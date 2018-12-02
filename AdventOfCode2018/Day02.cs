@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using Xunit;
+using static AdventOfCode2018.Util;
 
 namespace AdventOfCode2018
 {
@@ -22,7 +23,7 @@ namespace AdventOfCode2018
 
         [Theory]
         [InlineData("1", "fgij", "abcde,fghij,klmno,pqrst,fguij,axcye,wvxyz")]
-        [InlineData("Actual", "", puzzleInput)]
+        [InlineData("Actual", "nvosmkcdtdbfhyxsphzgraljq", puzzleInput)]
         public void Test_Solve2(string nr, string expected, string input)
         {
             Assert.Equal(nr, nr); // Suppresses warning
@@ -54,8 +55,7 @@ namespace AdventOfCode2018
                 {
                     if (GetLevenshteinDistance(ids[i], ids[j]) == 1)
                     {
-                        // Plus some manual work:
-                        return ids[j] + " vs " + ids[j];
+                        return GetCommonId(ids[i], ids[j]);
                     }
                 }
             }
@@ -63,32 +63,18 @@ namespace AdventOfCode2018
             return "notfound";
         }
 
-        // Variation of https://stackoverflow.com/a/9453762/419956
-        private static int GetLevenshteinDistance(string a, string b)
+        private string GetCommonId(string v1, string v2)
         {
-            if (String.IsNullOrEmpty(a)) throw new ArgumentException(nameof(a));
-            if (String.IsNullOrEmpty(b)) throw new ArgumentException(nameof(b));
+            var result = "";
+            var errorFound = false;
 
-            int lengthA = a.Length;
-            int lengthB = b.Length;
-            var distances = new int[lengthA + 1, lengthB + 1];
-            for (int i = 0; i <= lengthA; distances[i, 0] = i++) ;
-            for (int j = 0; j <= lengthB; distances[0, j] = j++) ;
-
-            for (int i = 1; i <= lengthA; i++)
+            for (int i = 0; i < v1.Length - 1; i++)
             {
-                for (int j = 1; j <= lengthB; j++)
-                {
-                    int cost = b[j - 1] == a[i - 1] ? 0 : 1;
-                    distances[i, j] = Math.Min
-                        (
-                        Math.Min(distances[i - 1, j] + 1, distances[i, j - 1] + 1),
-                        distances[i - 1, j - 1] + cost
-                        );
-                }
+                errorFound = errorFound || v1[i] != v2[i];
+                result += errorFound ? v1[i + 1] : v1[i];
             }
 
-            return distances[lengthA, lengthB];
+            return result;
         }
     }
 }

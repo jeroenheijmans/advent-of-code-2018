@@ -53,7 +53,7 @@ namespace AdventOfCode2018
             {
                 for (int j = i + 1; j < ids.Length; j++)
                 {
-                    if (GetLevenshteinDistance(ids[i], ids[j]) == 1)
+                    if (IsAlmostEqual(ids[i], ids[j]))
                     {
                         return GetCommonId(ids[i], ids[j]);
                     }
@@ -62,19 +62,30 @@ namespace AdventOfCode2018
 
             return "notfound";
         }
+        
+        private static bool IsAlmostEqual(string a, string b)
+        {
+            var diff = 0;
+
+            for (int i = 0; i < a.Length; i++)
+            {
+                if (a[i] != b[i]) diff++;
+                if (diff > 1) return false;
+            }
+
+            return diff == 1 ? true : false;
+        }
 
         private string GetCommonId(string v1, string v2)
         {
-            var result = "";
-            var errorFound = false;
+            var result = new StringBuilder();
 
-            for (int i = 0; i < v1.Length - 1; i++)
+            for (int i = 0; i < v1.Length; i++)
             {
-                errorFound = errorFound || v1[i] != v2[i];
-                result += errorFound ? v1[i + 1] : v1[i];
+                if (v1[i] == v2[i]) result.Append(v1[i]);
             }
 
-            return result;
+            return result.ToString();
         }
     }
 }

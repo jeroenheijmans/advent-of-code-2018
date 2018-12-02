@@ -34,15 +34,15 @@ namespace AdventOfCode2018
         {
             var ids = input.Split(",");
 
-            var idCharArrays = ids.Select(i => i.ToArray());
-
-            var grps = idCharArrays.Select(i => i.GroupBy(c => c).Select(g => g.Count()));
+            var grps = ids
+                .Select(i => i.ToArray())
+                .Select(i => i.GroupBy(c => c)
+                .Select(g => g.Count()));
 
             var twos = grps.Where(g => g.Any(i => i == 2)).Count();
             var threes = grps.Where(g => g.Any(i => i == 3)).Count();
-            var result = twos * threes;
 
-            return result;
+            return twos * threes;
         }
 
         public string Solve2(string input)

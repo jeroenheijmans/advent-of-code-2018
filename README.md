@@ -10,9 +10,9 @@ TODO: Instructions on running the solutions.
 
 Here's what I learned (or noticed) each day.
 
-1. TBD
-2. TBD
-3. TBD
+1. You should _prepare_ if you want to _compete_ in challenges.
+2. C#'s LINQ features are _not_ "like riding a bike".
+3. Don't use all input you get for problems.
 4. TBD
 5. TBD
 6. TBD

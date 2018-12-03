@@ -31,56 +31,36 @@ namespace AdventOfCode2018
             Assert.Equal(expected, Solve2(input));
         }
 
-        public class Box
-        {
-            public int Id;
-            public int Left;
-            public int Top;
-            public int Width;
-            public int Height;
-            public Point[] Points;
-        }
-
         public long Solve1(string input)
         {
+            var baseSet = new HashSet<Point>();
+            var overlaps = new HashSet<Point>();
+
             var data = input
                 .Replace(" ", "")
                 .Split("#")
                 .Where(x => !string.IsNullOrWhiteSpace(x))
-                .Select(z =>
+                .Select(x => x.Split(new char[] { '@', ',', ':', 'x' }).Select(int.Parse).ToArray());
+
+            foreach (var box in data)
+            {
+                var left = box[1];
+                var top = box[2];
+                var width = box[3];
+                var height = box[4];
+
+                for (int i = 0; i < width; i++)
                 {
-                    var x = z.Split(new char[] { '@', ',', ':', 'x' });
-                    var b = new Box
+                    for (int j = 0; j < height; j++)
                     {
-                        Id = int.Parse(x[0]),
-                        Left = int.Parse(x[1]),
-                        Top = int.Parse(x[2]),
-                        Width = int.Parse(x[3]),
-                        Height = int.Parse(x[4]),
-                    };
-
-                    var points = new List<Point>();
-
-                    for (int i = 0; i < b.Width; i++)
-                    {
-                        for (int j = 0; j < b.Height; j++)
-                        {
-                            points.Add(new Point(i + b.Left, j + b.Top));
-                        }
+                        var point = new Point(i + left, j + top);
+                        if (baseSet.Contains(point)) { overlaps.Add(point); }
+                        else { baseSet.Add(point); }
                     }
+                }
+            }
 
-                    b.Points = points.ToArray();
-
-                    return b;
-                });
-
-            var maxLeft = data.Select(x => x.Left + x.Width).Max();
-            var maxTop = data.Select(x => x.Top + x.Height).Max();
-            
-            var allPoints = data.SelectMany(d => d.Points).GroupBy(p => p).Where(g => g.Count() > 1);
-            var result = allPoints.Count();
-
-            return result;
+            return overlaps.Count();
         }
 
         public long Solve2(string input)
@@ -89,45 +69,32 @@ namespace AdventOfCode2018
                 .Replace(" ", "")
                 .Split("#")
                 .Where(x => !string.IsNullOrWhiteSpace(x))
-                .Select(z =>
-                {
-                    var x = z.Split(new char[] { '@', ',', ':', 'x' });
-                    var b = new Box
-                    {
-                        Id = int.Parse(x[0]),
-                        Left = int.Parse(x[1]),
-                        Top = int.Parse(x[2]),
-                        Width = int.Parse(x[3]),
-                        Height = int.Parse(x[4]),
-                    };
+                .Select(x => x.Split(new char[] { '@', ',', ':', 'x' }).Select(int.Parse).ToArray());
 
-                    var points = new List<Point>();
+            var pointToIdList = new Dictionary<Point, List<int>>();
 
-                    for (int i = 0; i < b.Width; i++)
-                    {
-                        for (int j = 0; j < b.Height; j++)
-                        {
-                            points.Add(new Point(i + b.Left, j + b.Top));
-                        }
-                    }
-
-                    b.Points = points.ToArray();
-
-                    return b;
-                });
-
-            var maxLeft = data.Select(x => x.Left + x.Width).Max();
-            var maxTop = data.Select(x => x.Top + x.Height).Max();
-
-            foreach (var item in data)
+            foreach (var box in data)
             {
-                if (!data.Where(d => d.Id != item.Id).SelectMany(d => d.Points).Any(p => item.Points.Contains(p)))
+                var id = box[0];
+                var left = box[1];
+                var top = box[2];
+                var width = box[3];
+                var height = box[4];
+
+                for (int i = 0; i < width; i++)
                 {
-                    return item.Id;
+                    for (int j = 0; j < height; j++)
+                    {
+                        var point = new Point(i + left, j + top);
+                        if (!pointToIdList.ContainsKey(point)) pointToIdList.Add(point, new List<int>());
+                        pointToIdList[point].Add(id);
+                    }
                 }
             }
 
-            return -1L;
+            var badIds = pointToIdList.Where(p => p.Value.Count() > 1).SelectMany(p => p.Value);
+
+            return data.First(box => !badIds.Contains(box[0]))[0];
         }
     }
 }

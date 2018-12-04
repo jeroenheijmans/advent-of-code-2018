@@ -34,44 +34,7 @@ namespace AdventOfCode2018
 
         public long Solve1(string input)
         {
-            var data = input
-                .ToLowerInvariant()
-                .Replace("[", "")
-                .Replace("]", "")
-                .Split(",")
-                .OrderBy(x => x);
-
-            int currentGuardId = -1;
-            int previousSleepMinute = 0;
-
-            var sleepTotals = new Dictionary<int, int>();
-
-            var sleepMinutes = new Dictionary<int, int[]>();
-
-            foreach (var item in data)
-            {
-                var parts = item.Split(" ");
-                if (parts[2] == "guard")
-                {
-                    currentGuardId = int.Parse(parts[3].Replace("#", ""));
-                    if (!sleepTotals.ContainsKey(currentGuardId)) sleepTotals.Add(currentGuardId, 0);
-                    if (!sleepMinutes.ContainsKey(currentGuardId)) sleepMinutes.Add(currentGuardId, new int[60]);
-                }
-                else if (parts[2] == "falls")
-                {
-                    previousSleepMinute = int.Parse(parts[1].Split(":")[1]);
-                } 
-                else if (parts[2] == "wakes")
-                {
-                    var wakeMinute = int.Parse(parts[1].Split(":")[1]);
-
-                    for (int i = previousSleepMinute; i < wakeMinute; i++)
-                    {
-                        sleepTotals[currentGuardId]++;
-                        sleepMinutes[currentGuardId][i]++;
-                    }
-                }
-            }
+            var (sleepTotals, sleepMinutes) = GetData(input);
 
             var snoozy = sleepTotals.OrderByDescending(x => x.Value).Select(x => x.Key).First();
 
@@ -87,6 +50,23 @@ namespace AdventOfCode2018
 
         public long Solve2(string input)
         {
+            var (sleepTotals, sleepMinutes) = GetData(input);
+
+            var max = sleepMinutes.SelectMany(x => x.Value).Max();
+
+            foreach (var snoozy in sleepMinutes.Keys)
+            {
+                for (int i = 0; i < 60; i++)
+                {
+                    if (sleepMinutes[snoozy][i] == max) return i * snoozy;
+                }
+            }
+
+            return 0;
+        }
+
+        private static (Dictionary<int, int>, Dictionary<int, int[]>) GetData(string input)
+        {
             var data = input
                 .ToLowerInvariant()
                 .Replace("[", "")
@@ -98,7 +78,6 @@ namespace AdventOfCode2018
             int previousSleepMinute = 0;
 
             var sleepTotals = new Dictionary<int, int>();
-
             var sleepMinutes = new Dictionary<int, int[]>();
 
             foreach (var item in data)
@@ -107,8 +86,8 @@ namespace AdventOfCode2018
                 if (parts[2] == "guard")
                 {
                     currentGuardId = int.Parse(parts[3].Replace("#", ""));
-                    if (!sleepTotals.ContainsKey(currentGuardId)) sleepTotals.Add(currentGuardId, 0);
-                    if (!sleepMinutes.ContainsKey(currentGuardId)) sleepMinutes.Add(currentGuardId, new int[60]);
+                    sleepTotals.GetOrCreate(currentGuardId);
+                    sleepMinutes.GetOrCreate(currentGuardId, new int[60]);
                 }
                 else if (parts[2] == "falls")
                 {
@@ -125,18 +104,8 @@ namespace AdventOfCode2018
                     }
                 }
             }
-            
-            var max = sleepMinutes.SelectMany(x => x.Value).Max();
 
-            foreach (var snoozy in sleepMinutes.Keys)
-            {
-                for (int i = 0; i < 60; i++)
-                {
-                    if (sleepMinutes[snoozy][i] == max) return i * snoozy;
-                }
-            }
-
-            return 0;
+            return (sleepTotals, sleepMinutes);
         }
     }
 }

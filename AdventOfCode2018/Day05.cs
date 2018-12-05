@@ -68,10 +68,11 @@ namespace AdventOfCode2018
                         data[i] = ' ';
                         data[lastIdx] = ' ';
                         hasReplaced = true;
-                        break;
-                    }
 
-                    if (data[i] != ' ')
+                        lastIdx = i++;
+                        i++;
+                    }
+                    else if (data[i] != ' ')
                     {
                         lastIdx = i;
                     }
@@ -88,7 +89,7 @@ namespace AdventOfCode2018
 
             for (char c = 'a'; c <= 'z'; c++)
             {
-                var data = input.Replace(c.ToString(), "").Replace(c.ToString().ToUpperInvariant(), "").ToArray();
+                var data = Regex.Replace(input, $"[{c}{char.ToUpperInvariant(c)}]", "").ToArray();
                 var length = GetPolymerLength(data);
                 bestLength = Math.Min(length, bestLength);
             }

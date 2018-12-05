@@ -57,13 +57,7 @@ namespace AdventOfCode2018
                         continue;
                     }
 
-                    if (data[i] == ' ')
-                    {
-                        continue;
-                    }
-
-                    if (data[i] != data[lastIdx]
-                        && char.ToUpperInvariant(data[i]) == char.ToUpperInvariant(data[lastIdx]))
+                    if (Math.Abs(data[i] -data[lastIdx]) == 32)
                     {
                         data[i] = ' ';
                         data[lastIdx] = ' ';
@@ -77,10 +71,12 @@ namespace AdventOfCode2018
                         lastIdx = i;
                     }
                 }
+
+                data = data.Where(c => c != ' ').ToArray();
             }
             while (hasReplaced);
 
-            return data.Where(c => c != ' ').Count();
+            return data.Count();
         }
 
         public long Solve2(string input)

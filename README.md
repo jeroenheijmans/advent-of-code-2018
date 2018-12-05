@@ -13,8 +13,8 @@ Here's what I learned (or noticed) each day.
 1. You should _prepare_ if you want to _compete_ in challenges.
 2. C#'s LINQ features are _not_ "like riding a bike".
 3. Don't use all input you get for problems.
-4. TBD
-5. TBD
+4. I have a healthy fear of DateTime types, and avoid them unless needed.
+5. Using mostly "for each" in app development, I almost forgot "Off By One" errors existed.
 6. TBD
 7. TBD
 8. TBD

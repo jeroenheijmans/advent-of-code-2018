@@ -47,29 +47,6 @@ namespace AdventOfCode2018
             var minY = data.Select(p => p.Y).Min();
             var maxY = data.Select(p => p.Y).Max();
 
-            var innerPoints = data.Where(p =>
-                p.X == minX || p.X == maxX || p.Y == minY || p.Y == maxY
-            ).ToArray();
-
-            Dictionary<Point, Point> pointOwners = GetPointOwnersBetween(data, minX, maxX, minY, maxY);
-
-            // NOT: 5035 (only between min/max) TOO HIGH
-            // NOT: 5475 (just go from 0, instead of minX/maxX)
-            // Oh it is 5035 :D https://twitter.com/ericwastl/status/1070563771339411457
-            // I still have a bug though, see the left over failing test
-
-            var candidates = pointOwners
-                .GroupBy(kvp => kvp.Value /*owner*/)
-                .Where(grp => grp.Key.X < maxX && grp.Key.X > minX && grp.Key.Y < maxY && grp.Key.Y > minY)
-                .ToList();
-
-            return candidates
-                .Select(grp => grp.Count())
-                .Max();
-        }
-
-        private static Dictionary<Point, Point> GetPointOwnersBetween(Point[] data, int minX, int maxX, int minY, int maxY)
-        {
             var pointOwners = new Dictionary<Point, Point>();
 
             for (int x = minX; x <= maxX; x++)
@@ -82,7 +59,7 @@ namespace AdventOfCode2018
 
                     var minDist = dists.Min(kvp => kvp.Value);
 
-                    var closestPoints = dists.Where(kvp => kvp.Value == minDist);
+                    var closestPoints = dists.Where(kvp => kvp.Value == minDist).ToArray();
 
                     if (closestPoints.Count() == 1)
                     {
@@ -92,7 +69,17 @@ namespace AdventOfCode2018
                 }
             }
 
-            return pointOwners;
+            var edgeOwners = pointOwners
+                .Where(p => p.Key.X == minX || p.Key.X == maxX || p.Key.Y == minY || p.Key.Y == maxY)
+                .Select(po => po.Value)
+                .Distinct()
+                .ToArray();
+            
+            return pointOwners
+                .Where(po => !edgeOwners.Contains(po.Value /* owner */))
+                .GroupBy(po => po.Value /* owner */)
+                .Select(grp => grp.Count())
+                .Max();
         }
 
         public int Solve2(string input, int safety)

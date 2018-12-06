@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -27,6 +28,31 @@ namespace AdventOfCode2018
             }
 
             return val;
+        }
+
+        public static (int minX, int maxX, int minY, int maxY) GetDimensions(this IEnumerable<Point> data)
+        {
+            return (
+                data.Select(p => p.X).Min(),
+                data.Select(p => p.X).Max(),
+                data.Select(p => p.Y).Min(),
+                data.Select(p => p.Y).Max()
+            );
+        }
+
+        public static int GetManhattanDistance(Point p1, Point p2)
+        {
+            return GetManhattanDistance(p1.X, p1.Y, p2.X, p2.Y);
+        }
+
+        public static int GetManhattanDistance(Point p, int x, int y)
+        {
+            return GetManhattanDistance(p.X, p.Y, x, y);
+        }
+
+        public static int GetManhattanDistance(int x1, int y1, int x2, int y2)
+        {
+            return Math.Abs(x1 - x2) + Math.Abs(y1 - y2);
         }
     }
 }

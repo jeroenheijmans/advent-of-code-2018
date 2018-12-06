@@ -37,44 +37,35 @@ namespace AdventOfCode2018
 
         public int Solve1(string input)
         {
-            var data = input
-                .Split("|")
-                .Select(x => new Point(int.Parse(x.Split(",")[0]), int.Parse(x.Split(",")[1])))
-                .ToArray();
-
-            var minX = data.Select(p => p.X).Min();
-            var maxX = data.Select(p => p.X).Max();
-            var minY = data.Select(p => p.Y).Min();
-            var maxY = data.Select(p => p.Y).Max();
-
+            Point[] data = SelectPointsFromInput(input);
+            var (minX, maxX, minY, maxY) = data.GetDimensions();
             var pointOwners = new Dictionary<Point, Point>();
+            var edgeOwners = new HashSet<Point>();
 
             for (int x = minX; x <= maxX; x++)
             {
                 for (int y = minY; y <= maxY; y++)
                 {
-                    var dists = data
-                        .Select(p => new KeyValuePair<Point, int>(p, Math.Abs(p.X - x) + Math.Abs(p.Y - y)))
+                    var distances = data
+                        .Select(p => new KeyValuePair<Point, int>(p, GetManhattanDistance(p, x, y)))
                         .ToArray();
 
-                    var minDist = dists.Min(kvp => kvp.Value);
-
-                    var closestPoints = dists.Where(kvp => kvp.Value == minDist).ToArray();
+                    var minDistance = distances.Min(kvp => kvp.Value);
+                    var closestPoints = distances.Where(kvp => kvp.Value == minDistance).ToArray();
 
                     if (closestPoints.Count() == 1)
                     {
                         pointOwners.Add(new Point(x, y), closestPoints.Single().Key);
+
+                        if (x == minX || x == maxX || y == minY || y == maxY)
+                        {
+                            edgeOwners.Add(closestPoints.Single().Key);
+                        }
                     }
                     // else: multiple ownwers, so no ownwer
                 }
             }
 
-            var edgeOwners = pointOwners
-                .Where(p => p.Key.X == minX || p.Key.X == maxX || p.Key.Y == minY || p.Key.Y == maxY)
-                .Select(po => po.Value)
-                .Distinct()
-                .ToArray();
-            
             return pointOwners
                 .Where(po => !edgeOwners.Contains(po.Value /* owner */))
                 .GroupBy(po => po.Value /* owner */)
@@ -84,27 +75,15 @@ namespace AdventOfCode2018
 
         public int Solve2(string input, int safety)
         {
-            var data = input
-                .Split("|")
-                .Select(x => new Point(int.Parse(x.Split(",")[0]), int.Parse(x.Split(",")[1])))
-                .ToArray();
-
-            var minX = data.Select(p => p.X).Min();
-            var maxX = data.Select(p => p.X).Max();
-            var minY = data.Select(p => p.Y).Min();
-            var maxY = data.Select(p => p.Y).Max();
-
+            var data = SelectPointsFromInput(input);
+            var (minX, maxX, minY, maxY) = data.GetDimensions();
             int result = 0;
 
             for (int x = 0; x <= maxX; x++)
             {
                 for (int y = 0; y <= maxY; y++)
                 {
-                    var totalDistance = data
-                        .Select(p => Math.Abs(p.X - x) + Math.Abs(p.Y - y))
-                        .Sum();
-
-                    if (totalDistance < safety)
+                    if (data.Select(p => GetManhattanDistance(p, x, y)).Sum() < safety)
                     {
                         result++;
                     }
@@ -112,6 +91,14 @@ namespace AdventOfCode2018
             }
 
             return result;
+        }
+
+        private static Point[] SelectPointsFromInput(string input)
+        {
+            return input
+                .Split("|")
+                .Select(x => new Point(int.Parse(x.Split(",")[0]), int.Parse(x.Split(",")[1])))
+                .ToArray();
         }
     }
 }

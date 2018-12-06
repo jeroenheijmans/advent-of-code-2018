@@ -19,7 +19,7 @@ namespace AdventOfCode2018
         [InlineData("1", 5, "2,2|6,2|4,4|2,6|6,6")]
         [InlineData("1", 6, "2,2|6,2|4,4|2,6|6,7")]
         [InlineData("1", 1, "4,4|2,3|5,3|3,5|5,6")]
-        [InlineData("Actual", -1L, puzzleInput)]
+        [InlineData("Actual", 5035, puzzleInput)]
         public void Test_Solve1(string nr, int expected, string input)
         {
             Assert.Equal(nr, nr); // Suppresses warning
@@ -55,6 +55,8 @@ namespace AdventOfCode2018
 
             // NOT: 5035 (only between min/max) TOO HIGH
             // NOT: 5475 (just go from 0, instead of minX/maxX)
+            // Oh it is 5035 :D https://twitter.com/ericwastl/status/1070563771339411457
+            // I still have a bug though, see the left over failing test
 
             var candidates = pointOwners
                 .GroupBy(kvp => kvp.Value /*owner*/)

@@ -16,7 +16,9 @@ namespace AdventOfCode2018
 
         [Theory]
         [InlineData("1", 17, "1,1|1,6|8,3|3,4|5,5|8,9")]
-        [InlineData("1", 5, "1,1|6,1|4,4|1,6|6,6")]
+        [InlineData("1", 5, "2,2|6,2|4,4|2,6|6,6")]
+        [InlineData("1", 6, "2,2|6,2|4,4|2,6|6,7")]
+        [InlineData("1", 1, "4,4|2,3|5,3|3,5|5,6")]
         [InlineData("Actual", -1L, puzzleInput)]
         public void Test_Solve1(string nr, int expected, string input)
         {
@@ -50,22 +52,17 @@ namespace AdventOfCode2018
             ).ToArray();
 
             Dictionary<Point, Point> pointOwners = GetPointOwnersBetween(data, minX, maxX, minY, maxY);
-            Dictionary<Point, Point> outliers = GetPointOwnersBetween(data, 0, maxX+100, 0, maxY+100);
 
-            // NOT: 5035 (only between min/max)
+            // NOT: 5035 (only between min/max) TOO HIGH
             // NOT: 5475 (just go from 0, instead of minX/maxX)
 
-            var two = outliers
+            var candidates = pointOwners
                 .GroupBy(kvp => kvp.Value /*owner*/)
-                .ToDictionary(x => x.Key, x => x.Count());
+                .Where(grp => grp.Key.X < maxX && grp.Key.X > minX && grp.Key.Y < maxY && grp.Key.Y > minY)
+                .ToList();
 
-            var one = pointOwners
-                .GroupBy(kvp => kvp.Value /*owner*/)
-                .ToDictionary(x => x.Key, x => x.Count());
-
-            return one
-                .Where(grp => two[grp.Key] == grp.Value)
-                .Select(grp => grp.Value)
+            return candidates
+                .Select(grp => grp.Count())
                 .Max();
         }
 

@@ -27,12 +27,12 @@ namespace AdventOfCode2018
         }
 
         [Theory]
-        [InlineData("1", -1L, "")]
-        [InlineData("Actual", -1L, puzzleInput)]
-        public void Test_Solve2(string nr, int expected, string input)
+        [InlineData("1", 16, 32, "1,1|1,6|8,3|3,4|5,5|8,9")]
+        [InlineData("Actual", 35294, 10000, puzzleInput)]
+        public void Test_Solve2(string nr, int expected, int safety, string input)
         {
             Assert.Equal(nr, nr); // Suppresses warning
-            Assert.Equal(expected, Solve2(input));
+            Assert.Equal(expected, Solve2(input, safety));
         }
 
         public int Solve1(string input)
@@ -95,10 +95,36 @@ namespace AdventOfCode2018
             return pointOwners;
         }
 
-        public int Solve2(string input)
+        public int Solve2(string input, int safety)
         {
-            var data = input.Split(",");
-            return 0;
+            var data = input
+                .Split("|")
+                .Select(x => new Point(int.Parse(x.Split(",")[0]), int.Parse(x.Split(",")[1])))
+                .ToArray();
+
+            var minX = data.Select(p => p.X).Min();
+            var maxX = data.Select(p => p.X).Max();
+            var minY = data.Select(p => p.Y).Min();
+            var maxY = data.Select(p => p.Y).Max();
+
+            int result = 0;
+
+            for (int x = 0; x <= maxX; x++)
+            {
+                for (int y = 0; y <= maxY; y++)
+                {
+                    var totalDistance = data
+                        .Select(p => Math.Abs(p.X - x) + Math.Abs(p.Y - y))
+                        .Sum();
+
+                    if (totalDistance < safety)
+                    {
+                        result++;
+                    }
+                }
+            }
+
+            return result;
         }
     }
 }

@@ -24,12 +24,12 @@ namespace AdventOfCode2018
         }
 
         [Theory]
-        [InlineData("1", "", "")]
-        [InlineData("Actual", "", puzzleInput)]
-        public void Test_Solve2(string nr, string expected, string input)
+        [InlineData("1", 2, 15, "C,A;C,F;A,B;A,D;B,E;D,E;F,E")]
+        [InlineData("Actual", 5, 0, puzzleInput)]
+        public void Test_Solve2(string nr, int workerCount, int expected, string input)
         {
             Assert.Equal(nr, nr); // Suppresses warning
-            Assert.Equal(expected, Solve2(input));
+            Assert.Equal(expected, Solve2(workerCount, input));
         }
 
         public string Solve1(string input)
@@ -64,10 +64,64 @@ namespace AdventOfCode2018
             return result.ToString();
         }
 
-        public string Solve2(string input)
+        public int Solve2(int workerCount, string input)
         {
-            var data = input.Split(",");
-            return "";
+            var data = input
+                .Split(";")
+                .Select(x => new KeyValuePair<char, char>(x[0], x[2]))
+                .OrderBy(x => x.Key)
+                .ToList();
+
+            int secs = 0;
+
+            var workerTimers = new Tuple<char, int>[workerCount];
+            
+            while (data.Any() || workerTimers.Any(t => t != null))
+            {
+                secs++;
+
+                for (int i = 0; i < workerCount; i++)
+                {
+                    if (workerTimers[i] != null)
+                    {
+                        if (workerTimers[i].Item2 == 0)
+                        {
+                            foreach (var item in data.Where(x => x.Key == workerTimers[i].Item1).ToArray())
+                            {
+                                data.Remove(item);
+                            }
+
+                            workerTimers[i] = null; // Done!
+                        }
+                        else
+                        {
+                            workerTimers[i] = new Tuple<char, int>(workerTimers[i].Item1, workerTimers[i].Item2 - 1);
+                        }
+                    }
+                }
+
+                if (!workerTimers.Any(t => t == null)) continue; // None available
+
+                var candidates = data
+                    .Where(i => !data.Select(x => x.Value).Contains(i.Key) && !workerTimers.Where(t => t != null).Select(t => t.Item1).Contains(i.Key))
+                    .Select(x => x.Key)
+                    .Take(workerCount);
+
+                var queue = new Queue<char>(candidates.Distinct().OrderBy(x => x).Distinct());
+
+                for (int i = 0; i < workerCount; i++)
+                {
+                    if (workerTimers[i] == null && queue.Any())
+                    {
+                        var c = queue.Dequeue();
+                        var t = c - 64; // Makes A=1, etc
+                        workerTimers[i] = new Tuple<char, int>(c, t);
+                    }
+                }
+            }
+
+            // Not 214
+            return secs;
         }
     }
 }

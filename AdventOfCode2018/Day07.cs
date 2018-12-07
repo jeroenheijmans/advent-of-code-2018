@@ -24,12 +24,12 @@ namespace AdventOfCode2018
         }
 
         [Theory]
-        [InlineData("1", 2, 15, "C,A;C,F;A,B;A,D;B,E;D,E;F,E")]
-        [InlineData("Actual", 5, 0, puzzleInput)]
-        public void Test_Solve2(string nr, int workerCount, int expected, string input)
+        [InlineData("1", 2, 0, 15, "C,A;C,F;A,B;A,D;B,E;D,E;F,E")]
+        [InlineData("Actual", 5, 60, 1118, puzzleInput)]
+        public void Test_Solve2(string nr, int workerCount, int extraSecsPerStep, int expected, string input)
         {
             Assert.Equal(nr, nr); // Suppresses warning
-            Assert.Equal(expected, Solve2(workerCount, input));
+            Assert.Equal(expected, Solve2(workerCount, extraSecsPerStep, input));
         }
 
         public string Solve1(string input)
@@ -69,9 +69,14 @@ namespace AdventOfCode2018
             public char Node { get; set; }
             public int TimeLeft { get; set; }
             public bool IsBusy => TimeLeft != 0;
+
+            public override string ToString()
+            {
+                return $"{IsBusy} {TimeLeft} needed for {Node}";
+            }
         }
 
-        public int Solve2(int workerCount, string input)
+        public int Solve2(int workerCount, int extraSecsPerStep, string input)
         {
             var data = input
                 .Split(";")
@@ -117,16 +122,19 @@ namespace AdventOfCode2018
                     {
                         var worker = workers.First(w => !w.IsBusy);
                         worker.Node = item;
-                        worker.TimeLeft = item - 64;
+                        worker.TimeLeft = GetSecondsForStep(extraSecsPerStep, item);
                     }
                 }
 
                 secs++;
             }
 
-            // Not 214
-            // Not 218 ("too low")
-            return secs + finalItem.Value - 64 - 1;
+            return secs + GetSecondsForStep(extraSecsPerStep, finalItem.Value) - 1;
+        }
+
+        private static int GetSecondsForStep(int extraSecsPerStep, char item)
+        {
+            return item - 64 + extraSecsPerStep;
         }
     }
 }

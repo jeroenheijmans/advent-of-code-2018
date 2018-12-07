@@ -30,6 +30,13 @@ namespace AdventOfCode2018
             return val;
         }
 
+        public static IEnumerable<int> AsRangeFromZero(this int input) 
+            => Enumerable.Range(0, input);
+
+        public static T[] NewItemsOfType<T>(this int count) 
+            where T : new() 
+            => count.AsRangeFromZero().Select(_ => new T()).ToArray();
+
         public static (int minX, int maxX, int minY, int maxY) GetDimensions(this IEnumerable<Point> data)
         {
             return (

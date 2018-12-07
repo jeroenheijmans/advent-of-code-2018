@@ -42,24 +42,18 @@ namespace AdventOfCode2018
 
             var result = new StringBuilder();
 
-            KeyValuePair<char, char> next = new KeyValuePair<char, char>('-', '-');
-
             while (data.Any())
             {
-                next = data
+                var next = data
                     .Where(i => !data.Select(x => x.Value).Contains(i.Key))
                     .OrderBy(x => x.Key)
                     .First();
 
                 result.Append(next.Key);
+                data.RemoveAll(x => x.Key == next.Key);
 
-                foreach (var item in data.Where(x => x.Key == next.Key).ToArray())
-                {
-                    data.Remove(item);
-                }
-            }
-
-            result.Append(next.Value);
+                if (!data.Any()) result.Append(next.Value);
+            }            
 
             return result.ToString();
         }
@@ -70,10 +64,13 @@ namespace AdventOfCode2018
             public int TimeLeft { get; set; }
             public bool IsBusy => TimeLeft != 0;
 
-            public override string ToString()
+            public void WorkOnCharacter(char target, int time)
             {
-                return $"{IsBusy} {TimeLeft} needed for {Node}";
+                Node = target;
+                TimeLeft = time;
             }
+
+            public override string ToString() => $"{IsBusy} {TimeLeft} needed for {Node}";
         }
 
         public int Solve2(int workerCount, int extraSecsPerStep, string input)
@@ -84,57 +81,40 @@ namespace AdventOfCode2018
                 .OrderBy(x => x.Key)
                 .ToList();
 
+            int GetSecondsForStep(char item) => item - 'A' + 1 + extraSecsPerStep;
             int secs = 0;
-
-            var workers = Enumerable.Range(0, workerCount).Select(i => new Worker()).ToArray();
-
-            KeyValuePair<char, char> finalItem = new KeyValuePair<char, char>(' ', ' ');
+            var workers = workerCount.NewItemsOfType<Worker>();
 
             while (data.Any())
             {
                 foreach (var worker in workers.Where(w => w.IsBusy))
                 {
-                    worker.TimeLeft--;
-
-                    if (worker.TimeLeft == 0)
+                    if (--worker.TimeLeft == 0)
                     {
-                        foreach (var x in data.Where(n => n.Key == worker.Node).ToArray())
-                        {
-                            data.Remove(x);
-                            finalItem = x;
-                        }
+                        var finalItem = data.Where(n => n.Key == worker.Node).First().Value;
+                        data.RemoveAll(n => n.Key == worker.Node);
+                        if (!data.Any()) return secs + GetSecondsForStep(finalItem);
                     }
                 }
 
-                if (workers.Any(w => !w.IsBusy))
-                {
-                    var candidates = data
-                        .Where(i => 
-                            !data.Select(x => x.Value).Contains(i.Key) // Has no requirements left
-                            && !workers.Any(w => w.IsBusy && w.Node == i.Key) // No one working on it yet
-                        ).Select(x => x.Key)
-                        .OrderBy(x => x)
-                        .Distinct()
-                        .Take(workers.Count(w => !w.IsBusy))
-                        .ToArray();
+                var candidates = data
+                    .Where(i => 
+                        !data.Select(x => x.Value).Contains(i.Key) // Has no requirements left
+                        && !workers.Any(w => w.IsBusy && w.Node == i.Key) // No one working on it yet
+                    ).Select(x => x.Key)
+                    .OrderBy(x => x)
+                    .Distinct()
+                    .Take(workers.Count(w => !w.IsBusy));
 
-                    foreach (var item in candidates)
-                    {
-                        var worker = workers.First(w => !w.IsBusy);
-                        worker.Node = item;
-                        worker.TimeLeft = GetSecondsForStep(extraSecsPerStep, item);
-                    }
+                foreach (var item in candidates)
+                {
+                    workers.First(w => !w.IsBusy).WorkOnCharacter(item, GetSecondsForStep(item));
                 }
 
                 secs++;
             }
 
-            return secs + GetSecondsForStep(extraSecsPerStep, finalItem.Value) - 1;
-        }
-
-        private static int GetSecondsForStep(int extraSecsPerStep, char item)
-        {
-            return item - 64 + extraSecsPerStep;
+            return secs;
         }
     }
 }

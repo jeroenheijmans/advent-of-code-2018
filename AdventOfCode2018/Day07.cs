@@ -64,6 +64,13 @@ namespace AdventOfCode2018
             return result.ToString();
         }
 
+        private class Worker
+        {
+            public char Node { get; set; }
+            public int TimeLeft { get; set; }
+            public bool IsBusy => TimeLeft != 0;
+        }
+
         public int Solve2(int workerCount, string input)
         {
             var data = input
@@ -74,54 +81,52 @@ namespace AdventOfCode2018
 
             int secs = 0;
 
-            var workerTimers = new Tuple<char, int>[workerCount];
-            
-            while (data.Any() || workerTimers.Any(t => t != null))
+            var workers = Enumerable.Range(0, workerCount).Select(i => new Worker()).ToArray();
+
+            KeyValuePair<char, char> finalItem = new KeyValuePair<char, char>(' ', ' ');
+
+            while (data.Any())
             {
+                foreach (var worker in workers.Where(w => w.IsBusy))
+                {
+                    worker.TimeLeft--;
+
+                    if (worker.TimeLeft == 0)
+                    {
+                        foreach (var x in data.Where(n => n.Key == worker.Node).ToArray())
+                        {
+                            data.Remove(x);
+                            finalItem = x;
+                        }
+                    }
+                }
+
+                if (workers.Any(w => !w.IsBusy))
+                {
+                    var candidates = data
+                        .Where(i => 
+                            !data.Select(x => x.Value).Contains(i.Key) // Has no requirements left
+                            && !workers.Any(w => w.IsBusy && w.Node == i.Key) // No one working on it yet
+                        ).Select(x => x.Key)
+                        .OrderBy(x => x)
+                        .Distinct()
+                        .Take(workers.Count(w => !w.IsBusy))
+                        .ToArray();
+
+                    foreach (var item in candidates)
+                    {
+                        var worker = workers.First(w => !w.IsBusy);
+                        worker.Node = item;
+                        worker.TimeLeft = item - 64;
+                    }
+                }
+
                 secs++;
-
-                for (int i = 0; i < workerCount; i++)
-                {
-                    if (workerTimers[i] != null)
-                    {
-                        if (workerTimers[i].Item2 == 0)
-                        {
-                            foreach (var item in data.Where(x => x.Key == workerTimers[i].Item1).ToArray())
-                            {
-                                data.Remove(item);
-                            }
-
-                            workerTimers[i] = null; // Done!
-                        }
-                        else
-                        {
-                            workerTimers[i] = new Tuple<char, int>(workerTimers[i].Item1, workerTimers[i].Item2 - 1);
-                        }
-                    }
-                }
-
-                if (!workerTimers.Any(t => t == null)) continue; // None available
-
-                var candidates = data
-                    .Where(i => !data.Select(x => x.Value).Contains(i.Key) && !workerTimers.Where(t => t != null).Select(t => t.Item1).Contains(i.Key))
-                    .Select(x => x.Key)
-                    .Take(workerCount);
-
-                var queue = new Queue<char>(candidates.Distinct().OrderBy(x => x).Distinct());
-
-                for (int i = 0; i < workerCount; i++)
-                {
-                    if (workerTimers[i] == null && queue.Any())
-                    {
-                        var c = queue.Dequeue();
-                        var t = c - 64; // Makes A=1, etc
-                        workerTimers[i] = new Tuple<char, int>(c, t);
-                    }
-                }
             }
 
             // Not 214
-            return secs;
+            // Not 218 ("too low")
+            return secs + finalItem.Value - 64 - 1;
         }
     }
 }

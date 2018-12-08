@@ -34,33 +34,28 @@ namespace AdventOfCode2018
         {
             public int[] MetaData { get; set; }
             public Node[] Children { get; set; }
-            public Node Parent { get; set; }
 
             public int GetMetaDataSum() => MetaData.Sum() + Children.Select(c => c.GetMetaDataSum()).Sum();
 
             public int GetValue()
             {
-                if (Children.Any())
-                {
-                    return MetaData.Select(i => (i - 1) >= Children.Length ? 0 : Children[i - 1].GetValue()).Sum();
-                }
-                else
-                {
-                    return GetMetaDataSum();
-                }
+                return Children.Any() 
+                    ? MetaData.Select(i => i > Children.Length ? 0 : Children[i - 1].GetValue()).Sum() 
+                    : GetMetaDataSum();
             }
         }
 
-        private Node Parse(Node parent, Queue<int> inputs, Stack<Node> nodes)
+        private static Node Parse(Queue<int> inputs)
         {
-            var node = new Node();
-            node.Children = new Node[inputs.Dequeue()];
-            node.MetaData = new int[inputs.Dequeue()];
-            node.Parent = parent;
+            var node = new Node
+            {
+                Children = new Node[inputs.Dequeue()],
+                MetaData = new int[inputs.Dequeue()]
+            };
 
             for (int i = 0; i < node.Children.Length; i++)
             {
-                node.Children[i] = Parse(node, inputs, nodes);
+                node.Children[i] = Parse(inputs);
             }
 
             for (int i = 0; i < node.MetaData.Length; i++)
@@ -73,25 +68,15 @@ namespace AdventOfCode2018
 
         public int Solve1(string input)
         {
-            var data = input.Split(" ").Select(int.Parse).ToArray();
-
-            var queue = new Queue<int>(data);
-            var nodes = new Stack<Node>();
-
-            var root = Parse(null, queue, nodes);
-            
+            var data = input.Split(" ").Select(int.Parse).ToQueue();
+            var root = Parse(data);
             return root.GetMetaDataSum();
         }
 
         public int Solve2(string input)
         {
-            var data = input.Split(" ").Select(int.Parse).ToArray();
-
-            var queue = new Queue<int>(data);
-            var nodes = new Stack<Node>();
-
-            var root = Parse(null, queue, nodes);
-
+            var data = input.Split(" ").Select(int.Parse).ToQueue();
+            var root = Parse(data);
             return root.GetValue();
         }
     }

@@ -30,6 +30,9 @@ namespace AdventOfCode2018
             return val;
         }
 
+        public static Queue<T> ToQueue<T>(this IEnumerable<T> input) => new Queue<T>(input);
+        public static Stack<T> ToStack<T>(this IEnumerable<T> input) => new Stack<T>(input);
+
         public static IEnumerable<int> AsRangeFromZero(this int input) 
             => Enumerable.Range(0, input);
 

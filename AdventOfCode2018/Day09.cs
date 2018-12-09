@@ -21,39 +21,39 @@ namespace AdventOfCode2018
         [InlineData("17 players; last marble is worth 1104 points", 2764)]
         [InlineData("21 players; last marble is worth 6111 points", 54718)]
         [InlineData("30 players; last marble is worth 5807 points", 37305)]
-        public void Solution_1_test_examples(string input, long expected) => Assert.Equal(expected, Solve1(input));
+        public void Solution_1_test_examples(string input, int expected) => Assert.Equal(expected, Solve1(input));
 
         [Fact] public void Solution_1_test_real_input() => Assert.Equal(404611, Solve1(puzzleInput));
 
         [Fact] public void Solution_2_test_real_input() => Assert.Equal(3350093681, Solve2(puzzleInput));
         
-        public long Solve1(string input)
+        private static (int playerCount, int lastMarblePoints) ParseInput(string input)
         {
             var matches = Regex.Matches(input, @"(\d+) players; last marble is worth (\d+) points");
-            long playerCount = int.Parse(matches.First().Groups[1].Value);
-            long lastMarblePoints = int.Parse(matches.First().Groups[2].Value);
+            return (
+                int.Parse(matches.First().Groups[1].Value),
+                int.Parse(matches.First().Groups[2].Value)
+            );
+        }
 
+        public long Solve1(string input)
+        {
+            (int playerCount, int lastMarblePoints) = ParseInput(input);
             return SolveInternal(playerCount, lastMarblePoints);
         }
 
         public long Solve2(string input)
         {
-            var matches = Regex.Matches(input, @"(\d+) players; last marble is worth (\d+) points");
-            long playerCount = int.Parse(matches.First().Groups[1].Value);
-            long lastMarblePoints = int.Parse(matches.First().Groups[2].Value);
-
+            (int playerCount, int lastMarblePoints) = ParseInput(input);
             return SolveInternal(playerCount, lastMarblePoints * 100);
         }
 
-        private static long SolveInternal(long playerCount, long lastMarblePoints)
+        private static long SolveInternal(int playerCount, int lastMarblePoints)
         {
-            var circle = new LinkedList<long>();
-
+            var circle = new LinkedList<int>();
             var currentNode = circle.AddFirst(0);
-
-            long nextMarbleValue = 0;
-
-            long currentPlayer = 0;
+            int nextMarbleValue = 0;
+            int currentPlayer = 0;
             long[] scores = new long[playerCount];
 
             while (nextMarbleValue++ < lastMarblePoints)
@@ -61,10 +61,13 @@ namespace AdventOfCode2018
                 if (nextMarbleValue % 23 == 0)
                 {
                     var toRemove = currentNode;
-                    var i = 0;
-                    while (i++ < 7) toRemove = toRemove.Previous ?? circle.Last;
-                    currentNode = toRemove.Next ?? circle.First;
 
+                    for (var i = 0; i < 7; i++)
+                    {
+                        toRemove = toRemove.Previous ?? circle.Last;
+                    }
+
+                    currentNode = toRemove.Next ?? circle.First;
                     scores[currentPlayer] += nextMarbleValue + toRemove.Value;
                     circle.Remove(toRemove);
                 }

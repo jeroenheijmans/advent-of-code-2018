@@ -29,10 +29,9 @@ namespace AdventOfCode2018
         
         private static (int playerCount, int lastMarblePoints) ParseInput(string input)
         {
-            var matches = Regex.Matches(input, @"(\d+) players; last marble is worth (\d+) points");
             return (
-                int.Parse(matches.First().Groups[1].Value),
-                int.Parse(matches.First().Groups[2].Value)
+                int.Parse(input.SubGroups(@"(\d+) .+ (\d+) .+")[0]),
+                int.Parse(input.SubGroups(@"(\d+) .+ (\d+) .+")[1])
             );
         }
 

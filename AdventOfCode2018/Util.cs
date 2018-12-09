@@ -9,6 +9,16 @@ namespace AdventOfCode2018
 {
     public static class Util
     {
+        public static string[] SubGroups(this string input, string pattern)
+        {
+            return Regex.Matches(input, pattern)
+                .First()
+                .Groups
+                .Skip(1) // Match on the whole input
+                .Select(g => g.Value)
+                .ToArray();
+        }
+
         // https://stackoverflow.com/a/16193323/419956 by @AdamHouldsWorth
         public static TValue GetOrCreate<TKey, TValue>(this IDictionary<TKey, TValue> dict, TKey key)
             where TValue : new()

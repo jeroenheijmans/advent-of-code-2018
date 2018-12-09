@@ -36,6 +36,15 @@ namespace AdventOfCode2018
             return SolveInternal(playerCount, lastMarblePoints);
         }
 
+        public long Solve2(string input)
+        {
+            var matches = Regex.Matches(input, @"(\d+) players; last marble is worth (\d+) points");
+            long playerCount = int.Parse(matches.First().Groups[1].Value);
+            long lastMarblePoints = int.Parse(matches.First().Groups[2].Value);
+
+            return SolveInternal(playerCount, lastMarblePoints * 100);
+        }
+
         private static long SolveInternal(long playerCount, long lastMarblePoints)
         {
             var circle = new LinkedList<long>();
@@ -55,7 +64,7 @@ namespace AdventOfCode2018
                     var i = 0;
                     while (i++ < 7) toRemove = toRemove.Previous ?? circle.Last;
                     currentNode = toRemove.Next ?? circle.First;
-                    
+
                     scores[currentPlayer] += nextMarbleValue + toRemove.Value;
                     circle.Remove(toRemove);
                 }
@@ -69,15 +78,6 @@ namespace AdventOfCode2018
             }
 
             return scores.Max();
-        }
-
-        public long Solve2(string input)
-        {
-            var matches = Regex.Matches(input, @"(\d+) players; last marble is worth (\d+) points");
-            long playerCount = int.Parse(matches.First().Groups[1].Value);
-            long lastMarblePoints = int.Parse(matches.First().Groups[2].Value);
-
-            return SolveInternal(playerCount, lastMarblePoints * 100);
         }
     }
 }

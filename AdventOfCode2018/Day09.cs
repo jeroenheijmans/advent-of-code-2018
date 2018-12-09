@@ -23,7 +23,7 @@ namespace AdventOfCode2018
         [InlineData("30 players; last marble is worth 5807 points", 37305)]
         public void Solution_1_test_examples(string input, int expected) => Assert.Equal(expected, Solve1(input));
 
-        [Fact] public void Solution_1_test_real_input() => Assert.Equal(0, Solve1(puzzleInput));
+        [Fact] public void Solution_1_test_real_input() => Assert.Equal(404611, Solve1(puzzleInput));
 
         //[Fact] public void Solution_2_test_example() => Assert.Equal(0, Solve2(testInput));
         //[Fact] public void Solution_2_test_real_input() => Assert.Equal(0, Solve2(puzzleInput));
@@ -42,8 +42,6 @@ namespace AdventOfCode2018
 
             while (nextMarbleValue++ < lastMarblePoints)
             {
-                var visual = $"[{currentPlayer}] " + string.Join("", circle.Select(x => $" {x} "));
-
                 if (nextMarbleValue % 23 == 0)
                 {
                     var removeIndex = (currentMarbleIndex + circle.Count() - 7) % circle.Count();

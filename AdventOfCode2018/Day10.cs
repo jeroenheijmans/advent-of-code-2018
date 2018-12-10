@@ -397,7 +397,7 @@ position=< 10583,  10592> velocity=<-1, -1>
 
         public static int Solve2(string input)
         {
-            var prev = input
+            var data = input
                 .Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.None)
                 .Where(x => !string.IsNullOrWhiteSpace(x))
                 .Select(x => x
@@ -409,50 +409,58 @@ position=< 10583,  10592> velocity=<-1, -1>
                 .Select(arr => new KeyValuePair<Point, Point>(new Point(arr[0], arr[1]), new Point(arr[2], arr[3])))
                 .ToArray();
 
-            var next = prev;
+            int count = data.Count();
+
+            Point[] velocities = data.Select(kvp => kvp.Value).ToArray();
+            Point[] positions = data.Select(kvp => kvp.Key).ToArray();
+            Point[] positionsNext = new Point[positions.Length];
+
             long prevEntropy = long.MaxValue;
 
             for (int i = 0; i < 100_000; i++)
             {
-                next = prev.Select(kvp => new KeyValuePair<Point, Point>(new Point(kvp.Key.X + kvp.Value.X, kvp.Key.Y + kvp.Value.Y), kvp.Value)).ToArray();
+                for (int n = 0; n < count; n++)
+                {
+                    positionsNext[n] = new Point(positions[n].X + velocities[n].X, positions[n].Y + velocities[n].Y);
+                }
 
-                var nextGrid = next.Select(x => x.Key).ToArray(); // For performance
                 long nextEntropy = 0;
 
-                for (int a = 0; a < nextGrid.Length; a++)
+                for (int a = 0; a < count; a++)
                 {
-                    for (int b = 0; b < nextGrid.Length; b++)
+                    var aX = positionsNext[a].X;
+                    var aY = positionsNext[a].Y;
+                    for (int b = a + 1; b < count; b++)
                     {
                         // Inlining Manhattan Distance function for (some) performance
-                        nextEntropy += Math.Abs(nextGrid[a].X - nextGrid[b].X) + Math.Abs(nextGrid[a].Y - nextGrid[b].Y);
+                        nextEntropy += Math.Abs(aX - positionsNext[b].X) + Math.Abs(aY - positionsNext[b].Y);
                     }
                 }
 
                 if (nextEntropy > prevEntropy)
                 {
-                    string asciiArt = GetAsciiArt(prev);
+                    string asciiArt = GetAsciiArt(positions);
                     Console.WriteLine(asciiArt);
                     return i;
                 }
 
                 prevEntropy = nextEntropy;
-                prev = next;
+                positions = positionsNext;
             }
 
             return -1;
         }
 
-        private static string GetAsciiArt(IEnumerable<KeyValuePair<Point, Point>> data)
+        private static string GetAsciiArt(IEnumerable<Point> data)
         {
-            var prevGrid = data.Select(x => x.Key).ToArray();
-            var (minX, maxX, minY, maxY) = prevGrid.GetDimensions();
+            var (minX, maxX, minY, maxY) = data.GetDimensions();
 
             var sb = new StringBuilder();
             for (int y = minY - 1; y <= maxY + 1; y++)
             {
                 for (int x = minX - 1; x <= maxX + 1; x++)
                 {
-                    sb.Append(prevGrid.Contains(new Point(x, y)) ? '█' : '·');
+                    sb.Append(data.Contains(new Point(x, y)) ? '█' : '·');
                 }
 
                 sb.Append(Environment.NewLine);

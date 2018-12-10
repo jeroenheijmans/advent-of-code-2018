@@ -4,7 +4,10 @@ Solutions to the [Advent of Code 2018](https://adventofcode.com/2018) edition by
 
 ## Running
 
-TODO: Instructions on running the solutions.
+Pick your poison:
+
+- Command line: `dotnet test`
+- IDE, just run all the tests with your favorite test runner
 
 ## Lessons
 
@@ -15,11 +18,11 @@ Here's what I learned (or noticed) each day.
 3. Don't use all input you get for problems.
 4. I have a healthy fear of DateTime types, and avoid them unless needed.
 5. Using mostly "for each" in app development, I almost forgot "Off By One" errors existed.
-6. TBD
-7. TBD
-8. TBD
-9. TBD
-10. TBD
+6. Sets are *fast* for 'Contains(...)` operations.
+7. God I wish I knew Python and its graph libraries...
+8. Static typing can slow you down a lot in AoC.
+9. Doubly linked lists are the bomb!
+10. Not everything is (nor should be) easily unit-testable
 11. TBD
 12. TBD
 13. TBD
@@ -38,7 +41,7 @@ Here's what I learned (or noticed) each day.
 
 ## Compendium Repositories
 
-I've created [a Google Chrome Extension to spice up your private leaderboard page with graphs](https://chrome.google.com/webstore/detail/ipbomkmbokofodhhjpipflmdplipblbe).
-It is [open source](https://github.com/jeroenheijmans/advent-of-code-charts) if you want to contribute!
+I've created a browser extension for [Google Chrome](https://chrome.google.com/webstore/detail/ipbomkmbokofodhhjpipflmdplipblbe) and [Mozilla Firefox](https://addons.mozilla.org/en-US/firefox/addon/advent-of-code-charts/).
+It is [open source](https://github.com/jeroenheijmans/advent-of-code-charts)  to spice up your private leaderboard page with graphs if you want to contribute!
 
 In addition, you can also check [my Advent of Code 2017 solutions](https://github.com/jeroenheijmans/advent-of-code-2017), done in JavaScript.

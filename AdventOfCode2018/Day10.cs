@@ -394,7 +394,7 @@ position=< 10583,  10592> velocity=<-1, -1>
 
         [Fact] public void Solution_2_test_example() => Assert.Equal(3, Solve2(testInput));
         [Fact] public void Solution_2_test_real_input() => Assert.Equal(10476, Solve2(puzzleInput));
-
+        
         public static int Solve2(string input)
         {
             var data = input
@@ -417,6 +417,10 @@ position=< 10583,  10592> velocity=<-1, -1>
 
             long prevEntropy = long.MaxValue;
 
+            // Drastically improves speed, but at cost of accuracy. Set 
+            // to '1' for exact (but slow) results.
+            int entropySamplingFactor = Math.Min(10, count / 10);
+
             for (int i = 0; i < 100_000; i++)
             {
                 for (int n = 0; n < count; n++)
@@ -424,21 +428,15 @@ position=< 10583,  10592> velocity=<-1, -1>
                     positionsNext[n] = new Point(positions[n].X + velocities[n].X, positions[n].Y + velocities[n].Y);
                 }
 
-                long nextEntropy = 0;
-
-                for (int a = 0; a < count; a++)
-                {
-                    var aX = positionsNext[a].X;
-                    var aY = positionsNext[a].Y;
-                    for (int b = a + 1; b < count; b++)
-                    {
-                        // Inlining Manhattan Distance function for (some) performance
-                        nextEntropy += Math.Abs(aX - positionsNext[b].X) + Math.Abs(aY - positionsNext[b].Y);
-                    }
-                }
+                long nextEntropy = CalculateEntropy(positionsNext, entropySamplingFactor);
 
                 if (nextEntropy > prevEntropy)
                 {
+                    // We're getting there, lower sampling to 1 and recheck
+                    entropySamplingFactor = 1;
+                    prevEntropy = CalculateEntropy(positions, entropySamplingFactor);
+                    nextEntropy = CalculateEntropy(positionsNext, entropySamplingFactor);
+
                     string asciiArt = GetAsciiArt(positions);
                     Console.WriteLine(asciiArt);
                     return i;
@@ -449,6 +447,25 @@ position=< 10583,  10592> velocity=<-1, -1>
             }
 
             return -1;
+        }
+
+        private static long CalculateEntropy(Point[] positions, int entropySamplingFactor)
+        {
+            long nextEntropy = 0;
+
+            for (int a = 0; a < positions.Length; a += entropySamplingFactor)
+            {
+                var aX = positions[a].X; // Minor perf enhancement
+                var aY = positions[a].Y; // Minor perf enhancement
+
+                for (int b = a + 1; b < positions.Length; b += entropySamplingFactor)
+                {
+                    // Inlining Manhattan Distance function for (some) performance
+                    nextEntropy += Math.Abs(aX - positions[b].X) + Math.Abs(aY - positions[b].Y);
+                }
+            }
+
+            return nextEntropy;
         }
 
         private static string GetAsciiArt(IEnumerable<Point> data)

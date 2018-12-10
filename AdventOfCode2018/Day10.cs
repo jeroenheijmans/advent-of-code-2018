@@ -389,15 +389,15 @@ position=<-52224,  52496> velocity=< 5, -5>
 position=< 10583,  10592> velocity=<-1, -1>
 ";
 
-        [Fact] public void Solution_1_test_example() => Assert.Equal("HI", "HI");
-        [Fact] public void Solution_1_test_real_input() => Assert.Equal("BLGNHPJC", "BLGNHPJC");
+        [Fact] public void Solution_1_test_example() => Assert.Equal("HI", "HI"); // Gonna need OCR to test-drive this I think...
+        [Fact] public void Solution_1_test_real_input() => Assert.Equal("BLGNHPJC", "BLGNHPJC"); // Gonna need OCR to test-drive this I think...
 
-        [Fact] public void Solution_2_test_example() => Assert.Equal(3, 3);
-        [Fact] public void Solution_2_test_real_input() => Assert.Equal(10476, 10476); // NOT: 20951, also not 20952 it's too high, also not 20950 still too high // yes: 10476 divided by two, silly mistake
+        [Fact] public void Solution_2_test_example() => Assert.Equal(3, Solve2(testInput));
+        [Fact] public void Solution_2_test_real_input() => Assert.Equal(10476, Solve2(puzzleInput));
 
-        public static int Solve1(string input)
+        public static int Solve2(string input)
         {
-            var old = input
+            var prev = input
                 .Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.None)
                 .Where(x => !string.IsNullOrWhiteSpace(x))
                 .Select(x => x
@@ -407,52 +407,58 @@ position=< 10583,  10592> velocity=<-1, -1>
                     .ToArray()
                 )
                 .Select(arr => new KeyValuePair<Point, Point>(new Point(arr[0], arr[1]), new Point(arr[2], arr[3])))
-                .ToList();
+                .ToArray();
 
-            var next = old;
+            var next = prev;
+            long prevEntropy = long.MaxValue;
 
-            for (int i = 0; i < 20960; i++)
+            for (int i = 0; i < 100_000; i++)
             {
-                var grid = next.Select(x => x.Key).ToList();
-                int minX = grid.Select(p => p.X).Min();
-                int minY = grid.Select(p => p.Y).Min();
-                int maxX = grid.Select(p => p.X).Max();
-                int maxY = grid.Select(p => p.Y).Max();
+                next = prev.Select(kvp => new KeyValuePair<Point, Point>(new Point(kvp.Key.X + kvp.Value.X, kvp.Key.Y + kvp.Value.Y), kvp.Value)).ToArray();
 
-                if (i > 20949 && (maxX - minX) < 200)
+                var nextGrid = next.Select(x => x.Key).ToArray(); // For performance
+                long nextEntropy = 0;
+
+                for (int a = 0; a < nextGrid.Length; a++)
                 {
-                    var sb = new StringBuilder();
-                    for (int y = minY - 4; y < maxY + 4; y++)
+                    for (int b = 0; b < nextGrid.Length; b++)
                     {
-                        for (int x = minX - 4; x < maxX + 4; x++)
-                        {
-                            sb.Append(grid.Contains(new Point(x, y)) ? '#' : '.');
-                        }
-                        sb.Append(Environment.NewLine);
+                        // Inlining Manhattan Distance function for (some) performance
+                        nextEntropy += Math.Abs(nextGrid[a].X - nextGrid[b].X) + Math.Abs(nextGrid[a].Y - nextGrid[b].Y);
                     }
-
-                    var result = sb.ToString();
-                    //Console.WriteLine();
-                    //Console.WriteLine();
-                    //Console.WriteLine(i);
-                    //Console.WriteLine();
-                    //Console.WriteLine(result);
-                    //Console.WriteLine();
-                    //Console.WriteLine("Read a key");
-                    //Console.ReadKey();
                 }
 
-                var temp = next;
-                next = new List<KeyValuePair<Point, Point>>();
-
-                foreach (var kvp in old)
+                if (nextEntropy > prevEntropy)
                 {
-                    next.Add(new KeyValuePair<Point, Point>(new Point(kvp.Key.X + kvp.Value.X, kvp.Key.Y + kvp.Value.Y), kvp.Value));
+                    string asciiArt = GetAsciiArt(prev);
+                    Console.WriteLine(asciiArt);
+                    return i;
                 }
-                old = temp;
+
+                prevEntropy = nextEntropy;
+                prev = next;
             }
 
             return -1;
+        }
+
+        private static string GetAsciiArt(IEnumerable<KeyValuePair<Point, Point>> data)
+        {
+            var prevGrid = data.Select(x => x.Key).ToArray();
+            var (minX, maxX, minY, maxY) = prevGrid.GetDimensions();
+
+            var sb = new StringBuilder();
+            for (int y = minY - 1; y <= maxY + 1; y++)
+            {
+                for (int x = minX - 1; x <= maxX + 1; x++)
+                {
+                    sb.Append(prevGrid.Contains(new Point(x, y)) ? '█' : '·');
+                }
+
+                sb.Append(Environment.NewLine);
+            }
+
+            return sb.ToString();
         }
     }
 }

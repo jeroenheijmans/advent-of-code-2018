@@ -16,7 +16,7 @@ namespace AdventOfCode2018
                 .Groups
                 .Skip(1) // Match on the whole input
                 .Select(g => g.Value)
-                .ToArray();
+                .ToArray(); 
         }
 
         // https://stackoverflow.com/a/16193323/419956 by @AdamHouldsWorth

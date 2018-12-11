@@ -25,8 +25,8 @@ namespace AdventOfCode2018
         public string Solve1(long serialNr)
         {
             var levels = GetEnergyLevelsGrid(serialNr);
-            KeyValuePair<Point, long> largest = GetLargestSquareWithValue(size: 3, energyLevels: levels);
-            return $"{largest.Key.X},{largest.Key.Y}";
+            var (targetPoint, _) = GetLargestSquareWithValue(levels, size: 3);
+            return $"{targetPoint.X},{targetPoint.Y}";
         }
 
         public string Solve2(long serialNr)
@@ -37,22 +37,22 @@ namespace AdventOfCode2018
             long largestSum = long.MinValue;
             var origin = new Point(0, 0);
 
-            for (int size = 3; size < 30; size++)
+            for (int size = 3; size < 30; size++) // Guessing size no larger than this... :'(
             {
-                KeyValuePair<Point, long> target = GetLargestSquareWithValue(size, energyLevels);
+                var (targetPoint, targetValue) = GetLargestSquareWithValue(energyLevels, size);
 
-                if (target.Value > largestSum)
+                if (targetValue > largestSum)
                 {
-                    largestSum = target.Value;
+                    largestSum = targetValue;
                     largestSize = size;
-                    origin = target.Key;
+                    origin = targetPoint;
                 }
             }
             
             return $"{origin.X},{origin.Y},{largestSize}";
         }
 
-        private static KeyValuePair<Point, long> GetLargestSquareWithValue(int size, long[,] energyLevels)
+        private static (Point, long) GetLargestSquareWithValue(long[,] energyLevels, int size)
         {
             long largest = long.MinValue;
             Point origin = new Point(0, 0);
@@ -77,6 +77,7 @@ namespace AdventOfCode2018
                         largest = newSum;
                     }
 
+                    // TODO: Apply same trick for moving down a notch
                     while (x++ < gridSize - size)
                     {
                         for (int j = 0; j < size; j++)
@@ -94,7 +95,7 @@ namespace AdventOfCode2018
                 }
             }
 
-            return new KeyValuePair<Point, long>(origin, largest);
+            return (origin, largest);
         }
 
         private static long[,] GetEnergyLevelsGrid(long serialNr)
@@ -105,19 +106,19 @@ namespace AdventOfCode2018
             {
                 for (int x = 0; x < gridSize; x++)
                 {
-                    rows[x, y] = GetLevelFor(serialNr, y + 1, x + 1); ; // +1 as answers should be 1-based
+                    rows[x, y] = GetLevelFor(serialNr, x + 1, y + 1); // +1 as answers should be 1-based
                 }
             }
 
             return rows;
         }
 
-        [Fact] public void GetLevelFor_given_example1_should_return_result() => Assert.Equal(4, GetLevelFor(8, y: 5, x: 3));
-        [Fact] public void GetLevelFor_given_example2_should_return_result() => Assert.Equal(-5, GetLevelFor(57, y: 79, x: 122));
-        [Fact] public void GetLevelFor_given_example3_should_return_result() => Assert.Equal(0, GetLevelFor(39, y: 196, x: 217));
-        [Fact] public void GetLevelFor_given_example4_should_return_result() => Assert.Equal(4, GetLevelFor(71, y: 153, x: 101));
+        [Fact] public void GetLevelFor_given_example1_should_return_result() => Assert.Equal(4, GetLevelFor(8, x: 3, y: 5));
+        [Fact] public void GetLevelFor_given_example2_should_return_result() => Assert.Equal(-5, GetLevelFor(57, x: 122, y: 79));
+        [Fact] public void GetLevelFor_given_example3_should_return_result() => Assert.Equal(0, GetLevelFor(39, x: 217, y: 196));
+        [Fact] public void GetLevelFor_given_example4_should_return_result() => Assert.Equal(4, GetLevelFor(71, x: 101, y: 153));
 
-        private static long GetLevelFor(long serialNr, int y, int x)
+        private static long GetLevelFor(long serialNr, int x, int y)
         {
             long rackId = x + 10;
             long multiple = (rackId * y + serialNr) * rackId;

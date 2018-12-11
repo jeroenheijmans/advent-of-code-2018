@@ -42,7 +42,7 @@ namespace AdventOfCode2018
             long largestSum = long.MinValue;
             Point origin = new Point(0, 0);
 
-            for (int size = 299; size > 150; size--)
+            for (int size = 3; size < 40; size++)
             {
                 KeyValuePair<Point, long> target = GetLargestSquareWithValue(size, energyLevels);
 
@@ -55,7 +55,7 @@ namespace AdventOfCode2018
             }
 
             // Not 1,1,299
-            return $"{origin},{largestSize}";
+            return $"{origin.X},{origin.Y},{largestSize}";
         }
 
         private static KeyValuePair<Point, long> GetLargestSquareWithValue(int size, Dictionary<Point, long> energyLevels)
@@ -81,6 +81,21 @@ namespace AdventOfCode2018
                     {
                         origin = new Point(x, y);
                         largest = newSum;
+                    }
+
+                    while (x++ <= gridSize - size)
+                    {
+                        for (int j = 0; j < size; j++)
+                        {
+                            newSum -= energyLevels[new Point(x - 1, y + j)]; // Take off old left side
+                            newSum += energyLevels[new Point(x + size - 1, y + j)]; // Add new row on the right
+                        }
+
+                        if (newSum > largest)
+                        {
+                            origin = new Point(x, y);
+                            largest = newSum;
+                        }
                     }
                 }
             }

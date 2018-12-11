@@ -77,7 +77,7 @@ namespace AdventOfCode2018
                 return 0;
             }
 
-            if (counter > 100)
+            if (counter > 40)
             {
                 return int.MaxValue; // Escape hatch for now, maxrecursion (sort of)
             }
@@ -87,9 +87,41 @@ namespace AdventOfCode2018
             foreach (var target in grid[currentX, currentY].ConntectedNodes)
             {
                 var clone = Clone(grid);
-                // shift!! and as part of the shift: reconnect nodes properly
-                // possibly shift Santa here as well?
-                var dist = GetShortestTwilightDistanceTo(target.X, target.Y, counter + 1, clone);
+                var targetX = target.X;
+                var targetY = target.Y;
+
+                if (counter % 2 == 0)
+                {
+                    // Shift a row
+                    var yToShift = counter % clone.GetLength(1);
+                    var firstNode = clone[0, yToShift];
+                    for (int x = 1; x < clone.GetLength(0); x++)
+                    {
+                        clone[x, yToShift] = clone[x - 1, yToShift];
+                    }
+                    clone[clone.GetLength(0) - 1, yToShift] = firstNode;
+
+                    // shift santa
+                    if (targetY == yToShift) targetX = (targetX + 1) % clone.GetLength(0);
+                }
+                else
+                {
+                    // Shift a column
+                    var xToShift = counter % grid.GetLength(0);
+                    var firstNode = clone[xToShift, 0];
+                    for (int y = 1; y < clone.GetLength(1); y++)
+                    {
+                        clone[xToShift, y] = clone[xToShift, y - 1];
+                    }
+                    clone[xToShift, clone.GetLength(1) - 1] = firstNode;
+
+                    // shift santa
+                    if (targetX == xToShift) targetY = (targetY + 1) % clone.GetLength(1);
+                }
+
+                ReconnectNodes(clone, targetX, targetY);
+
+                var dist = GetShortestTwilightDistanceTo(targetX, targetY, counter + 1, clone);
                 shortestPath = Math.Min(shortestPath, dist);
             }
 
@@ -118,6 +150,29 @@ namespace AdventOfCode2018
             return shortestPath;
         }
 
+        private static void ReconnectNodes(Node[,] grid, int x, int y)
+        {
+            if (x > 0 && grid[x, y].IsOpenLeft && grid[x - 1, y].IsOpenRight)
+            {
+                grid[x, y].ConnectTo(grid[x - 1, y]);
+            }
+
+            if (x < grid.GetLength(0) - 2 && grid[x, y].IsOpenRight && grid[x + 1, y].IsOpenLeft)
+            {
+                grid[x, y].ConnectTo(grid[x + 1, y]);
+            }
+
+            if (y > 0 && grid[x, y].IsOpenTop && grid[x, y - 1].IsOpenBottom)
+            {
+                grid[x, y].ConnectTo(grid[x, y - 1]);
+            }
+
+            if (y < grid.GetLength(1) - 2 && grid[x, y].IsOpenBottom && grid[x, y + 1].IsOpenTop)
+            {
+                grid[x, y].ConnectTo(grid[x, y + 1]);
+            }
+        }
+
         private static Node[,] Clone(Node[,] grid)
         {
             var nodes = new Node[grid.GetLength(0), grid.GetLength(1)];
@@ -127,20 +182,6 @@ namespace AdventOfCode2018
                 for (int x = 0; x < grid.GetLength(0); x++)
                 {
                     nodes[x, y] = new Node { X = x, Y = y, Char = grid[x, y].Char };
-
-                    if (x > 0
-                        && nodes[x, y].IsOpenLeft
-                        && nodes[x - 1, y].IsOpenRight)
-                    {
-                        nodes[x, y].ConnectTo(nodes[x - 1, y]);
-                    }
-
-                    if (y > 0
-                        && nodes[x, y].IsOpenTop
-                        && nodes[x, y - 1].IsOpenBottom)
-                    {
-                        nodes[x, y].ConnectTo(nodes[x, y - 1]);
-                    }
                 }
             }
 

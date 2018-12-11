@@ -24,20 +24,20 @@ namespace AdventOfCode2018
 
         public string Solve1(long serialNr)
         {
-            Dictionary<Point, long> levels = GetEnergyLevelsGrid(serialNr);
+            var levels = GetEnergyLevelsGrid(serialNr);
             KeyValuePair<Point, long> largest = GetLargestSquareWithValue(size: 3, energyLevels: levels);
             return $"{largest.Key.X},{largest.Key.Y}";
         }
 
         public string Solve2(long serialNr)
         {
-            Dictionary<Point, long> energyLevels = GetEnergyLevelsGrid(serialNr);
+            var energyLevels = GetEnergyLevelsGrid(serialNr);
 
             int largestSize = 3;
             long largestSum = long.MinValue;
             var origin = new Point(0, 0);
 
-            for (int size = 3; size < 18; size++)
+            for (int size = 3; size < 30; size++)
             {
                 KeyValuePair<Point, long> target = GetLargestSquareWithValue(size, energyLevels);
 
@@ -52,14 +52,14 @@ namespace AdventOfCode2018
             return $"{origin.X},{origin.Y},{largestSize}";
         }
 
-        private static KeyValuePair<Point, long> GetLargestSquareWithValue(int size, Dictionary<Point, long> energyLevels)
+        private static KeyValuePair<Point, long> GetLargestSquareWithValue(int size, long[,] energyLevels)
         {
             long largest = long.MinValue;
             Point origin = new Point(0, 0);
 
-            for (int y = 1; y <= gridSize - size; y++)
+            for (int y = 0; y < gridSize - size; y++)
             {
-                for (int x = 1; x <= gridSize - size; x++)
+                for (int x = 0; x < gridSize - size; x++)
                 {
                     long newSum = 0;
 
@@ -67,27 +67,27 @@ namespace AdventOfCode2018
                     {
                         for (int j = 0; j < size; j++)
                         {
-                            newSum += energyLevels[new Point(x + i, y + j)];
+                            newSum += energyLevels[x + i, y + j];
                         }
                     }
 
                     if (newSum > largest)
                     {
-                        origin = new Point(x, y);
+                        origin = new Point(x + 1, y + 1); // +1 as answers should be 1-based
                         largest = newSum;
                     }
 
-                    while (x++ <= gridSize - size)
+                    while (x++ < gridSize - size)
                     {
                         for (int j = 0; j < size; j++)
                         {
-                            newSum -= energyLevels[new Point(x - 1, y + j)]; // Take off old left side
-                            newSum += energyLevels[new Point(x + size - 1, y + j)]; // Add new row on the right
+                            newSum -= energyLevels[x - 1, y + j]; // Take off old left side
+                            newSum += energyLevels[x + size - 1, y + j]; // Add new row on the right
                         }
 
                         if (newSum > largest)
                         {
-                            origin = new Point(x, y);
+                            origin = new Point(x + 1, y + 1); // +1 as answers should be 1-based
                             largest = newSum;
                         }
                     }
@@ -97,21 +97,19 @@ namespace AdventOfCode2018
             return new KeyValuePair<Point, long>(origin, largest);
         }
 
-        private static Dictionary<Point, long> GetEnergyLevelsGrid(long serialNr)
+        private static long[,] GetEnergyLevelsGrid(long serialNr)
         {
-            var energyLevels = new Dictionary<Point, long>();
+            var rows = new long[gridSize, gridSize];
 
-            for (int y = 1; y <= gridSize; y++)
+            for (int y = 0; y < gridSize; y++)
             {
-                for (int x = 1; x <= gridSize; x++)
+                for (int x = 0; x < gridSize; x++)
                 {
-                    long level = GetLevelFor(serialNr, y, x);
-
-                    energyLevels.Add(new Point(x, y), level);
+                    rows[x, y] = GetLevelFor(serialNr, y + 1, x + 1); ; // +1 as answers should be 1-based
                 }
             }
 
-            return energyLevels;
+            return rows;
         }
 
         [Fact] public void GetLevelFor_given_example1_should_return_result() => Assert.Equal(4, GetLevelFor(8, y: 5, x: 3));

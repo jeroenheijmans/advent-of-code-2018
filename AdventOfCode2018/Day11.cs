@@ -20,34 +20,72 @@ namespace AdventOfCode2018
         [Fact] public void Solution_1_test_example_2() => Assert.Equal(new Point(21,61), Solve1(42));
         [Fact] public void Solution_1_test_real_input() => Assert.Equal(new Point(20,34), Solve1(puzzleInput));
 
-        [Fact] public void Solution_2_test_example() => Assert.Equal(0, Solve2(0));
-        [Fact] public void Solution_2_test_real_input() => Assert.Equal(0, Solve2(0));
+        //[Fact] public void Solution_2_test_example() => Assert.Equal("", Solve2(0));
+        [Fact] public void Solution_2_test_real_input() => Assert.Equal("", Solve2(puzzleInput));
 
         public Point Solve1(long serialNr)
         {
+            int size = 3;
+
             Dictionary<Point, long> energyLevels = GetEnergyLevelsGrid(serialNr);
 
-            var sums = new Dictionary<Point, long>();
+            KeyValuePair<Point, long> getLargestSquareWithValue = GetLargestSquareWithValue(size, energyLevels);
 
-            for (int y = 1; y <= gridSize - 3; y++)
+            return getLargestSquareWithValue.Key;
+        }
+
+        public string Solve2(long serialNr)
+        {
+            Dictionary<Point, long> energyLevels = GetEnergyLevelsGrid(serialNr);
+
+            int largestSize = 3;
+            long largestSum = long.MinValue;
+            Point origin = new Point(0, 0);
+
+            for (int size = 299; size > 150; size--)
             {
-                for (int x = 1; x <= gridSize - 3; x++)
+                KeyValuePair<Point, long> target = GetLargestSquareWithValue(size, energyLevels);
+
+                if (target.Value > largestSum)
+                {
+                    largestSum = target.Value;
+                    largestSize = size;
+                    origin = target.Key;
+                }
+            }
+
+            // Not 1,1,299
+            return $"{origin},{largestSize}";
+        }
+
+        private static KeyValuePair<Point, long> GetLargestSquareWithValue(int size, Dictionary<Point, long> energyLevels)
+        {
+            long largest = long.MinValue;
+            Point origin = new Point(0, 0);
+
+            for (int y = 1; y <= gridSize - size; y++)
+            {
+                for (int x = 1; x <= gridSize - size; x++)
                 {
                     long newSum = 0;
 
-                    for (int i = 0; i < 3; i++)
+                    for (int i = 0; i < size; i++)
                     {
-                        for (int j = 0; j < 3; j++)
+                        for (int j = 0; j < size; j++)
                         {
                             newSum += energyLevels[new Point(x + i, y + j)];
                         }
                     }
 
-                    sums.Add(new Point(x, y), newSum);
+                    if (newSum > largest)
+                    {
+                        origin = new Point(x, y);
+                        largest = newSum;
+                    }
                 }
             }
 
-            return sums.OrderByDescending(kvp => kvp.Value).First().Key;
+            return new KeyValuePair<Point, long>(origin, largest);
         }
 
         private static Dictionary<Point, long> GetEnergyLevelsGrid(long serialNr)
@@ -75,19 +113,7 @@ namespace AdventOfCode2018
         private static long GetLevelFor(long serialNr, int y, int x)
         {
             long rackId = x + 10;
-            long levelStart = rackId * y;
-            long withSerial = levelStart + serialNr;
-            long multiplied = withSerial * rackId;
-            long hundreth = (multiplied / 100) % 10;
-            long level = hundreth - 5;
-
-            return level;
-        }
-
-        public long Solve2(long serialNr)
-        {
-
-            return -1;
+            return ((((rackId * y + serialNr) * rackId) / 100) % 10) - 5;
         }
     }
 }

@@ -16,14 +16,14 @@ namespace AdventOfCode2018
 
         public const int gridSize = 300;
 
-        [Fact] public void Solution_1_test_example_1() => Assert.Equal(29, Solve1(18));
-        [Fact] public void Solution_1_test_example_2() => Assert.Equal(30, Solve1(42));
-        [Fact] public void Solution_1_test_real_input() => Assert.Equal(0, Solve1(puzzleInput));
+        [Fact] public void Solution_1_test_example_1() => Assert.Equal(new Point(33, 45), Solve1(18));
+        [Fact] public void Solution_1_test_example_2() => Assert.Equal(new Point(21,61), Solve1(42));
+        [Fact] public void Solution_1_test_real_input() => Assert.Equal(new Point(20,34), Solve1(puzzleInput));
 
         [Fact] public void Solution_2_test_example() => Assert.Equal(0, Solve2(0));
         [Fact] public void Solution_2_test_real_input() => Assert.Equal(0, Solve2(0));
 
-        public long Solve1(long serialNr)
+        public Point Solve1(long serialNr)
         {
             Dictionary<Point, long> energyLevels = GetEnergyLevelsGrid(serialNr);
 
@@ -47,8 +47,7 @@ namespace AdventOfCode2018
                 }
             }
 
-            // Not 30
-            return sums.Select(x => x.Value).Max();
+            return sums.OrderByDescending(kvp => kvp.Value).First().Key;
         }
 
         private static Dictionary<Point, long> GetEnergyLevelsGrid(long serialNr)

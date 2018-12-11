@@ -16,22 +16,17 @@ namespace AdventOfCode2018
 
         public const int gridSize = 300;
 
-        [Fact] public void Solution_1_test_example_1() => Assert.Equal(new Point(33, 45), Solve1(18));
-        [Fact] public void Solution_1_test_example_2() => Assert.Equal(new Point(21,61), Solve1(42));
-        [Fact] public void Solution_1_test_real_input() => Assert.Equal(new Point(20,34), Solve1(puzzleInput));
+        [Fact] public void Solution_1_test_example_1() => Assert.Equal("33,45", Solve1(18));
+        [Fact] public void Solution_1_test_example_2() => Assert.Equal("21,61", Solve1(42));
+        [Fact] public void Solution_1_test_real_input() => Assert.Equal("20,34", Solve1(puzzleInput));
+        
+        [Fact] public void Solution_2_test_real_input() => Assert.Equal("90,57,15", Solve2(puzzleInput));
 
-        //[Fact] public void Solution_2_test_example() => Assert.Equal("", Solve2(0));
-        [Fact] public void Solution_2_test_real_input() => Assert.Equal("", Solve2(puzzleInput));
-
-        public Point Solve1(long serialNr)
+        public string Solve1(long serialNr)
         {
-            int size = 3;
-
-            Dictionary<Point, long> energyLevels = GetEnergyLevelsGrid(serialNr);
-
-            KeyValuePair<Point, long> getLargestSquareWithValue = GetLargestSquareWithValue(size, energyLevels);
-
-            return getLargestSquareWithValue.Key;
+            Dictionary<Point, long> levels = GetEnergyLevelsGrid(serialNr);
+            KeyValuePair<Point, long> largest = GetLargestSquareWithValue(size: 3, energyLevels: levels);
+            return $"{largest.Key.X},{largest.Key.Y}";
         }
 
         public string Solve2(long serialNr)
@@ -40,9 +35,9 @@ namespace AdventOfCode2018
 
             int largestSize = 3;
             long largestSum = long.MinValue;
-            Point origin = new Point(0, 0);
+            var origin = new Point(0, 0);
 
-            for (int size = 3; size < 40; size++)
+            for (int size = 3; size < 18; size++)
             {
                 KeyValuePair<Point, long> target = GetLargestSquareWithValue(size, energyLevels);
 
@@ -53,8 +48,7 @@ namespace AdventOfCode2018
                     origin = target.Key;
                 }
             }
-
-            // Not 1,1,299
+            
             return $"{origin.X},{origin.Y},{largestSize}";
         }
 
@@ -128,7 +122,9 @@ namespace AdventOfCode2018
         private static long GetLevelFor(long serialNr, int y, int x)
         {
             long rackId = x + 10;
-            return ((((rackId * y + serialNr) * rackId) / 100) % 10) - 5;
+            long multiple = (rackId * y + serialNr) * rackId;
+            long hundredth = (multiple / 100) % 10;
+            return hundredth - 5;
         }
     }
 }

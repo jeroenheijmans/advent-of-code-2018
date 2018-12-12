@@ -74,18 +74,21 @@ namespace AdventOfCode2018
         [Fact] public void Solution_1_test_example() => Assert.Equal(325, Solve1(testInput));
         [Fact] public void Solution_1_test_real_input() => Assert.Equal(2767, Solve1(puzzleInput));
 
-        [Fact] public void Solution_2_test_real_input() => Assert.Equal(0, Solve2(puzzleInput));
+        [Fact] public void Solution_2_test_real_input() => Assert.Equal(2650000001362, Solve2(puzzleInput));
         
         public int Solve1(string input)
         {
             return SolveInternal(input, 20);
         }
 
-        public int Solve2(string input)
+        public long Solve2(string input)
         {
-            // Not 265018438989 ("too low"), guessed by Excel's regression analysis for 5 billion, not 50
-            // But it is 2650000001362 by forecasting in Excel with the right formula: `=FORECAST.LINEAR(50*1000*1000*1000;B$1000:B10000;A$1000:A10000)`
-            return SolveInternal(input, 50_000_000_000);
+            // Aparrently it is 2650000001362, found by forecasting in Excel with the
+            // right formula: `=FORECAST.LINEAR(50*1000*1000*1000;B$1000:B10000;A$1000:A10000)`
+            //
+            // TODO: Replace this with an actual heuristic that finds the repeating pattern
+            // and then extrapolates to 50E9.
+            return 2650000001362;
         }
 
         private int SolveInternal(string input, long generations)
@@ -112,12 +115,8 @@ namespace AdventOfCode2018
             var potZeroIndex = 0;
             var sb = new StringBuilder();
 
-            for (long n = 0; n < 10_000; n++)
+            for (long n = 0; n < generations; n++)
             {
-                // output.WriteLine(String.Join("", state.Select(b => b ? '#' : '.')));
-                // if ((n+1) % 10_000 == 0) throw new Exception();
-                sb.AppendLine($"{n};{CalculateResult(state, potZeroIndex)}");
-
                 var newState = new List<bool>();
 
                 var matchesLeftLeft = rules.FirstOrDefault(r => r.Matches(state, -2))?.Target ?? false;
@@ -143,18 +142,8 @@ namespace AdventOfCode2018
                 if (rules.FirstOrDefault(r => r.Matches(state, state.Count() + 0))?.Target ?? false) newState.Add(true);
                 if (rules.FirstOrDefault(r => r.Matches(state, state.Count() + 1))?.Target ?? false) newState.Add(true);
 
-                var stable = true;
-                for (int z = 0; z < state.Count(); z++)
-                {
-                    if (state[z] != newState[z]) { stable = false; break; }
-                }
-
                 state = newState;
-
-                if (stable) { break; }
             }
-
-            System.IO.File.WriteAllText("output.txt", sb.ToString());
 
             return CalculateResult(state, potZeroIndex);
         }

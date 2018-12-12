@@ -6,12 +6,20 @@ using System.Numerics;
 using System.Text;
 using System.Text.RegularExpressions;
 using Xunit;
+using Xunit.Abstractions;
 using static AdventOfCode2018.Util;
 
 namespace AdventOfCode2018
 {
     public class Day12
     {
+        private readonly ITestOutputHelper output;
+
+        public Day12(ITestOutputHelper output)
+        {
+            this.output = output;
+        }
+
         public const string testInput = @"initial state: #..#.#..##......###...###
 
 ...## => #
@@ -28,10 +36,43 @@ namespace AdventOfCode2018
 ###.. => #
 ###.# => #
 ####. => #";
-        public const string puzzleInput = "";
+        public const string puzzleInput = @"initial state: ..#..###...#####.#.#...####.#..####..###.##.#.#.##.#....#....#.####...#....###.###..##.#....#######
+
+..### => .
+.##.# => #
+#..#. => .
+#.#.# => #
+###.. => #
+.#..# => .
+##..# => #
+.###. => #
+..#.. => .
+..... => .
+##### => .
+.#... => #
+...#. => #
+#...# => #
+####. => .
+.#### => .
+##.## => #
+...## => .
+..##. => .
+#.##. => .
+#.... => .
+.#.#. => .
+..#.# => #
+#.#.. => #
+##... => #
+##.#. => .
+#..## => .
+.##.. => .
+#.### => .
+....# => .
+.#.## => #
+###.# => #";
 
         [Fact] public void Solution_1_test_example() => Assert.Equal(325, Solve1(testInput));
-        [Fact] public void Solution_1_test_real_input() => Assert.Equal(-1, Solve1(puzzleInput));
+        [Fact] public void Solution_1_test_real_input() => Assert.Equal(2767, Solve1(puzzleInput));
 
         [Fact] public void Solution_2_test_example() => Assert.Equal(0, Solve2(testInput));
         [Fact] public void Solution_2_test_real_input() => Assert.Equal(0, Solve2(puzzleInput));
@@ -61,6 +102,8 @@ namespace AdventOfCode2018
 
             for (int n = 0; n < 20; n++)
             {
+                // output.WriteLine(String.Join("", state.Select(b => b ? '#' : '.')));
+
                 var newState = new List<bool>();
 
                 var matchesLeftLeft = rules.SingleOrDefault(r => r.Matches(state, -2))?.Target ?? false;
@@ -77,11 +120,14 @@ namespace AdventOfCode2018
                     newState.Add(true);
                 }
 
-                for (int i = 0; i < state.Count() + 2; i++)
+                for (int i = 0; i < state.Count(); i++)
                 {
                     var target = rules.SingleOrDefault(r => r.Matches(state, i))?.Target ?? false;
                     newState.Add(target);
                 }
+
+                if (rules.SingleOrDefault(r => r.Matches(state, state.Count() + 0))?.Target ?? false) newState.Add(true);
+                if (rules.SingleOrDefault(r => r.Matches(state, state.Count() + 1))?.Target ?? false) newState.Add(true);
 
                 state = newState;
             }
@@ -89,7 +135,7 @@ namespace AdventOfCode2018
             var result = 0;
             for (int n = 0; n < state.Count(); n++)
             {
-                result += n - potZeroIndex;
+                if (state[n]) result += n - potZeroIndex;
             }
 
             return result;

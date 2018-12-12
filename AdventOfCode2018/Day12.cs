@@ -74,10 +74,21 @@ namespace AdventOfCode2018
         [Fact] public void Solution_1_test_example() => Assert.Equal(325, Solve1(testInput));
         [Fact] public void Solution_1_test_real_input() => Assert.Equal(2767, Solve1(puzzleInput));
 
-        [Fact] public void Solution_2_test_example() => Assert.Equal(0, Solve2(testInput));
         [Fact] public void Solution_2_test_real_input() => Assert.Equal(0, Solve2(puzzleInput));
         
         public int Solve1(string input)
+        {
+            return SolveInternal(input, 20);
+        }
+
+        public int Solve2(string input)
+        {
+            // Not 265018438989 ("too low"), guessed by Excel's regression analysis for 5 billion, not 50
+            // But it is 2650000001362 by forecasting in Excel with the right formula: `=FORECAST.LINEAR(50*1000*1000*1000;B$1000:B10000;A$1000:A10000)`
+            return SolveInternal(input, 50_000_000_000);
+        }
+
+        private int SolveInternal(string input, long generations)
         {
             var data = input.Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.None);
 
@@ -99,15 +110,18 @@ namespace AdventOfCode2018
                 .ToArray();
 
             var potZeroIndex = 0;
+            var sb = new StringBuilder();
 
-            for (int n = 0; n < 20; n++)
+            for (long n = 0; n < 10_000; n++)
             {
                 // output.WriteLine(String.Join("", state.Select(b => b ? '#' : '.')));
+                // if ((n+1) % 10_000 == 0) throw new Exception();
+                sb.AppendLine($"{n};{CalculateResult(state, potZeroIndex)}");
 
                 var newState = new List<bool>();
 
-                var matchesLeftLeft = rules.SingleOrDefault(r => r.Matches(state, -2))?.Target ?? false;
-                var matchesLeft = rules.SingleOrDefault(r => r.Matches(state, -1))?.Target ?? false;
+                var matchesLeftLeft = rules.FirstOrDefault(r => r.Matches(state, -2))?.Target ?? false;
+                var matchesLeft = rules.FirstOrDefault(r => r.Matches(state, -1))?.Target ?? false;
                 if (matchesLeftLeft)
                 {
                     potZeroIndex += 2;
@@ -122,16 +136,31 @@ namespace AdventOfCode2018
 
                 for (int i = 0; i < state.Count(); i++)
                 {
-                    var target = rules.SingleOrDefault(r => r.Matches(state, i))?.Target ?? false;
+                    var target = rules.FirstOrDefault(r => r.Matches(state, i))?.Target ?? false;
                     newState.Add(target);
                 }
 
-                if (rules.SingleOrDefault(r => r.Matches(state, state.Count() + 0))?.Target ?? false) newState.Add(true);
-                if (rules.SingleOrDefault(r => r.Matches(state, state.Count() + 1))?.Target ?? false) newState.Add(true);
+                if (rules.FirstOrDefault(r => r.Matches(state, state.Count() + 0))?.Target ?? false) newState.Add(true);
+                if (rules.FirstOrDefault(r => r.Matches(state, state.Count() + 1))?.Target ?? false) newState.Add(true);
+
+                var stable = true;
+                for (int z = 0; z < state.Count(); z++)
+                {
+                    if (state[z] != newState[z]) { stable = false; break; }
+                }
 
                 state = newState;
+
+                if (stable) { break; }
             }
 
+            System.IO.File.WriteAllText("output.txt", sb.ToString());
+
+            return CalculateResult(state, potZeroIndex);
+        }
+
+        private static int CalculateResult(List<bool> state, int potZeroIndex)
+        {
             var result = 0;
             for (int n = 0; n < state.Count(); n++)
             {
@@ -139,13 +168,6 @@ namespace AdventOfCode2018
             }
 
             return result;
-        }
-
-        public int Solve2(string input)
-        {
-            var data = input.Split(" ");
-
-            return -1;
         }
 
         public class Rule

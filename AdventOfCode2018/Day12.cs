@@ -35,65 +35,20 @@ namespace AdventOfCode2018
 
         [Fact] public void Solution_2_test_example() => Assert.Equal(0, Solve2(testInput));
         [Fact] public void Solution_2_test_real_input() => Assert.Equal(0, Solve2(puzzleInput));
-
-        public class Pot
-        {
-            public int Index { get; set; }
-            public bool HasPlant { get; set; }
-        }
-
-        public class Rule
-        {
-            public bool[] Pattern { get; set; }
-            public bool Target { get; set; }
-
-            public bool Matches(LinkedListNode<Pot> current)
-            {
-                return
-                    (current.Previous?.Previous?.Value?.HasPlant ?? false) == Pattern[0]
-                    && (current.Previous?.Value?.HasPlant ?? false) == Pattern[1]
-                    && current.Value.HasPlant == Pattern[2]
-                    && (current.Next?.Value?.HasPlant ?? false) == Pattern[3]
-                    && (current.Next?.Next?.Value?.HasPlant ?? false) == Pattern[4];
-            }
-        }
-
-        [Fact]
-        public void RuleTest1()
-        {
-            var list = new LinkedList<Pot>(new[] { new Pot { HasPlant = true } });
-            var rule = new Rule { Pattern = new[] { false, false, true, false, false } };
-            Assert.True(rule.Matches(list.First));
-            list.First.Value.HasPlant = false;
-            Assert.False(rule.Matches(list.First));
-        }
-
-        [Fact]
-        public void RuleTest2()
-        {
-            var list = new LinkedList<Pot>(new[] { new Pot { HasPlant = true }, new Pot { HasPlant = true } });
-            var rule = new Rule { Pattern = new[] { false, false, true, true, false } };
-            Assert.True(rule.Matches(list.First));
-            Assert.False(rule.Matches(list.Last));
-        }
-
-        [Fact]
-        public void RuleTest3()
-        {
-            var list = new LinkedList<Pot>(new[] { new Pot { HasPlant = true }, new Pot { HasPlant = true }, new Pot { HasPlant = true } });
-            var rule = new Rule { Pattern = new[] { false, true, true, true, false } };
-            Assert.False(rule.Matches(list.First));
-            Assert.True(rule.Matches(list.First.Next));
-            Assert.False(rule.Matches(list.Last));
-        }
-
+        
         public int Solve1(string input)
         {
             var data = input.Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.None);
 
-            var initialState = data.First().Replace("initial state: ", "").Select(c => c == '#').ToArray();
+            var state = data
+                .First()
+                .Replace("initial state: ", "")
+                .Select(c => c == '#')
+                .ToList();
 
-            var rules = data.Skip(2).Where(r => !string.IsNullOrWhiteSpace(r))
+            var rules = data
+                .Skip(2)
+                .Where(r => !string.IsNullOrWhiteSpace(r))
                 .Select(r => r.Replace(" => ", ""))
                 .Select(r => new Rule
                 {
@@ -102,35 +57,41 @@ namespace AdventOfCode2018
                 })
                 .ToArray();
 
-            var linkedList = new LinkedList<Pot>();
-            for (int i = 0; i < initialState.Length; i++)
-            {
-                linkedList.AddLast(new Pot { Index = i, HasPlant = initialState[i] });
-            }
-            
-            for (int i = 0; i < 20; i++)
-            {
-                var newList = new LinkedList<Pot>(linkedList);
+            var potZeroIndex = 0;
 
-                var current = linkedList.First;
-                while (current.Next != null)
+            for (int n = 0; n < 20; n++)
+            {
+                var newState = new List<bool>();
+
+                var matchesLeftLeft = rules.SingleOrDefault(r => r.Matches(state, -2))?.Target ?? false;
+                var matchesLeft = rules.SingleOrDefault(r => r.Matches(state, -1))?.Target ?? false;
+                if (matchesLeftLeft)
                 {
-                    var newTarget = rules.FirstOrDefault(r => r.Matches(current))?.Target ?? false;
-                    newList.AddLast(new Pot { Index = current.Value.Index, HasPlant = newTarget });
-                    current = current.Next;
+                    potZeroIndex += 2;
+                    newState.Add(true);
+                    newState.Add(matchesLeft);
+                }
+                else if (matchesLeft)
+                {
+                    potZeroIndex += 1;
+                    newState.Add(true);
                 }
 
-                linkedList = newList;
+                for (int i = 0; i < state.Count() + 2; i++)
+                {
+                    var target = rules.SingleOrDefault(r => r.Matches(state, i))?.Target ?? false;
+                    newState.Add(target);
+                }
+
+                state = newState;
             }
 
             var result = 0;
-            var node = linkedList.First;
-            while (node != null)
+            for (int n = 0; n < state.Count(); n++)
             {
-                if (node.Value.HasPlant) result += node.Value.Index;
-                node = node.Next;
+                result += n - potZeroIndex;
             }
-            
+
             return result;
         }
 
@@ -139,6 +100,56 @@ namespace AdventOfCode2018
             var data = input.Split(" ");
 
             return -1;
+        }
+
+        public class Rule
+        {
+            public bool[] Pattern { get; set; }
+            public bool Target { get; set; }
+
+            public bool Matches(IList<bool> state, int i)
+            {
+                var stateLength = state.Count();
+
+                var ll = i-2 < 0 || i-2 >= stateLength ? false : state[i-2];
+                var l = i-1 < 0 || i-1 >= stateLength ? false : state[i-1];
+                var c = i < 0 || i >= stateLength ? false : state[i];
+                var r = i+1 < 0 || i+1 >= stateLength ? false : state[i+1];
+                var rr = i+2 < 0 || i+2 >= stateLength ? false : state[i+2];
+
+                return ll == Pattern[0]
+                    && l == Pattern[1]
+                    && c == Pattern[2]
+                    && r == Pattern[3]
+                    && rr == Pattern[4];
+            }
+        }
+
+        [Fact]
+        public void Rule_test_1()
+        {
+            var rule = new Rule { Pattern = new[] { false, false, true, false, false } };
+            Assert.True(rule.Matches(new[] { true }, 0));
+            Assert.False(rule.Matches(new[] { false }, 0));
+        }
+
+        [Fact]
+        public void Rule_test_2()
+        {
+            var rule = new Rule { Pattern = new[] { true, true, true, true, true, } };
+            Assert.False(rule.Matches(new[] { true, true, true, true, true, true, }, 0));
+            Assert.False(rule.Matches(new[] { true, true, true, true, true, true, }, 1));
+            Assert.True(rule.Matches(new[] { true, true, true, true, true, true, }, 2));
+            Assert.True(rule.Matches(new[] { true, true, true, true, true, true, }, 3));
+            Assert.False(rule.Matches(new[] { true, true, true, true, true, true, }, 4));
+            Assert.False(rule.Matches(new[] { true, true, true, true, true, true, }, 5));
+        }
+
+        [Fact]
+        public void Rule_test_3()
+        {
+            var rule = new Rule { Pattern = new[] { false, false, false, false, true } };
+            Assert.True(rule.Matches(new[] { true }, -2));
         }
     }
 }

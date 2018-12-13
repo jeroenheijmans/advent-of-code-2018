@@ -219,106 +219,26 @@ namespace AdventOfCode2018
    \---/
 "));
 
-
         public class Cart
         {
             public int X { get; set; }
             public int Y { get; set; }
-            public int NextTurn { get; set; }
-            public int Direction { get; set; }
+            public int NextTurn { get; set; } // 0-1-2 = left-straight-right
+            public int Direction { get; set; } // 0-1-2-3 = up-right-down-left
 
             public override string ToString() => $"{GetHashCode()} on ({X},{Y}), direction {Direction}, turning {NextTurn}";
         }
 
-        public string Solve1(string input)
+        public string Solve1(string input) => RunUntilDone(input);
+
+        public string Solve2(string input) => RunUntilDone(input, maxCollisions: int.MaxValue);
+
+        private string RunUntilDone(string input, int maxCollisions = 1)
         {
-            var data = input.SplitByNewline();
-            int width = data.First().Length, height = data.Count();
-            var grid = new char[width, height];
-            var carts = new HashSet<Cart>();
+            var (grid, carts) = ConstructFromInput(input);
+            var collisionCount = 0;
 
-            for (int y = 0; y < height; y++)
-            {
-                for (int x = 0; x < width; x++)
-                {
-                    grid[x, y] = data[y][x];
-
-                    if (grid[x, y] == '^') { carts.Add(new Cart { X = x, Y = y, Direction = 0 }); grid[x, y] = '|'; }
-                    if (grid[x, y] == '>') { carts.Add(new Cart { X = x, Y = y, Direction = 1 }); grid[x, y] = '-'; }
-                    if (grid[x, y] == 'v') { carts.Add(new Cart { X = x, Y = y, Direction = 2 }); grid[x, y] = '-'; }
-                    if (grid[x, y] == '<') { carts.Add(new Cart { X = x, Y = y, Direction = 3 }); grid[x, y] = '|'; }
-                    // Lucky (?) my input has no carts starting on intersections?
-                }
-            }
-
-            var counter = 0;
-
-            while (counter++ < 10_000)
-            {
-                foreach (var cart in carts.OrderBy(c => c.Y).ThenBy(c => c.X))
-                {
-                    if (cart.Direction == 0) cart.Y--;
-                    if (cart.Direction == 1) cart.X++;
-                    if (cart.Direction == 2) cart.Y++;
-                    if (cart.Direction == 3) cart.X--;
-
-                    // Collision?
-                    if (carts.Any(c => c.X == cart.X && c.Y == cart.Y && c != cart))
-                    {
-                        OutputGrid(grid, carts);
-                        return $"{cart.X},{cart.Y}";
-                    }
-
-                    if (grid[cart.X, cart.Y] == '+')
-                    {
-                        if (cart.NextTurn == 0) cart.Direction--;
-                        if (cart.NextTurn == 1) ;
-                        if (cart.NextTurn == 2) cart.Direction++;
-
-                        cart.NextTurn = (cart.NextTurn + 1) % 3;
-                        if (cart.Direction == -1) cart.Direction = 3;
-                        if (cart.Direction == 4) cart.Direction = 0;
-                    }
-
-                         if (grid[cart.X, cart.Y] == '/' && cart.Direction == 0) cart.Direction = 1;
-                    else if (grid[cart.X, cart.Y] == '/' && cart.Direction == 1) cart.Direction = 0;
-                    else if (grid[cart.X, cart.Y] == '/' && cart.Direction == 2) cart.Direction = 3;
-                    else if (grid[cart.X, cart.Y] == '/' && cart.Direction == 3) cart.Direction = 2;
-
-                    else if (grid[cart.X, cart.Y] == '\\' && cart.Direction == 0) cart.Direction = 3;
-                    else if (grid[cart.X, cart.Y] == '\\' && cart.Direction == 1) cart.Direction = 2;
-                    else if (grid[cart.X, cart.Y] == '\\' && cart.Direction == 2) cart.Direction = 1;
-                    else if (grid[cart.X, cart.Y] == '\\' && cart.Direction == 3) cart.Direction = 0;
-                }
-            }
-
-            return "notfound";
-        }
-
-        public string Solve2(string input)
-        {
-            var data = input.SplitByNewline();
-            int width = data.First().Length, height = data.Count();
-            var grid = new char[width, height];
-            var carts = new HashSet<Cart>();
-
-            for (int y = 0; y < height; y++)
-            {
-                for (int x = 0; x < width; x++)
-                {
-                    grid[x, y] = data[y][x];
-
-                    if (grid[x, y] == '^') { carts.Add(new Cart { X = x, Y = y, Direction = 0 }); grid[x, y] = '|'; }
-                    if (grid[x, y] == '>') { carts.Add(new Cart { X = x, Y = y, Direction = 1 }); grid[x, y] = '-'; }
-                    if (grid[x, y] == 'v') { carts.Add(new Cart { X = x, Y = y, Direction = 2 }); grid[x, y] = '-'; }
-                    if (grid[x, y] == '<') { carts.Add(new Cart { X = x, Y = y, Direction = 3 }); grid[x, y] = '|'; }
-                    // Lucky (?) my input has no carts starting on intersections?
-                }
-            }
-
-            var counter = 0;
-
-            while (counter++ < 100_000 && carts.Count() != 1)
+            while (carts.Count() > 1)
             {
                 foreach (var cart in carts.OrderBy(c => c.Y).ThenBy(c => c.X).ToList())
                 {
@@ -332,42 +252,63 @@ namespace AdventOfCode2018
                     var colliders = carts.Where(c => c != cart && c.X == cart.X && c.Y == cart.Y).ToHashSet();
                     if (colliders.Any())
                     {
+                        if (++collisionCount >= maxCollisions) return $"{cart.X},{cart.Y}";
                         carts.RemoveWhere(c => colliders.Contains(c));
                         carts.Remove(cart);
-                        continue;
                     }
-
-                    if (grid[cart.X, cart.Y] == '+')
+                    else
                     {
-                        if (cart.NextTurn == 0) cart.Direction--;
-                        if (cart.NextTurn == 1) ;
-                        if (cart.NextTurn == 2) cart.Direction++;
+                        if (grid[cart.X, cart.Y] == '+')
+                        {
+                            if (cart.NextTurn == 0) cart.Direction--;
+                            if (cart.NextTurn == 1) ; // straight ahead!
+                            if (cart.NextTurn == 2) cart.Direction++;
 
-                        cart.NextTurn = (cart.NextTurn + 1) % 3;
-                        if (cart.Direction == -1) cart.Direction = 3;
-                        if (cart.Direction == 4) cart.Direction = 0;
+                            cart.NextTurn = (cart.NextTurn + 1) % 3;
+                            cart.Direction = (cart.Direction + 4) % 4;
+                        }
+
+                             if (grid[cart.X, cart.Y] == '/' && cart.Direction == 0) cart.Direction = 1;
+                        else if (grid[cart.X, cart.Y] == '/' && cart.Direction == 1) cart.Direction = 0;
+                        else if (grid[cart.X, cart.Y] == '/' && cart.Direction == 2) cart.Direction = 3;
+                        else if (grid[cart.X, cart.Y] == '/' && cart.Direction == 3) cart.Direction = 2;
+
+                        else if (grid[cart.X, cart.Y] == '\\' && cart.Direction == 0) cart.Direction = 3;
+                        else if (grid[cart.X, cart.Y] == '\\' && cart.Direction == 1) cart.Direction = 2;
+                        else if (grid[cart.X, cart.Y] == '\\' && cart.Direction == 2) cart.Direction = 1;
+                        else if (grid[cart.X, cart.Y] == '\\' && cart.Direction == 3) cart.Direction = 0;
                     }
-
-                    if (grid[cart.X, cart.Y] == '/' && cart.Direction == 0) cart.Direction = 1;
-                    else if (grid[cart.X, cart.Y] == '/' && cart.Direction == 1) cart.Direction = 0;
-                    else if (grid[cart.X, cart.Y] == '/' && cart.Direction == 2) cart.Direction = 3;
-                    else if (grid[cart.X, cart.Y] == '/' && cart.Direction == 3) cart.Direction = 2;
-
-                    else if (grid[cart.X, cart.Y] == '\\' && cart.Direction == 0) cart.Direction = 3;
-                    else if (grid[cart.X, cart.Y] == '\\' && cart.Direction == 1) cart.Direction = 2;
-                    else if (grid[cart.X, cart.Y] == '\\' && cart.Direction == 2) cart.Direction = 1;
-                    else if (grid[cart.X, cart.Y] == '\\' && cart.Direction == 3) cart.Direction = 0;
                 }
             }
 
             OutputGrid(grid, carts);
 
-            // NOT 106,119
-            // NOT 106,120
-            // NOT 69,42
-            // NOT 69,43
-            var last = carts.Single();
-            return $"{last.X},{last.Y}";
+            return $"{carts.Single().X},{carts.Single().Y}";
+        }
+
+        private (char[,] Grid, HashSet<Cart> carts) ConstructFromInput(string input)
+        {
+            var data = input.SplitByNewline();
+            int width = data.First().Length;
+            int height = data.Count();
+            var grid = new char[width, height];
+            var carts = new HashSet<Cart>();
+
+            for (int y = 0; y < height; y++)
+            {
+                for (int x = 0; x < width; x++)
+                {
+                    grid[x, y] = data[y][x];
+
+                    if (grid[x, y] == '^') { carts.Add(new Cart { X = x, Y = y, Direction = 0 }); grid[x, y] = '|'; }
+                    if (grid[x, y] == '>') { carts.Add(new Cart { X = x, Y = y, Direction = 1 }); grid[x, y] = '-'; }
+                    if (grid[x, y] == 'v') { carts.Add(new Cart { X = x, Y = y, Direction = 2 }); grid[x, y] = '-'; }
+                    if (grid[x, y] == '<') { carts.Add(new Cart { X = x, Y = y, Direction = 3 }); grid[x, y] = '|'; }
+                    // Lucky (?) my input has no carts starting on intersections?
+                }
+            }
+
+            return (grid, carts);
         }
 
         private void OutputGrid(char[,] grid, ISet<Cart> carts)

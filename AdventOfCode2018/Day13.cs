@@ -197,25 +197,26 @@ namespace AdventOfCode2018
 
         [Fact] public void Solution_2_test_example() => Assert.Equal("6,4", Solve2(testInput2));
         [Fact] public void Solution_2_test_real_input() => Assert.Equal("-1,-1", Solve2(puzzleInput));
-
-        [Fact] public void Solution_2_test_example_threeway_collision() => Assert.Equal("6,4", Solve2(@"
-/>-<\  
+        
+        [Fact] public void Solution_2_test_example_fourway_collision() => Assert.Equal("6,4", Solve2(@"
+/---\  
 |   |  
 | /<+-\
-| v | v
+| v | |
 \>+</ |
-  |   ^
+  ^   |
   \<->/
 "));
 
-        [Fact] public void Solution_2_test_example_fourway_collision() => Assert.Equal("6,4", Solve2(@"
-/>-<\  
-|   |  
-| /<+-\
-| v | v
-\>+</ |
-  ^   ^
-  \<->/
+        [Fact] public void Solution_2_test_example_near_miss() => Assert.Equal("3,4", Solve2(@"
+/----\  
+|  /<+-\
+|  | | |
+|  | | |
+\->+-/ |
+   |   |
+   ^   |
+   \---/
 "));
 
 
@@ -225,6 +226,8 @@ namespace AdventOfCode2018
             public int Y { get; set; }
             public int NextTurn { get; set; }
             public int Direction { get; set; }
+
+            public override string ToString() => $"{GetHashCode()} on ({X},{Y}), direction {Direction}, turning {NextTurn}";
         }
 
         public string Solve1(string input)
@@ -318,10 +321,21 @@ namespace AdventOfCode2018
             {
                 foreach (var cart in carts.OrderBy(c => c.Y).ThenBy(c => c.X).ToList())
                 {
+                    if (!carts.Contains(cart)) continue; // Other cart collided with this one
+
                     if (cart.Direction == 0) cart.Y--;
                     if (cart.Direction == 1) cart.X++;
                     if (cart.Direction == 2) cart.Y++;
                     if (cart.Direction == 3) cart.X--;
+
+                    var collider = carts.SingleOrDefault(c => c != cart && c.X == cart.X && c.Y == cart.Y);
+                    if (collider != null)
+                    {
+                        output.WriteLine($"Crash at {cart.X},{cart.Y} for cart {cart.GetHashCode()} vs cart {collider.GetHashCode()}");
+                        carts.Remove(collider);
+                        carts.Remove(cart);
+                        continue;
+                    }
 
                     if (grid[cart.X, cart.Y] == '+')
                     {
@@ -343,9 +357,6 @@ namespace AdventOfCode2018
                     else if (grid[cart.X, cart.Y] == '\\' && cart.Direction == 2) cart.Direction = 1;
                     else if (grid[cart.X, cart.Y] == '\\' && cart.Direction == 3) cart.Direction = 0;
                 }
-
-                var colliders = carts.Where(c1 => carts.Any(c2 => c2 != c1 && c2.X == c1.X && c2.Y == c1.Y)).ToHashSet();
-                carts.RemoveWhere(c => colliders.Contains(c));
             }
 
             OutputGrid(grid, carts);

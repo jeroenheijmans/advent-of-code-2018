@@ -196,7 +196,7 @@ namespace AdventOfCode2018
         [Fact] public void Solution_1_test_real_input() => Assert.Equal("119,41", Solve1(puzzleInput));
 
         [Fact] public void Solution_2_test_example() => Assert.Equal("6,4", Solve2(testInput2));
-        [Fact] public void Solution_2_test_real_input() => Assert.Equal("-1,-1", Solve2(puzzleInput));
+        [Fact] public void Solution_2_test_real_input() => Assert.Equal("45,136", Solve2(puzzleInput));
         
         [Fact] public void Solution_2_test_example_fourway_collision() => Assert.Equal("6,4", Solve2(@"
 /---\  
@@ -208,7 +208,7 @@ namespace AdventOfCode2018
   \<->/
 "));
 
-        [Fact] public void Solution_2_test_example_near_miss() => Assert.Equal("3,4", Solve2(@"
+        [Fact] public void Solution_2_test_example_near_miss() => Assert.Equal("2,4", Solve2(@"
 /----\  
 |  /<+-\
 |  | | |
@@ -276,7 +276,8 @@ namespace AdventOfCode2018
                         if (cart.NextTurn == 2) cart.Direction++;
 
                         cart.NextTurn = (cart.NextTurn + 1) % 3;
-                        cart.Direction = cart.Direction % 4;
+                        if (cart.Direction == -1) cart.Direction = 3;
+                        if (cart.Direction == 4) cart.Direction = 0;
                     }
 
                          if (grid[cart.X, cart.Y] == '/' && cart.Direction == 0) cart.Direction = 1;
@@ -317,7 +318,7 @@ namespace AdventOfCode2018
 
             var counter = 0;
 
-            while (counter++ < 10_000 && carts.Count() != 1)
+            while (counter++ < 100_000 && carts.Count() != 1)
             {
                 foreach (var cart in carts.OrderBy(c => c.Y).ThenBy(c => c.X).ToList())
                 {
@@ -328,11 +329,10 @@ namespace AdventOfCode2018
                     if (cart.Direction == 2) cart.Y++;
                     if (cart.Direction == 3) cart.X--;
 
-                    var collider = carts.SingleOrDefault(c => c != cart && c.X == cart.X && c.Y == cart.Y);
-                    if (collider != null)
+                    var colliders = carts.Where(c => c != cart && c.X == cart.X && c.Y == cart.Y).ToHashSet();
+                    if (colliders.Any())
                     {
-                        output.WriteLine($"Crash at {cart.X},{cart.Y} for cart {cart.GetHashCode()} vs cart {collider.GetHashCode()}");
-                        carts.Remove(collider);
+                        carts.RemoveWhere(c => colliders.Contains(c));
                         carts.Remove(cart);
                         continue;
                     }
@@ -344,7 +344,8 @@ namespace AdventOfCode2018
                         if (cart.NextTurn == 2) cart.Direction++;
 
                         cart.NextTurn = (cart.NextTurn + 1) % 3;
-                        cart.Direction = cart.Direction % 4;
+                        if (cart.Direction == -1) cart.Direction = 3;
+                        if (cart.Direction == 4) cart.Direction = 0;
                     }
 
                     if (grid[cart.X, cart.Y] == '/' && cart.Direction == 0) cart.Direction = 1;

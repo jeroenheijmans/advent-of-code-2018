@@ -21,7 +21,7 @@ namespace AdventOfCode2018
 
         public static string[] SplitByNewline(this string input)
         {
-            return input.Split(new[] { "\r", "\n", "\r\n" }, StringSplitOptions.None);
+            return input.Split(new[] { "\r", "\n", "\r\n" }, StringSplitOptions.None).Where(s => !string.IsNullOrWhiteSpace(s)).ToArray();
         }
 
         // https://stackoverflow.com/a/16193323/419956 by @AdamHouldsWorth

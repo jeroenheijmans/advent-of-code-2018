@@ -19,6 +19,11 @@ namespace AdventOfCode2018
                 .ToArray(); 
         }
 
+        public static string JoinAsStrings<T>(this IEnumerable<T> items)
+        {
+            return string.Join("", items);
+        }
+
         public static string[] SplitByNewline(this string input)
         {
             return input.Split(new[] { "\r", "\n", "\r\n" }, StringSplitOptions.None).Where(s => !string.IsNullOrWhiteSpace(s)).ToArray();

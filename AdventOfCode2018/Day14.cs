@@ -32,7 +32,9 @@ namespace AdventOfCode2018
         [Fact] public void Solution_2_test_example_2() => Assert.Equal(5, Solve2("01245"));
         [Fact] public void Solution_2_test_example_3() => Assert.Equal(18, Solve2("92510"));
         [Fact] public void Solution_2_test_example_4() => Assert.Equal(2018, Solve2("59414"));
-        [Fact] public void Solution_2_test_real_input() => Assert.Equal(0, Solve2(puzzleInput.ToString()));
+        [Fact] public void Solution_2_my_example_1() => Assert.Equal(6, Solve2("124"));
+        [Fact] public void Solution_2_my_example_2() => Assert.Equal(13, Solve2("916779"));
+        [Fact] public void Solution_2_test_real_input() => Assert.Equal(20286858, Solve2(puzzleInput.ToString()));
 
         public string Solve1(long input)
         {
@@ -66,17 +68,22 @@ namespace AdventOfCode2018
 
             for (long i = 0; i < 1_000_000_000; i++)
             {
-                //var line = board.Select((r, idx) => idx == elf1 ? $"({r})" : (idx == elf2 ? $"[{r}]" : $" {r} ")).JoinAsStrings();
-                //output.WriteLine(line);
-
                 var fresh = board[elf1] + board[elf2];
 
                 if (fresh > 9) board.Add(1);
+
+                var boardLength2 = board.Count();
+                var offset2 = boardLength2 - len;
+                for (int n = len - 1; n >= 0; n--)
+                {
+                    if (board[n + offset2] != digits[n]) break;
+                    if (n == 0) return offset2;
+                }
+
                 board.Add(fresh % 10);
 
                 var boardLength = board.Count();
                 var offset = boardLength - len;
-
                 for (int n = len - 1; n >= 0; n--)
                 {
                     if (board[n + offset] != digits[n]) break;

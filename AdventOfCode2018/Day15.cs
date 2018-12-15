@@ -20,8 +20,8 @@ namespace AdventOfCode2018
             this.output = output;
         }
 
-        private const int Example1Solution = 27730;
-        private const string Example1Input = @"
+        private const int ExampleBasicSolution = 27730;
+        private const string ExampleBasicInput = @"
 #######   
 #.G...#
 #...EG#
@@ -29,6 +29,63 @@ namespace AdventOfCode2018
 #..G#E#
 #.....#   
 #######
+";
+
+        private const int ExtraExample1Solution = 36334;
+        private const string ExtraExample1Input = @"
+#######
+#G..#E#
+#E#E.E#
+#G.##.#
+#...#E#
+#...E.#
+#######
+";
+
+        private const int ExtraExample2Solution = 39514;
+        private const string ExtraExample2Input = @"
+#######
+#E..EG#
+#.#G.E#
+#E.##E#
+#G..#.#
+#..E#.#
+#######
+";
+
+        private const int ExtraExample3Solution = 27755;
+        private const string ExtraExample3Input = @"
+#######
+#E.G#.#
+#.#G..#
+#G.#.G#
+#G..#.#
+#...E.#
+#######
+";
+
+        private const int ExtraExample4Solution = 28944;
+        private const string ExtraExample4Input = @"
+#######
+#.E...#
+#.#..G#
+#.###.#
+#E#G#G#
+#...#G#
+#######
+";
+
+        private const int ExtraExample5Solution = 18740;
+        private const string ExtraExample5Input = @"
+#########
+#G......#
+#.E.#...#
+#..##..G#
+#...##..#
+#...#...#
+#.G...G.#
+#.....G.#
+#########
 ";
 
         private const int My_Example_A_Solution = 33 * (101 + 200);
@@ -98,7 +155,14 @@ namespace AdventOfCode2018
         [Fact] public void Solution_1_test_my_example_A() => Assert.Equal(My_Example_A_Solution, Solve1(My_Example_A_Input));
         [Fact] public void Solution_1_test_my_example_B() => Assert.Equal(My_Example_B_Solution, Solve1(My_Example_B_Input));
         [Fact] public void Solution_1_test_my_example_C() => Assert.Equal(My_Example_C_Solution, Solve1(My_Example_C_Input));
-        [Fact] public void Solution_1_test_example_1() => Assert.Equal(Example1Solution, Solve1(Example1Input));
+
+        [Fact] public void Solution_1_basic_example() => Assert.Equal(ExampleBasicSolution, Solve1(ExampleBasicInput));
+
+        [Fact] public void Solution_1_extra_example_1() => Assert.Equal(ExtraExample1Solution, Solve1(ExtraExample1Input));
+        [Fact] public void Solution_1_extra_example_2() => Assert.Equal(ExtraExample2Solution, Solve1(ExtraExample2Input)); 
+        [Fact] public void Solution_1_extra_example_3() => Assert.Equal(ExtraExample3Solution, Solve1(ExtraExample3Input)); 
+        [Fact] public void Solution_1_extra_example_4() => Assert.Equal(ExtraExample4Solution, Solve1(ExtraExample4Input)); 
+        [Fact] public void Solution_1_extra_example_5() => Assert.Equal(ExtraExample5Solution, Solve1(ExtraExample5Input)); 
 
         // Not: 251877
         [Fact] public void Solution_1_test_real_input() => Assert.Equal(0, Solve1(puzzleInput));
@@ -148,7 +212,7 @@ namespace AdventOfCode2018
                         }
                         catch (NoMoveFoundException)
                         {
-                            output.WriteLine($"No optimal move available for [{creature}].");
+                            // output.WriteLine($"No optimal move available for [{creature}].");
                         }
                     }
 

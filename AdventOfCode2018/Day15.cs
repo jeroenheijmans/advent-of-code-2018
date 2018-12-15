@@ -185,6 +185,7 @@ namespace AdventOfCode2018
         // Not: 251877
         // Not: 244860 ("too low")
         // Not: 247277 ("too low", of course) after disabling the "IsDead => continue" option
+        // Not: 247192 (after sneakily doing round++ before calculating score)
         [Fact] public void Solution_1_test_real_input() => Assert.Equal(0, Solve1(puzzleInput));
 
         private const int StartingHitPoints = 200;

@@ -720,13 +720,27 @@ namespace AdventOfCode2018
                 this.Left = other;
             }
 
-            public List<Position> EnumerateAdjacentPositionsInReadingOrder() =>
-                new [] { Up, Left, Right, Down }.Where(p => p != null).ToList();
+            public List<Position> EnumerateAdjacentPositionsInReadingOrder()
+            {
+                var list = new List<Position>();
+                if (Up != null) list.Add(Up);
+                if (Left != null) list.Add(Left);
+                if (Right != null) list.Add(Right);
+                if (Down != null) list.Add(Down);
+                return list;
+            }
 
-            public List<Creature> EnumerateAdjacentCreatures() =>
-                new[] { Up, Left, Right, Down }.Select(p => p?.Creature).Where(c => c != null).ToList();
+            public List<Creature> EnumerateAdjacentCreatures()
+            {
+                var list = new List<Creature>();
+                if (Up?.Creature != null) list.Add(Up.Creature);
+                if (Left?.Creature != null) list.Add(Left.Creature);
+                if (Right?.Creature != null) list.Add(Right.Creature);
+                if (Down?.Creature != null) list.Add(Down.Creature);
+                return list;
+            }
 
-            public override string ToString() => $"({Point.X}, {Point.Y}) with {Creature?.Rune ?? '.'}";
+        public override string ToString() => $"({Point.X}, {Point.Y}) with {Creature?.Rune ?? '.'}";
         }
 
         [Fact]

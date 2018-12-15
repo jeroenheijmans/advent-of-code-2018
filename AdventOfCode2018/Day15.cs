@@ -60,13 +60,48 @@ namespace AdventOfCode2018
 ###
 ";
 
-        private const string puzzleInput = @"";
+        private const string puzzleInput = @"
+################################
+##############.#################
+##########G##....###############
+#########.....G.################
+#########...........############
+#########...........############
+##########.....G...#############
+###########.........############
+########.#.#..#..G....##########
+#######..........G......########
+##..GG..................###.####
+##G..........................###
+####G.G.....G.#####...E.#.G..###
+#....##......#######........####
+#.GG.#####.G#########.......####
+###..####...#########..E...#####
+#...####....#########........###
+#.G.###.....#########....E....##
+#..####...G.#########E.....E..##
+#..###G......#######E.........##
+#..##.........#####..........###
+#......................#..E....#
+##...G........G.......#...E...##
+##............#..........#..####
+###.....#...#.##..#......#######
+#####.###...#######...#..#######
+#########...E######....#########
+###########...######.###########
+############..#####..###########
+#############.E..##.############
+################.#..############
+################################
+";
 
         [Fact] public void Solution_1_test_my_example_A() => Assert.Equal(My_Example_A_Solution, Solve1(My_Example_A_Input));
         [Fact] public void Solution_1_test_my_example_B() => Assert.Equal(My_Example_B_Solution, Solve1(My_Example_B_Input));
         [Fact] public void Solution_1_test_my_example_C() => Assert.Equal(My_Example_C_Solution, Solve1(My_Example_C_Input));
         [Fact] public void Solution_1_test_example_1() => Assert.Equal(Example1Solution, Solve1(Example1Input));
-        //[Fact] public void Solution_1_test_real_input() => Assert.Equal(0, Solve1(puzzleInput));
+
+        // Not: 251877
+        [Fact] public void Solution_1_test_real_input() => Assert.Equal(0, Solve1(puzzleInput));
 
         private const int StartingHitPoints = 200;
         private const int DefaultAttackPower = 3;

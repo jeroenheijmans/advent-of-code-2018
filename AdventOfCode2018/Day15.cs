@@ -40,10 +40,32 @@ namespace AdventOfCode2018
 ###
 ";
 
+        private const int My_Example_B_Solution = 33 * (101 + 200);
+        private const string My_Example_B_Input = @"
+###
+#G#
+#E#
+#G#
+###
+";
+
+        private const int My_Example_C_Solution = 33 * (101 + 200);
+        private const string My_Example_C_Input = @"
+###
+#G#
+#.#
+#E#
+#.#
+#G#
+###
+";
+
         private const string puzzleInput = @"";
 
         [Fact] public void Solution_1_test_my_example_A() => Assert.Equal(My_Example_A_Solution, Solve1(My_Example_A_Input));
-        //[Fact] public void Solution_1_test_example_1() => Assert.Equal(Example1Solution, Solve1(Example1Input));
+        [Fact] public void Solution_1_test_my_example_B() => Assert.Equal(My_Example_B_Solution, Solve1(My_Example_B_Input));
+        [Fact] public void Solution_1_test_my_example_C() => Assert.Equal(My_Example_C_Solution, Solve1(My_Example_C_Input));
+        [Fact] public void Solution_1_test_example_1() => Assert.Equal(Example1Solution, Solve1(Example1Input));
         //[Fact] public void Solution_1_test_real_input() => Assert.Equal(0, Solve1(puzzleInput));
 
         private const int StartingHitPoints = 200;
@@ -54,7 +76,7 @@ namespace AdventOfCode2018
             var battle = CreateBattleFromInput(input);
             OutputGrid(battle);
 
-            for (int round = 0; round < 1_000; round++)
+            for (int numberOfCompletedRounds = 0; numberOfCompletedRounds < 1_000; numberOfCompletedRounds++)
             {
                 var creaturesInActingOrder = battle.Creatures
                     .OrderBy(c => c.Position.Point.Y)
@@ -63,20 +85,24 @@ namespace AdventOfCode2018
 
                 foreach (var creature in creaturesInActingOrder)
                 {
-                    if (battle.IsOver()) return battle.GetScoreFor(round);
+                    if (battle.IsOver())
+                    {
+                        OutputGrid(battle);
+                        return battle.GetScoreFor(numberOfCompletedRounds);
+                    }
 
                     var moveOptions = creature.Position.EnumerateAdjacentPositionsInReadingOrder();
                     
-                    if (!moveOptions.Select(p => p.Creature).Any(p => p != null))
+                    if (!creature.CanAttack())
                     {
-                        var optimalMove = GetOptimalMoveFor(creature, moveOptions);
+                        var optimalMove = GetOptimalMoveFor(creature);
                         creature.MoveTo(optimalMove);
                     }
 
                     var target = creature.Position
                         .EnumerateAdjacentPositionsInReadingOrder()
                         .Select(p => p.Creature)
-                        .FirstOrDefault();
+                        .FirstOrDefault(c => c.IsEnemyFor(creature));
 
                     if (target != null)
                     {
@@ -88,12 +114,40 @@ namespace AdventOfCode2018
             return 0;
         }
 
-        private static Position GetOptimalMoveFor(Creature creature, Position[] moveOptions)
+        [Fact]
+        public void GetOptimalMoveFor_scenario_1()
+        {
+            var battle = CreateBattleFromInput("E.G");
+            var attacker = battle.Creatures.Single(c => c.IsElf);
+            var result = GetOptimalMoveFor(attacker);
+            Assert.Equal(battle.Grid[1, 0], result);
+        }
+
+        [Fact]
+        public void GetOptimalMoveFor_scenario_2()
+        {
+            var battle = CreateBattleFromInput(@"
+                ######
+                #E#GE#
+                #....#
+                ######
+            ");
+            var attacker = battle.Creatures.Single(c => c.Position.Point.X == 1);
+            var result = GetOptimalMoveFor(attacker);
+            Assert.Equal(battle.Grid[1, 0], result);
+        }
+
+        private static Position GetOptimalMoveFor(Creature creature)
         {
             var consideredPositions = new HashSet<Position> { creature.Position };
-            List<List<Position>> paths = moveOptions.Select(p => new List<Position> { p }).ToList();
 
-            var depth = 2;
+            List<List<Position>> paths = creature.Position
+                .EnumerateAdjacentPositionsInReadingOrder()
+                .Where(p => !p.HasCreature)
+                .Select(p => new List<Position> { p })
+                .ToList();
+
+            var depth = 100;
             for (int i = 0; i < depth; i++)
             {
                 var newPaths = new List<List<Position>>();
@@ -101,7 +155,6 @@ namespace AdventOfCode2018
                 foreach (var path in paths)
                 {
                     var last = path.Last();
-                    consideredPositions.Add(last);
 
                     foreach (var p in last.EnumerateAdjacentPositionsInReadingOrder())
                     {
@@ -109,12 +162,19 @@ namespace AdventOfCode2018
 
                         if (p.HasEnemyFor(creature))
                         {
-                            return p;
+                            return path.First();
+                        }
+
+                        if (p.HasCreature) // Must be a friend...
+                        {
+                            continue;
                         }
 
                         var newPath = new List<Position>(path);
                         newPath.Add(p);
                         newPaths.Add(newPath);
+
+                        consideredPositions.Add(p);
                     }
                 }
             }
@@ -144,19 +204,26 @@ namespace AdventOfCode2018
 
                     if (y > 0 && battle.Grid[x, y - 1] != null)
                     {
-                        battle.Grid[x, y].Up = battle.Grid[x, y - 1];
-                        battle.Grid[x, y - 1].Down = battle.Grid[x, y];
+                        battle.Grid[x, y].ConnectToPositionAbove(battle.Grid[x, y - 1]);
                     }
 
                     if (x > 0 && battle.Grid[x - 1, y] != null)
                     {
-                        battle.Grid[x, y].Left = battle.Grid[x - 1, y];
-                        battle.Grid[x - 1, y].Right = battle.Grid[x, y];
+                        battle.Grid[x, y].ConnectToPositionToTheLeft(battle.Grid[x - 1, y]);
                     }
                 }
             }
 
             return battle;
+        }
+
+        [Fact]
+        public void Creature_enemy_detection_works()
+        {
+            Assert.True(Creature.CreateElf().IsEnemyFor(Creature.CreateGoblin()));
+            Assert.True(Creature.CreateGoblin().IsEnemyFor(Creature.CreateElf()));
+            Assert.False(Creature.CreateElf().IsEnemyFor(Creature.CreateElf()));
+            Assert.False(Creature.CreateGoblin().IsEnemyFor(Creature.CreateGoblin()));
         }
 
         public class Creature
@@ -167,7 +234,7 @@ namespace AdventOfCode2018
             public Position Position { get; set; }
 
             public bool IsElf => !IsGoblin;
-            public bool IsEnemyFor(Creature other) => other.IsGoblin == this.IsGoblin;
+            public bool IsEnemyFor(Creature other) => other.IsGoblin != this.IsGoblin;
 
             public void MoveTo(Position other)
             {
@@ -175,6 +242,16 @@ namespace AdventOfCode2018
                 this.Position = other;
                 other.Creature = this;
             }
+
+            public bool CanAttack() =>
+                true == Position.Up?.Creature?.IsEnemyFor(this)
+                || true == Position.Left?.Creature?.IsEnemyFor(this)
+                || true == Position.Right?.Creature?.IsEnemyFor(this)
+                || true == Position.Down?.Creature?.IsEnemyFor(this);
+
+            public char Rune => IsGoblin ? 'G' : 'E';
+
+            public override string ToString() => $"{Rune} ({HitPoints} HP) at ({Position.Point.X}, {Position.Point.Y})";
 
             public static Creature CreateGoblin() => new Creature { IsGoblin = true };
             public static Creature CreateElf() => new Creature { IsGoblin = false };
@@ -186,7 +263,7 @@ namespace AdventOfCode2018
             {
                 Point = new Point(x, y);
                 Creature = creature;
-                creature.Position = this;
+                if (creature != null) creature.Position = this;
             }
 
             public Point Point { get; }
@@ -198,9 +275,23 @@ namespace AdventOfCode2018
             public Position Left { get; set; }
             public Position Right { get; set; }
             public Position Down { get; set; }
-            
+
+            public void ConnectToPositionAbove(Position other)
+            {
+                other.Down = this;
+                this.Up = other;
+            }
+
+            public void ConnectToPositionToTheLeft(Position other)
+            {
+                other.Right = this;
+                this.Left = other;
+            }
+
             public Position[] EnumerateAdjacentPositionsInReadingOrder() =>
                 new [] { Up, Left, Right, Down }.Where(p => p != null).ToArray();
+
+            public override string ToString() => $"({Point.X}, {Point.Y}) with {Creature?.Rune ?? '.'}";
         }
 
         public class Battle
@@ -219,6 +310,7 @@ namespace AdventOfCode2018
 
             public void Fight(Creature attacker, Creature target)
             {
+                if (!attacker.IsEnemyFor(target)) throw new InvalidOperationException("Friendly fire forbidden!");
                 target.HitPoints -= attacker.AttackPower;
                 if (target.HitPoints <= 0) Creatures.Remove(target);
             }
@@ -239,9 +331,7 @@ namespace AdventOfCode2018
                 for (int x = 0; x < battle.Width; x++)
                 {
                     if (battle.Grid[x, y] == null) sb.Append('█');
-                    else if (battle.Grid[x, y].Creature == null) sb.Append('·');
-                    else if (battle.Grid[x, y].Creature.IsElf) sb.Append('E');
-                    else if (battle.Grid[x, y].Creature.IsGoblin) sb.Append('G');
+                    else sb.Append(battle.Grid[x, y].Creature?.Rune ?? '.');
                 }
                 output.WriteLine(sb.ToString());
             }

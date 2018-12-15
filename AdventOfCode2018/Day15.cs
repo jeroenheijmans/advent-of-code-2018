@@ -162,9 +162,10 @@ namespace AdventOfCode2018
         [Fact] public void Solution_1_extra_example_2() => Assert.Equal(ExtraExample2Solution, Solve1(ExtraExample2Input)); 
         [Fact] public void Solution_1_extra_example_3() => Assert.Equal(ExtraExample3Solution, Solve1(ExtraExample3Input)); 
         [Fact] public void Solution_1_extra_example_4() => Assert.Equal(ExtraExample4Solution, Solve1(ExtraExample4Input)); 
-        [Fact] public void Solution_1_extra_example_5() => Assert.Equal(ExtraExample5Solution, Solve1(ExtraExample5Input)); 
+        [Fact] public void Solution_1_extra_example_5() => Assert.Equal(ExtraExample5Solution, Solve1(ExtraExample5Input));
 
         // Not: 251877
+        // Not: 244860 ("too low")
         [Fact] public void Solution_1_test_real_input() => Assert.Equal(0, Solve1(puzzleInput));
 
         private const int StartingHitPoints = 200;
@@ -187,6 +188,8 @@ namespace AdventOfCode2018
 
                 foreach (var creature in creaturesInActingOrder)
                 {
+                    if (creature.IsDead) continue;
+
                     if (battle.IsOver())
                     {
                         var score = battle.GetScoreFor(numberOfCompletedRounds);
@@ -371,16 +374,21 @@ namespace AdventOfCode2018
             Assert.Equal(weakTarget, result);
         }
 
-        [Fact]
-        public void Creature_targets_reading_order_enemy_first()
+        [Theory]
+        [InlineData("... \n EGE \n ...", 0, 1)]
+        [InlineData("... \n EGE \n .E.", 0, 1)]
+        [InlineData(".E. \n EGE \n .E.", 1, 0)]
+        [InlineData("... \n .GE \n .E.", 2, 1)]
+        [InlineData("... \n .G. \n .E.", 1, 2)]
+        public void Creature_targets_reading_order_enemy_first(string input, int x, int y)
         {
-            var battle = CreateBattleFromInput("EGE");
+            var battle = CreateBattleFromInput(input);
             var attacker = battle.Creatures.Single(c => c.IsGoblin);
-            var leftTarget = battle.Creatures.Single(c => c.Position.Point.X == 0);
+            var expectedTarget = battle.Creatures.Single(c => c.Position.Point.X == x && c.Position.Point.Y == y);
 
             var result = attacker.FirstOrDefaultTarget();
 
-            Assert.Equal(leftTarget, result);
+            Assert.Equal(expectedTarget, result);
         }
 
         public class Creature
@@ -389,6 +397,8 @@ namespace AdventOfCode2018
             public int HitPoints { get; set; } = StartingHitPoints;
             public int AttackPower => DefaultAttackPower;
             public Position Position { get; set; }
+
+            public bool IsDead => HitPoints <= 0;
 
             public bool IsElf => !IsGoblin;
             public bool IsEnemyFor(Creature other) => other.IsGoblin != this.IsGoblin;

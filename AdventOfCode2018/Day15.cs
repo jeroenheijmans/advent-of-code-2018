@@ -2,9 +2,7 @@
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
-using System.Numerics;
 using System.Text;
-using System.Text.RegularExpressions;
 using Xunit;
 using Xunit.Abstractions;
 using static AdventOfCode2018.Util;
@@ -223,8 +221,6 @@ namespace AdventOfCode2018
                         return score;
                     }
 
-                    var moveOptions = creature.Position.EnumerateAdjacentPositionsInReadingOrder();
-                    
                     if (!creature.CanAttack())
                     {
                         try
@@ -260,8 +256,6 @@ namespace AdventOfCode2018
                     OutputGrid(battle);
                     throw new NotSupportedException("Deadlocks are not supported");
                 }
-
-                if (numberOfCompletedRounds < 10) { output.WriteLine(""); output.WriteLine($"After {numberOfCompletedRounds}"); OutputGrid(battle); }
             }
 
             throw new Exception("No outcome found.");
@@ -437,6 +431,19 @@ namespace AdventOfCode2018
             Assert.Equal(battle.Grid[2, 3], result);
         }
 
+        [Fact]
+        public void GetOptimalMoveFor_scenario_8()
+        {
+            var battle = CreateBattleFromInput(@"
+                #########
+                #G..E..G#
+                #########
+            ");
+            var attacker = battle.Creatures.Single(c => c.Position.Point.X == 4);
+            var result = GetOptimalMoveFor(attacker, battle);
+            Assert.Equal(battle.Grid[5, 1], result);
+        }
+
         public class NoMoveFoundException : Exception
         { }
 
@@ -446,6 +453,7 @@ namespace AdventOfCode2018
 
             var enemies = battle.Creatures.Where(c => c.IsEnemyFor(creature));
             var wantedPositionsWithBestReadingOrder = new Dictionary<Position, int>();
+
             foreach (var enemy in enemies)
             {
                 if (enemy.Position.Up?.HasCreature == false)
@@ -528,7 +536,7 @@ namespace AdventOfCode2018
                 }
 
                 initialDirections = newDirections;
-
+                
                 var bestChoice = choices.OrderBy(c => c.TargetReadingOrder).ThenBy(c => c.DirectionReadingOrder).FirstOrDefault();
 
                 if (bestChoice != null) return bestChoice.Direction;
@@ -549,7 +557,6 @@ namespace AdventOfCode2018
             public Position Position { get; set; }
             public int ReadingOrder { get; set; }
         }
-
 
         private static Battle CreateBattleFromInput(string input)
         {
@@ -640,6 +647,10 @@ namespace AdventOfCode2018
             public void MoveTo(Position other)
             {
                 if (other.Creature != null) throw new InvalidOperationException("Cannot move into occupied position");
+                if (other == this.Position) throw new InvalidOperationException("Can only move to a *new* position");
+                if (other != Position.Up && other != Position.Left && other != Position.Right && other != Position.Down)
+                    throw new InvalidOperationException("Can only move to a connected position");
+
                 this.Position.Creature = null;
                 this.Position = other;
                 other.Creature = this;
@@ -670,7 +681,7 @@ namespace AdventOfCode2018
             private char myGoblinId = GetNextId();
             public char Rune => IsGoblin ? myGoblinId : '@';
 
-            public override string ToString() => $"{Rune} ({HitPoints} HP) at ({Position.Point.X}, {Position.Point.Y})";
+            public override string ToString() => $"{Rune} ({HitPoints} HP) at ({Position?.Point.X}, {Position?.Point.Y})";
 
             public static Creature CreateGoblin() => new Creature { IsGoblin = true };
             public static Creature CreateElf() => new Creature { IsGoblin = false };
@@ -792,6 +803,7 @@ namespace AdventOfCode2018
                 {
                     Creatures.Remove(target);
                     target.Position.Creature = null;
+                    target.Position = null;
                     return FightResult.Death;
                 }
 

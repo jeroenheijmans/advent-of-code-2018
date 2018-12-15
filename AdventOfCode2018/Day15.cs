@@ -264,6 +264,36 @@ namespace AdventOfCode2018
         }
 
         [Fact]
+        public void GetOptimalMoveFor_aoc_scenario_1()
+        {
+            var battle = CreateBattleFromInput(@"
+                #######
+                #E..G.#
+                #...#.#
+                #.G.#G#
+                #######
+            ");
+            var attacker = battle.Creatures.Single(c => c.IsElf);
+            var result = GetOptimalMoveFor(attacker);
+            Assert.Equal(battle.Grid[2, 1], result);
+        }
+
+        [Fact]
+        public void GetOptimalMoveFor_aoc_scenario_2()
+        {
+            var battle = CreateBattleFromInput(@"
+                #######
+                #.E...#
+                #.....#
+                #...G.#
+                #######
+            ");
+            var attacker = battle.Creatures.Single(c => c.IsElf);
+            var result = GetOptimalMoveFor(attacker);
+            Assert.Equal(battle.Grid[3, 1], result);
+        }
+
+        [Fact]
         public void GetOptimalMoveFor_scenario_1()
         {
             var battle = CreateBattleFromInput("E.G");
@@ -284,6 +314,23 @@ namespace AdventOfCode2018
             var attacker = battle.Creatures.Single(c => c.Position.Point.X == 1);
             var result = GetOptimalMoveFor(attacker);
             Assert.Equal(battle.Grid[1, 2], result);
+        }
+
+        [Fact]
+        public void GetOptimalMoveFor_scenario_3()
+        {
+            var battle = CreateBattleFromInput(@"
+                #########
+                #.......#
+                #...#.G.#
+                #...#...#
+                #.E.#...#
+                #.......#
+                #########
+            ");
+            var attacker = battle.Creatures.Single(c => c.Position.Point.Y == 2);
+            var result = GetOptimalMoveFor(attacker);
+            Assert.Equal(battle.Grid[6, 1], result);
         }
 
         public class NoMoveFoundException : Exception

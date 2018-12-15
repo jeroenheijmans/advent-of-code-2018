@@ -19,14 +19,30 @@ namespace AdventOfCode2018
                 .ToArray(); 
         }
 
+        // https://stackoverflow.com/a/3150821/419956 by @RonWarholic
+        public static IEnumerable<T> Flatten<T>(this T[,] map)
+        {
+            for (int row = 0; row < map.GetLength(0); row++)
+            {
+                for (int col = 0; col < map.GetLength(1); col++)
+                {
+                    yield return map[row, col];
+                }
+            }
+        }
+
         public static string JoinAsStrings<T>(this IEnumerable<T> items)
         {
             return string.Join("", items);
         }
 
-        public static string[] SplitByNewline(this string input)
+        public static string[] SplitByNewline(this string input, bool shouldTrim = false)
         {
-            return input.Split(new[] { "\r", "\n", "\r\n" }, StringSplitOptions.None).Where(s => !string.IsNullOrWhiteSpace(s)).ToArray();
+            return input
+                .Split(new[] { "\r", "\n", "\r\n" }, StringSplitOptions.None)
+                .Where(s => !string.IsNullOrWhiteSpace(s))
+                .Select(s => shouldTrim ? s.Trim() : s)
+                .ToArray();
         }
 
         // https://stackoverflow.com/a/16193323/419956 by @AdamHouldsWorth

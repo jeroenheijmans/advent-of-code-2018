@@ -67,7 +67,7 @@ namespace AdventOfCode2018
         public int Solve2(string input)
         {
             Node[,] nodes = ConvertToNodeArray(input);
-            return GetShortestTwilightDistanceTo(0, 0, 0, nodes);
+            return -1; // return GetShortestTwilightDistanceTo(0, 0, 0, nodes);
         }
 
         private int GetShortestTwilightDistanceTo(int currentX, int currentY, int counter, Node[,] grid)

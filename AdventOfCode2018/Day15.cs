@@ -188,6 +188,7 @@ namespace AdventOfCode2018
         // Not: 247192 (after sneakily doing round++ before calculating score)
         // Not: 244860 (just tried it again...)
         // Not: 245544 (with search depth 20 and no "consideredPoints" set at all)
+        // Not: 275520 (with the sort-attack-order on Y position disabled)
         [Fact] public void Solution_1_test_real_input() => Assert.Equal(0, Solve1(puzzleInput));
 
         private const int StartingHitPoints = 200;
@@ -320,7 +321,7 @@ namespace AdventOfCode2018
         }
 
         [Fact]
-        public void GetOptimalMoveFor_scenario_3()
+        public void GetOptimalMoveFor_scenario_3a()
         {
             var battle = CreateBattleFromInput(@"
                 #########
@@ -334,6 +335,40 @@ namespace AdventOfCode2018
             var attacker = battle.Creatures.Single(c => c.Position.Point.Y == 2);
             var result = GetOptimalMoveFor(attacker, battle);
             Assert.Equal(battle.Grid[6, 1], result);
+        }
+
+        [Fact]
+        public void GetOptimalMoveFor_scenario_3b()
+        {
+            var battle = CreateBattleFromInput(@"
+                #########
+                #.......#
+                #.E.#...#
+                #...#...#
+                #...#.G.#
+                #.......#
+                #########
+            ");
+            var attacker = battle.Creatures.Single(c => c.Position.Point.Y == 2);
+            var result = GetOptimalMoveFor(attacker, battle);
+            Assert.Equal(battle.Grid[2, 1], result);
+        }
+
+        [Fact]
+        public void GetOptimalMoveFor_scenario_3c()
+        {
+            var battle = CreateBattleFromInput(@"
+                #########
+                #.......#
+                #...#.G.#
+                #...#...#
+                #.E.#...#
+                #.......#
+                #########
+            ");
+            var attacker = battle.Creatures.Single(c => c.IsElf);
+            var result = GetOptimalMoveFor(attacker, battle);
+            Assert.Equal(battle.Grid[2, 3], result);
         }
 
         [Fact]

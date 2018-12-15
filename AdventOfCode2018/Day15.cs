@@ -193,7 +193,7 @@ namespace AdventOfCode2018
 
                         output.WriteLine("");
                         output.WriteLine("Battle is over!");
-                        OutputGrid(battle);
+                        OutputGrid(battle, includeCreatures: true);
                         output.WriteLine("");
                         output.WriteLine($"Outcome: {numberOfCompletedRounds} full rounds x {battle.GetHitPointsLeft()} HP = {score}");
 
@@ -216,10 +216,7 @@ namespace AdventOfCode2018
                         }
                     }
 
-                    var target = creature.Position
-                        .EnumerateAdjacentPositionsInReadingOrder()
-                        .Select(p => p.Creature)
-                        .FirstOrDefault(c => c?.IsEnemyFor(creature) == true);
+                    var target = creature.FirstOrDefaultTarget();
 
                     if (target != null)
                     {
@@ -361,6 +358,31 @@ namespace AdventOfCode2018
             Assert.False(Creature.CreateGoblin().IsEnemyFor(Creature.CreateGoblin()));
         }
 
+        [Fact]
+        public void Creature_targets_lowest_hp_enemy_first()
+        {
+            var battle = CreateBattleFromInput("EGE");
+            var attacker = battle.Creatures.Single(c => c.IsGoblin);
+            var weakTarget = battle.Creatures.Single(c => c.Position.Point.X == 2);
+            weakTarget.HitPoints -= 1;
+
+            var result = attacker.FirstOrDefaultTarget();
+
+            Assert.Equal(weakTarget, result);
+        }
+
+        [Fact]
+        public void Creature_targets_reading_order_enemy_first()
+        {
+            var battle = CreateBattleFromInput("EGE");
+            var attacker = battle.Creatures.Single(c => c.IsGoblin);
+            var leftTarget = battle.Creatures.Single(c => c.Position.Point.X == 0);
+
+            var result = attacker.FirstOrDefaultTarget();
+
+            Assert.Equal(leftTarget, result);
+        }
+
         public class Creature
         {
             public bool IsGoblin { get; set; }
@@ -384,6 +406,17 @@ namespace AdventOfCode2018
                 || true == Position.Left?.Creature?.IsEnemyFor(this)
                 || true == Position.Right?.Creature?.IsEnemyFor(this)
                 || true == Position.Down?.Creature?.IsEnemyFor(this);
+
+            public Creature FirstOrDefaultTarget()
+            {
+                return Position
+                    .EnumerateAdjacentCreatures()
+                    .Where(c => c.IsEnemyFor(this))
+                    .OrderBy(c => c.HitPoints)
+                    .ThenBy(c => c.Position.Point.Y)
+                    .ThenBy(c => c.Position.Point.X)
+                    .FirstOrDefault();
+            }
 
             public char Rune => IsGoblin ? 'G' : 'E';
 
@@ -426,6 +459,9 @@ namespace AdventOfCode2018
 
             public List<Position> EnumerateAdjacentPositionsInReadingOrder() =>
                 new [] { Up, Left, Right, Down }.Where(p => p != null).ToList();
+
+            public List<Creature> EnumerateAdjacentCreatures() =>
+                new[] { Up, Left, Right, Down }.Select(p => p?.Creature).Where(c => c != null).ToList();
 
             public override string ToString() => $"({Point.X}, {Point.Y}) with {Creature?.Rune ?? '.'}";
         }
@@ -475,7 +511,7 @@ namespace AdventOfCode2018
 
         public enum FightResult { JustPain, Death }
         
-        private void OutputGrid(Battle battle)
+        private void OutputGrid(Battle battle, bool includeCreatures = false)
         {
             for (int y = 0; y < battle.Height; y++)
             {
@@ -486,6 +522,18 @@ namespace AdventOfCode2018
                     else sb.Append(battle.Grid[x, y].Creature?.Rune ?? '.');
                 }
                 output.WriteLine(sb.ToString());
+            }
+
+            if (includeCreatures)
+            {
+                var creatures = battle.Creatures
+                    .OrderBy(c => c.Position.Point.Y)
+                    .ThenBy(c => c.Position.Point.X);
+
+                foreach (var creature in creatures)
+                {
+                    output.WriteLine(creature.ToString());
+                }
             }
         }
     }

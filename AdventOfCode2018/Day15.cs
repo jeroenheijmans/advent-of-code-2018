@@ -84,6 +84,8 @@ namespace AdventOfCode2018
                     .ThenBy(c => c.Position.Point.X)
                     .ToArray();
 
+                var someCreatureActed = false; // To detect bugs
+
                 foreach (var creature in creaturesInActingOrder)
                 {
                     if (battle.IsOver())
@@ -101,13 +103,11 @@ namespace AdventOfCode2018
                         {
                             var optimalMove = GetOptimalMoveFor(creature);
                             creature.MoveTo(optimalMove);
+                            someCreatureActed = true;
                         }
                         catch (NoMoveFoundException)
                         {
-                            output.WriteLine($"No optimal move found for [{creature}]. Not expected based on puzzle description.");
-                            output.WriteLine("Grid state:");
-                            OutputGrid(battle);
-                            throw;
+                            output.WriteLine($"No optimal move available for [{creature}].");
                         }
                     }
 
@@ -118,6 +118,7 @@ namespace AdventOfCode2018
 
                     if (target != null)
                     {
+                        someCreatureActed = true;
                         var result = battle.Fight(creature, target);
                         if (result == FightResult.Death)
                         {
@@ -125,6 +126,13 @@ namespace AdventOfCode2018
                             OutputGrid(battle);
                         }
                     }
+                }
+
+                if (!someCreatureActed)
+                {
+                    output.WriteLine("No single creature could act anymore with this grid state:");
+                    OutputGrid(battle);
+                    throw new NotSupportedException("Deadlocks are not supported");
                 }
             }
 

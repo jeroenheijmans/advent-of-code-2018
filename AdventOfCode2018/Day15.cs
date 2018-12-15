@@ -199,12 +199,9 @@ namespace AdventOfCode2018
             output.WriteLine("Battle is starting...");
             OutputGrid(battle);
 
-            for (int numberOfCompletedRounds = 0; numberOfCompletedRounds < 1_000; numberOfCompletedRounds++)
+            for (int numberOfCompletedRounds = 0; numberOfCompletedRounds < 1_000_000; numberOfCompletedRounds++)
             {
-                var creaturesInActingOrder = battle.Creatures
-                    .OrderBy(c => c.Position.Point.Y)
-                    .ThenBy(c => c.Position.Point.X)
-                    .ToArray();
+                var creaturesInActingOrder = battle.GetCreaturesInActingOrder();
 
                 var someCreatureActed = false; // To detect bugs
 
@@ -447,7 +444,7 @@ namespace AdventOfCode2018
             if (creature.Position.Right?.HasCreature == false) initialDirections[new PositionWithReadingOrder { ReadingOrder = 2, Position = creature.Position.Right }] = new List<Position> { creature.Position.Right };
             if (creature.Position.Down?.HasCreature == false) initialDirections[new PositionWithReadingOrder { ReadingOrder = 3, Position = creature.Position.Down }] = new List<Position> { creature.Position.Down };
 
-            var depth = 1000;
+            var depth = 500;
             for (int i = 0; i < depth; i++)
             {
                 var newDirections = new Dictionary<PositionWithReadingOrder, List<Position>>();
@@ -680,6 +677,48 @@ namespace AdventOfCode2018
             public override string ToString() => $"({Point.X}, {Point.Y}) with {Creature?.Rune ?? '.'}";
         }
 
+        [Fact]
+        public void ActingOrder_aoc_scenario()
+        {
+            var battle = CreateBattleFromInput(@"
+                #######
+                #.G.E.#
+                #E.G.E#
+                #.G.E.#
+                #######
+            ");
+            var result = battle.GetCreaturesInActingOrder().Select(p => p.Position.Point).ToArray();
+            Assert.Equal(
+                new[] { new Point(2, 1), new Point(4, 1), new Point(1, 2), new Point(3, 2), new Point(5, 2), new Point(2, 3), new Point(4, 3) },
+                result
+            );
+        }
+
+        [Theory]
+        [InlineData("E")]
+        [InlineData("G")]
+        [InlineData("EE")]
+        [InlineData("GG")]
+        [InlineData("EEE")]
+        public void IsOver_true_when_only_one_kind_left(string input) => Assert.True(CreateBattleFromInput(input).IsOver());
+
+        [Theory]
+        [InlineData("EG")]
+        [InlineData("GE")]
+        [InlineData("EEG")]
+        [InlineData("GGE")]
+        public void IsOver_false_when_only_many_kind_left(string input) => Assert.False(CreateBattleFromInput(input).IsOver());
+
+        [Theory]
+        [InlineData("EG")]
+        [InlineData("GE")]
+        public void IsOver_true_when_only_dead_others(string input)
+        {
+            var battle = CreateBattleFromInput(input);
+            battle.Creatures.First().HitPoints = -1;
+            Assert.True(battle.IsOver());
+        }
+
         public class Battle
         {
             public Battle(int width, int height)
@@ -693,6 +732,11 @@ namespace AdventOfCode2018
             public int Height { get; }
             public Position[,] Grid { get; }
             public ISet<Creature> Creatures { get; } = new HashSet<Creature>();
+
+            public Creature[] GetCreaturesInActingOrder() => Creatures
+                    .OrderBy(c => c.Position.Point.Y)
+                    .ThenBy(c => c.Position.Point.X)
+                    .ToArray();
 
             public FightResult Fight(Creature attacker, Creature target)
             {
@@ -713,7 +757,7 @@ namespace AdventOfCode2018
                 return FightResult.JustPain;
             }
 
-            public bool IsOver() => Creatures.All(c => c.IsGoblin) || Creatures.All(c => c.IsElf);
+            public bool IsOver() => Creatures.All(c => c.IsGoblin || c.IsDead) || Creatures.All(c => c.IsElf || c.IsDead);
 
             public int GetHitPointsLeft() => Creatures.Sum(x => x.HitPoints);
 

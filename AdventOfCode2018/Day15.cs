@@ -102,7 +102,7 @@ namespace AdventOfCode2018
                     var target = creature.Position
                         .EnumerateAdjacentPositionsInReadingOrder()
                         .Select(p => p.Creature)
-                        .FirstOrDefault(c => c.IsEnemyFor(creature));
+                        .FirstOrDefault(c => c?.IsEnemyFor(creature) == true);
 
                     if (target != null)
                     {
@@ -134,49 +134,51 @@ namespace AdventOfCode2018
             ");
             var attacker = battle.Creatures.Single(c => c.Position.Point.X == 1);
             var result = GetOptimalMoveFor(attacker);
-            Assert.Equal(battle.Grid[1, 0], result);
+            Assert.Equal(battle.Grid[1, 2], result);
         }
 
         private static Position GetOptimalMoveFor(Creature creature)
         {
             var consideredPositions = new HashSet<Position> { creature.Position };
 
-            List<List<Position>> paths = creature.Position
+            var positionsToTargetLocation = creature.Position
                 .EnumerateAdjacentPositionsInReadingOrder()
                 .Where(p => !p.HasCreature)
-                .Select(p => new List<Position> { p })
-                .ToList();
+                .ToDictionary(p => p, p => p.EnumerateAdjacentPositionsInReadingOrder());
 
             var depth = 100;
             for (int i = 0; i < depth; i++)
             {
-                var newPaths = new List<List<Position>>();
+                var newPositionsToTargetLocation = new Dictionary<Position, List<Position>>();
 
-                foreach (var path in paths)
+                foreach (var kvp in positionsToTargetLocation)
                 {
-                    var last = path.Last();
+                    newPositionsToTargetLocation[kvp.Key] = new List<Position>();
 
-                    foreach (var p in last.EnumerateAdjacentPositionsInReadingOrder())
+                    foreach (var target in kvp.Value)
                     {
-                        if (consideredPositions.Contains(p)) continue;
-
-                        if (p.HasEnemyFor(creature))
-                        {
-                            return path.First();
-                        }
-
-                        if (p.HasCreature) // Must be a friend...
+                        if (consideredPositions.Contains(target))
                         {
                             continue;
                         }
 
-                        var newPath = new List<Position>(path);
-                        newPath.Add(p);
-                        newPaths.Add(newPath);
+                        consideredPositions.Add(target);
 
-                        consideredPositions.Add(p);
+                        if (target.HasEnemyFor(creature))
+                        {
+                            return kvp.Key;
+                        }
+
+                        if (target.HasCreature) // Must be a friend... (who's blocking us!)
+                        {
+                            continue;
+                        }
+
+                        newPositionsToTargetLocation[kvp.Key].AddRange(target.EnumerateAdjacentPositionsInReadingOrder());
                     }
                 }
+
+                positionsToTargetLocation = newPositionsToTargetLocation;
             }
 
             throw new Exception("No optimal move found. Not expected based on puzzle description.");
@@ -288,8 +290,8 @@ namespace AdventOfCode2018
                 this.Left = other;
             }
 
-            public Position[] EnumerateAdjacentPositionsInReadingOrder() =>
-                new [] { Up, Left, Right, Down }.Where(p => p != null).ToArray();
+            public List<Position> EnumerateAdjacentPositionsInReadingOrder() =>
+                new [] { Up, Left, Right, Down }.Where(p => p != null).ToList();
 
             public override string ToString() => $"({Point.X}, {Point.Y}) with {Creature?.Rune ?? '.'}";
         }

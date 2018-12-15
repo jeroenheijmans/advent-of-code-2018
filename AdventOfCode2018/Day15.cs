@@ -74,6 +74,7 @@ namespace AdventOfCode2018
         public int Solve1(string input)
         {
             var battle = CreateBattleFromInput(input);
+            output.WriteLine("Battle is starting...");
             OutputGrid(battle);
 
             for (int numberOfCompletedRounds = 0; numberOfCompletedRounds < 1_000; numberOfCompletedRounds++)
@@ -87,6 +88,7 @@ namespace AdventOfCode2018
                 {
                     if (battle.IsOver())
                     {
+                        output.WriteLine("Battle is over!");
                         OutputGrid(battle);
                         return battle.GetScoreFor(numberOfCompletedRounds);
                     }
@@ -95,8 +97,18 @@ namespace AdventOfCode2018
                     
                     if (!creature.CanAttack())
                     {
-                        var optimalMove = GetOptimalMoveFor(creature);
-                        creature.MoveTo(optimalMove);
+                        try
+                        {
+                            var optimalMove = GetOptimalMoveFor(creature);
+                            creature.MoveTo(optimalMove);
+                        }
+                        catch (NoMoveFoundException)
+                        {
+                            output.WriteLine($"No optimal move found for [{creature}]. Not expected based on puzzle description.");
+                            output.WriteLine("Grid state:");
+                            OutputGrid(battle);
+                            throw;
+                        }
                     }
 
                     var target = creature.Position
@@ -106,7 +118,12 @@ namespace AdventOfCode2018
 
                     if (target != null)
                     {
-                        battle.Fight(creature, target);
+                        var result = battle.Fight(creature, target);
+                        if (result == FightResult.Death)
+                        {
+                            output.WriteLine($"Killing blow for {target}!");
+                            OutputGrid(battle);
+                        }
                     }
                 }
             }
@@ -136,6 +153,9 @@ namespace AdventOfCode2018
             var result = GetOptimalMoveFor(attacker);
             Assert.Equal(battle.Grid[1, 2], result);
         }
+
+        public class NoMoveFoundException : Exception
+        { }
 
         private static Position GetOptimalMoveFor(Creature creature)
         {
@@ -181,7 +201,7 @@ namespace AdventOfCode2018
                 positionsToTargetLocation = newPositionsToTargetLocation;
             }
 
-            throw new Exception("No optimal move found. Not expected based on puzzle description.");
+            throw new NoMoveFoundException();
         }
 
         private static Battle CreateBattleFromInput(string input)
@@ -241,6 +261,7 @@ namespace AdventOfCode2018
             public void MoveTo(Position other)
             {
                 if (other.Creature != null) throw new InvalidOperationException("Cannot move into occupied position");
+                this.Position.Creature = null;
                 this.Position = other;
                 other.Creature = this;
             }
@@ -310,11 +331,23 @@ namespace AdventOfCode2018
             public Position[,] Grid { get; }
             public ISet<Creature> Creatures { get; } = new HashSet<Creature>();
 
-            public void Fight(Creature attacker, Creature target)
+            public FightResult Fight(Creature attacker, Creature target)
             {
-                if (!attacker.IsEnemyFor(target)) throw new InvalidOperationException("Friendly fire forbidden!");
+                if (!attacker.IsEnemyFor(target))
+                {
+                    throw new InvalidOperationException("Friendly fire forbidden!");
+                }
+
                 target.HitPoints -= attacker.AttackPower;
-                if (target.HitPoints <= 0) Creatures.Remove(target);
+
+                if (target.HitPoints <= 0)
+                {
+                    Creatures.Remove(target);
+                    target.Position.Creature = null;
+                    return FightResult.Death;
+                }
+
+                return FightResult.JustPain;
             }
 
             public bool IsOver() => Creatures.All(c => c.IsGoblin) || Creatures.All(c => c.IsElf);
@@ -324,6 +357,8 @@ namespace AdventOfCode2018
                 return rounds * Creatures.Sum(x => x.HitPoints);
             }
         }
+
+        public enum FightResult { JustPain, Death }
         
         private void OutputGrid(Battle battle)
         {

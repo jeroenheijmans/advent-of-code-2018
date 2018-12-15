@@ -450,7 +450,8 @@ namespace AdventOfCode2018
             {
                 if (enemy.Position.Up?.HasCreature == false)
                 {
-                    wantedPositionsWithBestReadingOrder[enemy.Position.Up] = 0;
+                    wantedPositionsWithBestReadingOrder[enemy.Position.Up] =
+                        Min(0, wantedPositionsWithBestReadingOrder.GetOrDefault(enemy.Position.Up, int.MaxValue));
                 }
 
                 if (enemy.Position.Left?.HasCreature == false)
@@ -479,9 +480,11 @@ namespace AdventOfCode2018
             if (creature.Position.Right?.HasCreature == false) initialDirections[new PositionWithReadingOrder { ReadingOrder = 2, Position = creature.Position.Right }] = new List<Position> { creature.Position.Right };
             if (creature.Position.Down?.HasCreature == false) initialDirections[new PositionWithReadingOrder { ReadingOrder = 3, Position = creature.Position.Down }] = new List<Position> { creature.Position.Down };
 
-            var depth = 500;
-            for (int i = 0; i < depth; i++)
+            bool exhausted = false;
+            while (!exhausted)
             {
+                exhausted = true;
+
                 var newDirections = new Dictionary<PositionWithReadingOrder, List<Position>>();
 
                 var choices = new List<Choice>();
@@ -517,6 +520,9 @@ namespace AdventOfCode2018
                         }
 
                         var fanout = target.EnumerateAdjacentPositionsInReadingOrder().Where(p => !consideredPositions.Contains(p));
+
+                        if (fanout.Any()) exhausted = false;
+
                         newDirections[dir].AddRange(fanout);
                     }
                 }

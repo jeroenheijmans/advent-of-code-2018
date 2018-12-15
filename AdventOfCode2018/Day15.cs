@@ -125,9 +125,15 @@ namespace AdventOfCode2018
                 {
                     if (battle.IsOver())
                     {
+                        var score = battle.GetScoreFor(numberOfCompletedRounds);
+
+                        output.WriteLine("");
                         output.WriteLine("Battle is over!");
                         OutputGrid(battle);
-                        return battle.GetScoreFor(numberOfCompletedRounds);
+                        output.WriteLine("");
+                        output.WriteLine($"Outcome: {numberOfCompletedRounds} full rounds x {battle.GetHitPointsLeft()} HP = {score}");
+
+                        return score;
                     }
 
                     var moveOptions = creature.Position.EnumerateAdjacentPositionsInReadingOrder();
@@ -395,9 +401,11 @@ namespace AdventOfCode2018
 
             public bool IsOver() => Creatures.All(c => c.IsGoblin) || Creatures.All(c => c.IsElf);
 
+            public int GetHitPointsLeft() => Creatures.Sum(x => x.HitPoints);
+
             public int GetScoreFor(int rounds)
             {
-                return rounds * Creatures.Sum(x => x.HitPoints);
+                return rounds * GetHitPointsLeft();
             }
         }
 

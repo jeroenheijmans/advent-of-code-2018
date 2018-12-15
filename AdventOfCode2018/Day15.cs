@@ -164,8 +164,27 @@ namespace AdventOfCode2018
         [Fact] public void Solution_1_extra_example_4() => Assert.Equal(ExtraExample4Solution, Solve1(ExtraExample4Input)); 
         [Fact] public void Solution_1_extra_example_5() => Assert.Equal(ExtraExample5Solution, Solve1(ExtraExample5Input));
 
+        [Fact]
+        public void Solution_1_movement_example()
+        {
+            // Mainly meant to check the test output for movements, the answer was
+            // grabbed from my own algorithm, not provided by AoC.
+            Assert.Equal(27828, Solve1(@"
+                #########
+                #G..G..G#
+                #.......#
+                #.......#
+                #G..E..G#
+                #.......#
+                #.......#
+                #G..G..G#
+                #########
+            "));
+        }
+
         // Not: 251877
         // Not: 244860 ("too low")
+        // Not: 247277 ("too low", of course) after disabling the "IsDead => continue" option
         [Fact] public void Solution_1_test_real_input() => Assert.Equal(0, Solve1(puzzleInput));
 
         private const int StartingHitPoints = 200;
@@ -428,7 +447,13 @@ namespace AdventOfCode2018
                     .FirstOrDefault();
             }
 
-            public char Rune => IsGoblin ? 'G' : 'E';
+            // Original:
+            // public char Rune => IsGoblin ? 'G' : 'E';
+            // For debugging:
+            private static int goblinId = 'Z';
+            private static char GetNextId() => (char)(goblinId = goblinId > 89 ? 65 : goblinId + 1);
+            private char myGoblinId = GetNextId();
+            public char Rune => IsGoblin ? myGoblinId : '@';
 
             public override string ToString() => $"{Rune} ({HitPoints} HP) at ({Position.Point.X}, {Position.Point.Y})";
 
@@ -454,6 +479,8 @@ namespace AdventOfCode2018
             public Position Left { get; set; }
             public Position Right { get; set; }
             public Position Down { get; set; }
+
+            public char Rune => Creature?.Rune ?? '\u2003';
 
             public void ConnectToPositionAbove(Position other)
             {
@@ -529,7 +556,7 @@ namespace AdventOfCode2018
                 for (int x = 0; x < battle.Width; x++)
                 {
                     if (battle.Grid[x, y] == null) sb.Append('█');
-                    else sb.Append(battle.Grid[x, y].Creature?.Rune ?? '.');
+                    else sb.Append(battle.Grid[x, y].Rune);
                 }
                 output.WriteLine(sb.ToString());
             }

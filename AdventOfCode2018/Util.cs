@@ -9,6 +9,26 @@ namespace AdventOfCode2018
 {
     public static class Util
     {
+        public static int? Min(int? a, int? b)
+        {
+            if (a.HasValue && b.HasValue) return Math.Min(a.Value, b.Value);
+            if (a.HasValue) return a.Value;
+            if (b.HasValue) return b.Value;
+            return null;
+        }
+
+        public static int Min(int a, int? b)
+        {
+            if (b.HasValue) return Math.Min(a, b.Value);
+            return a;
+        }
+
+        public static TValue GetOrDefault<TKey, TValue>(this IDictionary<TKey, TValue> dictionary, TKey key, TValue fallback = default(TValue))
+        {
+            TValue item;
+            return dictionary.TryGetValue(key, out item) ? item : fallback;
+        }
+
         public static string[] SubGroups(this string input, string pattern)
         {
             return Regex.Matches(input, pattern)

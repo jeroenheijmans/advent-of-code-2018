@@ -186,6 +186,8 @@ namespace AdventOfCode2018
         // Not: 244860 ("too low")
         // Not: 247277 ("too low", of course) after disabling the "IsDead => continue" option
         // Not: 247192 (after sneakily doing round++ before calculating score)
+        // Not: 244860 (just tried it again...)
+        // Not: 245544 (with search depth 20 and no "consideredPoints" set at all)
         [Fact] public void Solution_1_test_real_input() => Assert.Equal(0, Solve1(puzzleInput));
 
         private const int StartingHitPoints = 200;
@@ -229,7 +231,7 @@ namespace AdventOfCode2018
                     {
                         try
                         {
-                            var optimalMove = GetOptimalMoveFor(creature);
+                            var optimalMove = GetOptimalMoveFor(creature, battle);
                             creature.MoveTo(optimalMove);
                             someCreatureActed = true;
                         }
@@ -247,7 +249,8 @@ namespace AdventOfCode2018
                         var result = battle.Fight(creature, target);
                         if (result == FightResult.Death)
                         {
-                            output.WriteLine($"Killing blow for {target}!");
+                            output.WriteLine("");
+                            output.WriteLine($"Killing blow at {numberOfCompletedRounds} for {target}!");
                             OutputGrid(battle);
                         }
                     }
@@ -259,9 +262,11 @@ namespace AdventOfCode2018
                     OutputGrid(battle);
                     throw new NotSupportedException("Deadlocks are not supported");
                 }
+
+                if (numberOfCompletedRounds < 10) { output.WriteLine(""); output.WriteLine($"After {numberOfCompletedRounds}"); OutputGrid(battle); }
             }
 
-            return 0;
+            throw new Exception("No outcome found.");
         }
 
         [Fact]
@@ -275,7 +280,7 @@ namespace AdventOfCode2018
                 #######
             ");
             var attacker = battle.Creatures.Single(c => c.IsElf);
-            var result = GetOptimalMoveFor(attacker);
+            var result = GetOptimalMoveFor(attacker, battle);
             Assert.Equal(battle.Grid[2, 1], result);
         }
 
@@ -290,7 +295,7 @@ namespace AdventOfCode2018
                 #######
             ");
             var attacker = battle.Creatures.Single(c => c.IsElf);
-            var result = GetOptimalMoveFor(attacker);
+            var result = GetOptimalMoveFor(attacker, battle);
             Assert.Equal(battle.Grid[3, 1], result);
         }
 
@@ -299,7 +304,7 @@ namespace AdventOfCode2018
         {
             var battle = CreateBattleFromInput("E.G");
             var attacker = battle.Creatures.Single(c => c.IsElf);
-            var result = GetOptimalMoveFor(attacker);
+            var result = GetOptimalMoveFor(attacker, battle);
             Assert.Equal(battle.Grid[1, 0], result);
         }
 
@@ -313,7 +318,7 @@ namespace AdventOfCode2018
                 ######
             ");
             var attacker = battle.Creatures.Single(c => c.Position.Point.X == 1);
-            var result = GetOptimalMoveFor(attacker);
+            var result = GetOptimalMoveFor(attacker, battle);
             Assert.Equal(battle.Grid[1, 2], result);
         }
 
@@ -330,32 +335,130 @@ namespace AdventOfCode2018
                 #########
             ");
             var attacker = battle.Creatures.Single(c => c.Position.Point.Y == 2);
-            var result = GetOptimalMoveFor(attacker);
+            var result = GetOptimalMoveFor(attacker, battle);
             Assert.Equal(battle.Grid[6, 1], result);
+        }
+
+        [Fact]
+        public void GetOptimalMoveFor_scenario_4()
+        {
+            var battle = CreateBattleFromInput(@"
+                #########
+                #.......#
+                #...#.G.#
+                #..E#...#
+                #.E.#...#
+                #.......#
+                #########
+            ");
+            var attacker = battle.Creatures.Single(c => c.Position.Point.Y == 3);
+            var result = GetOptimalMoveFor(attacker, battle);
+            Assert.Equal(battle.Grid[3, 2], result);
+        }
+
+        [Fact]
+        public void GetOptimalMoveFor_scenario_5()
+        {
+            var battle = CreateBattleFromInput(@"
+                #########
+                #.......#
+                #...#.G.#
+                #..E#...#
+                #..E#...#
+                #...#...#
+                #########
+            ");
+            var attacker = battle.Creatures.Single(c => c.Position.Point.Y == 4);
+            var result = GetOptimalMoveFor(attacker, battle);
+            Assert.Equal(battle.Grid[2, 4], result);
+        }
+
+        [Fact]
+        public void GetOptimalMoveFor_scenario_6()
+        {
+            var battle = CreateBattleFromInput(@"
+                #####
+                #E.G#
+                #.G.#
+                #####
+            ");
+            var attacker = battle.Creatures.Single(c => c.IsElf);
+            var result = GetOptimalMoveFor(attacker, battle);
+            Assert.Equal(battle.Grid[2, 1], result);
+        }
+
+        [Fact]
+        public void GetOptimalMoveFor_scenario_7()
+        {
+            var battle = CreateBattleFromInput(@"
+                ###########
+                #......G..#
+                #.........#
+                #....##G..#
+                #.E.##....#
+                #...##....#
+                #...##....#
+                ###########
+            ");
+            var attacker = battle.Creatures.Single(c => c.Position.Point.Y == 4);
+            var result = GetOptimalMoveFor(attacker, battle);
+            Assert.Equal(battle.Grid[2, 3], result);
         }
 
         public class NoMoveFoundException : Exception
         { }
 
-        private static Position GetOptimalMoveFor(Creature creature)
+        private static Position GetOptimalMoveFor(Creature creature, Battle battle)
         {
             var consideredPositions = new HashSet<Position> { creature.Position };
 
-            var positionsToTargetLocation = creature.Position
-                .EnumerateAdjacentPositionsInReadingOrder()
-                .Where(p => !p.HasCreature)
-                .ToDictionary(p => p, p => p.EnumerateAdjacentPositionsInReadingOrder());
+            var enemies = battle.Creatures.Where(c => c.IsEnemyFor(creature));
+            var wantedPositionsWithBestReadingOrder = new Dictionary<Position, int>();
+            foreach (var enemy in enemies)
+            {
+                if (enemy.Position.Up?.HasCreature == false)
+                {
+                    wantedPositionsWithBestReadingOrder[enemy.Position.Up] = 0;
+                }
 
-            var depth = 100;
+                if (enemy.Position.Left?.HasCreature == false)
+                {
+                    wantedPositionsWithBestReadingOrder[enemy.Position.Left] =
+                        Min(1, wantedPositionsWithBestReadingOrder.GetOrDefault(enemy.Position.Left, int.MaxValue));
+                }
+
+                if (enemy.Position.Right?.HasCreature == false)
+                {
+                    wantedPositionsWithBestReadingOrder[enemy.Position.Right] =
+                        Min(2, wantedPositionsWithBestReadingOrder.GetOrDefault(enemy.Position.Right, int.MaxValue));
+                }
+
+                if (enemy.Position.Down?.HasCreature == false)
+                {
+                    wantedPositionsWithBestReadingOrder[enemy.Position.Down] =
+                        Min(3, wantedPositionsWithBestReadingOrder.GetOrDefault(enemy.Position.Down, int.MaxValue));
+                }
+            }
+
+            var initialDirections = new Dictionary<PositionWithReadingOrder, List<Position>>();
+
+            if (creature.Position.Up?.HasCreature == false) initialDirections[new PositionWithReadingOrder { ReadingOrder = 0, Position = creature.Position.Up }] = new List<Position> { creature.Position.Up };
+            if (creature.Position.Left?.HasCreature == false) initialDirections[new PositionWithReadingOrder { ReadingOrder = 1, Position = creature.Position.Left }] = new List<Position> { creature.Position.Left };
+            if (creature.Position.Right?.HasCreature == false) initialDirections[new PositionWithReadingOrder { ReadingOrder = 2, Position = creature.Position.Right }] = new List<Position> { creature.Position.Right };
+            if (creature.Position.Down?.HasCreature == false) initialDirections[new PositionWithReadingOrder { ReadingOrder = 3, Position = creature.Position.Down }] = new List<Position> { creature.Position.Down };
+
+            var depth = 1000;
             for (int i = 0; i < depth; i++)
             {
-                var newPositionsToTargetLocation = new Dictionary<Position, List<Position>>();
+                var newDirections = new Dictionary<PositionWithReadingOrder, List<Position>>();
 
-                foreach (var kvp in positionsToTargetLocation)
+                var choices = new List<Choice>();
+
+                foreach (var dir in initialDirections.Keys.OrderBy(k => k.ReadingOrder))
                 {
-                    newPositionsToTargetLocation[kvp.Key] = new List<Position>();
-
-                    foreach (var target in kvp.Value)
+                    newDirections[dir] = new List<Position>();
+                    
+                    foreach (var target in initialDirections[dir])
                     {
                         if (consideredPositions.Contains(target))
                         {
@@ -364,9 +467,16 @@ namespace AdventOfCode2018
 
                         consideredPositions.Add(target);
 
-                        if (target.HasEnemyFor(creature))
+                        if (wantedPositionsWithBestReadingOrder.ContainsKey(target))
                         {
-                            return kvp.Key;
+                            choices.Add(new Choice
+                            {
+                                Direction = dir.Position,
+                                TargetReadingOrder = wantedPositionsWithBestReadingOrder[target],
+                                DirectionReadingOrder = dir.ReadingOrder,
+                            });
+
+                            continue;
                         }
 
                         if (target.HasCreature) // Must be a friend... (who's blocking us!)
@@ -374,15 +484,34 @@ namespace AdventOfCode2018
                             continue;
                         }
 
-                        newPositionsToTargetLocation[kvp.Key].AddRange(target.EnumerateAdjacentPositionsInReadingOrder());
+                        var fanout = target.EnumerateAdjacentPositionsInReadingOrder().Where(p => !consideredPositions.Contains(p));
+                        newDirections[dir].AddRange(fanout);
                     }
                 }
 
-                positionsToTargetLocation = newPositionsToTargetLocation;
+                initialDirections = newDirections;
+
+                var bestChoice = choices.OrderBy(c => c.TargetReadingOrder).ThenBy(c => c.DirectionReadingOrder).FirstOrDefault();
+
+                if (bestChoice != null) return bestChoice.Direction;
             }
 
             throw new NoMoveFoundException();
         }
+
+        public class Choice
+        {
+            public Position Direction { get; set; }
+            public int TargetReadingOrder { get; set; }
+            public int DirectionReadingOrder { get; set; }
+        }
+
+        public class PositionWithReadingOrder
+        {
+            public Position Position { get; set; }
+            public int ReadingOrder { get; set; }
+        }
+
 
         private static Battle CreateBattleFromInput(string input)
         {

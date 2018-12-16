@@ -4033,13 +4033,15 @@ After:  [1, 2, 1, 3]";
 4 1 0 0";
 
         [Fact] public void Solution_1_test_example() => Assert.Equal(1, Solve1(testInput));
-        [Fact] public void Solution_1_test_real_input() => Assert.Equal(0, Solve1(puzzleInput1));
+        [Fact] public void Solution_1_test_real_input() => Assert.Equal(640, Solve1(puzzleInput1));
+
+        [Fact] public void Solution_2_test_real_input() => Assert.Equal(-1, Solve2(puzzleInput1));
 
         public int Solve1(string input)
         {
-            var data = input.SplitByNewline(shouldTrim: true);
-
             var output = 0;
+            var data = input.SplitByNewline(shouldTrim: true);
+            var entries = new List<(int[] before, int[] instructions, int[] after)>();
 
             for (int i = 0; i < data.Length; i++)
             {
@@ -4047,19 +4049,18 @@ After:  [1, 2, 1, 3]";
                 int[] instructions = data[++i].Split().Select(int.Parse).ToArray();
                 int[] after = data[++i].Replace("After:  [", "").Replace("]", "").Split(", ").Select(int.Parse).ToArray();
 
+                entries.Add((before, instructions, after));
+            }
+
+            foreach (var (before, instructions, after) in entries)
+            {
                 var applicable = 0;
 
                 for (int n = 0; n < 16; n++)
                 {
                     instructions[0] = n;
-                    int[] clone = new[] { before[0], before[1], before[2], before[3] };
 
-                    Doop(instructions, clone);
-
-                    if (clone[0] == after[0]
-                        && clone[1] == after[1]
-                        && clone[2] == after[2]
-                        && clone[3] == after[3])
+                    if (IsOpPossible(instructions, before, after))
                     {
                         applicable++;
                     }
@@ -4068,9 +4069,72 @@ After:  [1, 2, 1, 3]";
                 if (applicable >= 3) output++;
             }
 
-            // Not: 274
-            // Not: 715
             return output;
+        }
+
+        public int Solve2(string input)
+        {
+            var data = input.SplitByNewline(shouldTrim: true);
+            var entries = new List<(int[] before, int[] instructions, int[] after)>();
+
+            for (int i = 0; i < data.Length; i++)
+            {
+                int[] before = data[i].Replace("Before: [", "").Replace("]", "").Split(", ").Select(int.Parse).ToArray();
+                int[] instructions = data[++i].Split().Select(int.Parse).ToArray();
+                int[] after = data[++i].Replace("After:  [", "").Replace("]", "").Split(", ").Select(int.Parse).ToArray();
+
+                entries.Add((before, instructions, after));
+            }
+
+            var mappings = Enumerable.Range(0, 16)
+                .ToDictionary(i => i, _ => Enumerable.Range(0, 16).ToHashSet());
+
+            while (mappings.Any(kvp => kvp.Value.Count > 1))
+            {
+                foreach (var (before, instructions, after) in entries)
+                {
+                    var applicable = 0;
+                    var realOpCode = instructions[0];
+
+                    for (int n = 0; n < 16; n++)
+                    {
+                        if (!mappings[realOpCode].Contains(n)) continue;
+
+                        instructions[0] = n;
+
+                        if (IsOpPossible(instructions, before, after))
+                        {
+                            applicable++;
+                        }
+                        else
+                        {
+                            mappings[realOpCode].Remove(n);
+                        }
+                    }
+
+                    if (applicable == 0) throw new NotSupportedException("No options left");
+                }
+            }
+
+            // Not: 3 (just a guess :D)
+            return 3;
+        }
+
+        private bool IsOpPossible(int[] instructions, int[] registers, int[] expected)
+        {
+            var clone = Clone(registers);
+
+            Doop(instructions, clone);
+
+            return (clone[0] == expected[0]
+                    && clone[1] == expected[1]
+                    && clone[2] == expected[2]
+                    && clone[3] == expected[3]);
+        }
+
+        private static int[] Clone(int[] before)
+        {
+            return new[] { before[0], before[1], before[2], before[3] };
         }
 
         [Theory]

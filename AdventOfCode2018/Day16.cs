@@ -4035,7 +4035,7 @@ After:  [1, 2, 1, 3]";
         [Fact] public void Solution_1_test_example() => Assert.Equal(1, Solve1(testInput));
         [Fact] public void Solution_1_test_real_input() => Assert.Equal(640, Solve1(puzzleInput1));
 
-        [Fact] public void Solution_2_test_real_input() => Assert.Equal(-1, Solve2(puzzleInput1));
+        [Fact] public void Solution_2_test_real_input() => Assert.Equal(472, Solve2(puzzleInput1, puzzleInput2));
 
         public int Solve1(string input)
         {
@@ -4072,7 +4072,7 @@ After:  [1, 2, 1, 3]";
             return output;
         }
 
-        public int Solve2(string input)
+        public int Solve2(string input, string input2)
         {
             var data = input.SplitByNewline(shouldTrim: true);
             var entries = new List<(int[] before, int[] instructions, int[] after)>();
@@ -4146,8 +4146,18 @@ After:  [1, 2, 1, 3]";
             
             OutputMappings(mappings);
 
-            // Not: 3 (just a guess :D)
-            return 3;
+            var realMapping = mappings.ToDictionary(kvp => kvp.Key, kvp => kvp.Value.Single());
+
+            var program = input2.SplitByNewline().Select(l => l.Split().Select(int.Parse).ToArray());
+
+            var registers = new[] { 0, 0, 0, 0 };
+            foreach (var line in program)
+            {
+                line[0] = realMapping[line[0]];
+                Doop(line, registers);
+            }
+
+            return registers[0];
         }
 
         private void OutputMappings(Dictionary<int, HashSet<int>> mappings)
@@ -4216,11 +4226,11 @@ After:  [1, 2, 1, 3]";
                     registers[c] = registers[a] + registers[b];
                     break;
                 case addi: // stores into register C the result of adding register A and value B
-                    registers[c] = b + registers[a];
+                    registers[c] = registers[a] + b;
                     break;
 
                 case mulr: // stores into register C the result of multiplying register A and register B
-                    registers[c] = a * b;
+                    registers[c] = registers[a] * registers[b];
                     break;
                 case muli: // stores into register C the result of multiplying register A and value B
                     registers[c] = registers[a] * b;
@@ -4234,10 +4244,10 @@ After:  [1, 2, 1, 3]";
                     break;
 
                 case borr: // stores into register C the result of the bitwise OR of register A and register B
-                    registers[c] = registers[a] & registers[b];
+                    registers[c] = registers[a] | registers[b];
                     break;
                 case bori: // stores into register C the result of the bitwise OR of register A and value B
-                    registers[c] = registers[a] & b;
+                    registers[c] = registers[a] | b;
                     break;
 
                 case setr: // copies the contents of register A into register C. (Input B is ignored.)

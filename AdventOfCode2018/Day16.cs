@@ -4053,7 +4053,9 @@ After:  [1, 2, 1, 3]";
                 {
                     instructions[0] = n;
                     int[] clone = new[] { before[0], before[1], before[2], before[3] };
+
                     Doop(instructions, clone);
+
                     if (clone[0] == after[0]
                         && clone[1] == after[1]
                         && clone[2] == after[2]
@@ -4067,62 +4069,90 @@ After:  [1, 2, 1, 3]";
             }
 
             // Not: 274
+            // Not: 715
             return output;
         }
 
-        private const int a = 0, b = 1, c = 2;
+        [Fact]
+        public void Doop_aoc_example_mulr()
+        {
+            var registers = new[] { 3, 2, 1, 1 };
+            Doop(new[] { mulr, 2, 1, 1 }, registers);
+            Assert.Equal(new[] { 3, 2, 2, 1 }, registers);
+        }
+
+        #region OpCodes
+        public const int addr = 0;
+        public const int addi = 1;
+        public const int mulr = 2;
+        public const int muli = 3;
+        public const int banr = 4;
+        public const int bani = 5;
+        public const int borr = 6;
+        public const int bori = 7;
+        public const int setr = 8;
+        public const int seti = 9;
+        public const int gtir = 10;
+        public const int gtri = 11;
+        public const int gtrr = 12;
+        public const int eqir = 13;
+        public const int eqri = 14;
+        public const int eqrr = 15;
+        #endregion
 
         private void Doop(int[] instructions, int[] registers)
         {
+            int a = instructions[1], b = instructions[2], c = instructions[3];
+
             switch (instructions[0])
             {
-                case 0: // adr
-                    registers[c] = instructions[a] + instructions[b];
+                case addr:
+                    registers[c] = a + b;
                     break;
-                case 1: // addi
-                    registers[c] = instructions[a] + registers[b];
+                case addi:
+                    registers[c] = a + registers[b];
                     break;
-                case 2: // mulr
-                    registers[c] = instructions[a] * instructions[b];
+                case mulr:
+                    registers[c] = a * b;
                     break;
-                case 3: // muli
-                    registers[c] = instructions[a] * registers[b];
+                case muli:
+                    registers[c] = a * registers[b];
                     break;
-                case 4: // banr
-                    registers[c] = instructions[a] & instructions[b];
+                case banr:
+                    registers[c] = a & b;
                     break;
-                case 5: // bani
-                    registers[c] = instructions[a] & registers[b];
+                case bani:
+                    registers[c] = a & registers[b];
                     break;
-                case 6: // borr
-                    registers[c] = instructions[a] & instructions[b];
+                case borr:
+                    registers[c] = a & b;
                     break;
-                case 7: // bori
-                    registers[c] = instructions[a] & registers[b];
+                case bori:
+                    registers[c] = a & registers[b];
                     break;
-                case 8: // setr
-                    registers[c] = instructions[a];
+                case setr:
+                    registers[c] = a;
                     break;
-                case 9: // seti
+                case seti:
                     registers[c] = registers[a];
                     break;
-                case 10: // gtir
-                    registers[c] = (registers[a] > instructions[b]) ? 1 : 0;
+                case gtir:
+                    registers[c] = (registers[a] > b) ? 1 : 0;
                     break;
-                case 11: // gtri
-                    registers[c] = (instructions[a] > registers[b]) ? 1 : 0;
+                case gtri:
+                    registers[c] = (a > registers[b]) ? 1 : 0;
                     break;
-                case 12: // gtrr
-                    registers[c] = (instructions[a] > instructions[b]) ? 1 : 0;
+                case gtrr:
+                    registers[c] = (a > b) ? 1 : 0;
                     break;
-                case 13: // eqir
-                    registers[c] = (registers[a] == instructions[b]) ? 1 : 0;
+                case eqir:
+                    registers[c] = (registers[a] == b) ? 1 : 0;
                     break;
-                case 14: // eqri
-                    registers[c] = (instructions[a] == registers[b]) ? 1 : 0;
+                case eqri:
+                    registers[c] = (a == registers[b]) ? 1 : 0;
                     break;
-                case 15:
-                    registers[c] = (instructions[a] == instructions[b]) ? 1 : 0;
+                case eqrr:
+                    registers[c] = (a == b) ? 1 : 0;
                     break;
                 default:
                     throw new NotSupportedException();

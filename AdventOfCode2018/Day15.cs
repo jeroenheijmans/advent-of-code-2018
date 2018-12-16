@@ -180,6 +180,7 @@ namespace AdventOfCode2018
         }
 
         [Fact] public void Solution_1_test_real_input() => Assert.Equal(250594, Solve1(puzzleInput));
+        [Fact] public void Solution_2_test_real_input() => Assert.Equal(52133, Solve2(puzzleInput));
 
         private const int StartingHitPoints = 200;
         private const int DefaultAttackPower = 3;
@@ -187,9 +188,24 @@ namespace AdventOfCode2018
         public int Solve1(string input)
         {
             var battle = new Battle(input);
-
             output.WriteLine("Battle is starting...");
+            return RunBattle(battle);
+        }
 
+        public int Solve2(string input)
+        {
+            for (int elfAttackPower = 0; elfAttackPower < 200; elfAttackPower++)
+            {
+                var battle = new Battle(input, elfAttackPower);
+                var score = RunBattle(battle);
+                if (battle.IsCleanElvenVictory()) return score;
+            }
+
+            throw new Exception("No outcome found");
+        }
+
+        private int RunBattle(Battle battle)
+        {
             for (int numberOfCompletedRounds = 0; numberOfCompletedRounds < 1_000_000; numberOfCompletedRounds++)
             {
                 var creaturesInActingOrder = battle.GetCreaturesInActingOrder();
@@ -252,6 +268,7 @@ namespace AdventOfCode2018
 
             throw new Exception("No outcome found.");
         }
+
 
         [Fact]
         public void GetOptimalMoveFor_aoc_scenario_1()
@@ -574,9 +591,14 @@ namespace AdventOfCode2018
 
         public class Creature
         {
+            public Creature(int attackPower = DefaultAttackPower)
+            {
+                this.AttackPower = attackPower;
+            }
+
             public bool IsGoblin { get; set; }
             public int HitPoints { get; set; } = StartingHitPoints;
-            public int AttackPower => DefaultAttackPower;
+            public int AttackPower { get; }
             public Position Position { get; set; }
 
             public bool IsDead => HitPoints <= 0;
@@ -620,7 +642,7 @@ namespace AdventOfCode2018
             public override string ToString() => $"{Rune} ({HitPoints} HP) at ({Position?.Point.X}, {Position?.Point.Y})";
 
             public static Creature CreateGoblin() => new Creature { IsGoblin = true };
-            public static Creature CreateElf() => new Creature { IsGoblin = false };
+            public static Creature CreateElf(int attackPower = DefaultAttackPower) => new Creature(attackPower) { IsGoblin = false };
         }
 
         public class Position
@@ -725,7 +747,7 @@ namespace AdventOfCode2018
 
         public class Battle
         {
-            public Battle(string input)
+            public Battle(string input, int elfAttackPower = DefaultAttackPower)
             {
                 var data = input.SplitByNewline(shouldTrim: true);
                 var width = data.First().Length;
@@ -741,7 +763,7 @@ namespace AdventOfCode2018
 
                         Creature creature = null;
                         if (data[y][x] == 'G') creature = Creature.CreateGoblin();
-                        if (data[y][x] == 'E') creature = Creature.CreateElf();
+                        if (data[y][x] == 'E') creature = Creature.CreateElf(elfAttackPower);
                         if (creature != null) Creatures.Add(creature);
 
                         var value = (y * width) + x;
@@ -763,6 +785,7 @@ namespace AdventOfCode2018
 
             public Position[,] Grid { get; }
             public ISet<Creature> Creatures { get; } = new HashSet<Creature>();
+            public ISet<Creature> Corpses { get; } = new HashSet<Creature>();
 
             public Creature[] GetCreaturesInActingOrder() => Creatures
                     .OrderBy(c => c.Position.Point.Y)
@@ -781,6 +804,7 @@ namespace AdventOfCode2018
                 if (target.HitPoints <= 0)
                 {
                     Creatures.Remove(target);
+                    Corpses.Add(target);
                     target.Position.Creature = null;
                     target.Position = null;
                     return FightResult.Death;
@@ -788,6 +812,8 @@ namespace AdventOfCode2018
 
                 return FightResult.JustPain;
             }
+
+            public bool IsCleanElvenVictory() => !Corpses.Any(c => c.IsElf) && IsOver();
 
             public bool IsOver() => Creatures.All(c => c.IsGoblin || c.IsDead) || Creatures.All(c => c.IsElf || c.IsDead);
             public int GetHitPointsLeft() => Creatures.Where(c => !c.IsDead).Sum(x => x.HitPoints);

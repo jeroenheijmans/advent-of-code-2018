@@ -5,7 +5,6 @@ using System.Linq;
 using System.Text;
 using Xunit;
 using Xunit.Abstractions;
-using static AdventOfCode2018.Util;
 
 namespace AdventOfCode2018
 {
@@ -194,7 +193,7 @@ namespace AdventOfCode2018
 
         public int Solve1(string input)
         {
-            var battle = CreateBattleFromInput(input);
+            var battle = new Battle(input);
             output.WriteLine("Battle is starting...");
             OutputGrid(battle);
 
@@ -264,7 +263,7 @@ namespace AdventOfCode2018
         [Fact]
         public void GetOptimalMoveFor_aoc_scenario_1()
         {
-            var battle = CreateBattleFromInput(@"
+            var battle = new Battle(@"
                 #######
                 #E..G.#
                 #...#.#
@@ -279,7 +278,7 @@ namespace AdventOfCode2018
         [Fact]
         public void GetOptimalMoveFor_aoc_scenario_2()
         {
-            var battle = CreateBattleFromInput(@"
+            var battle = new Battle(@"
                 #######
                 #.E...#
                 #.....#
@@ -294,7 +293,7 @@ namespace AdventOfCode2018
         [Fact]
         public void GetOptimalMoveFor_scenario_1()
         {
-            var battle = CreateBattleFromInput("E.G");
+            var battle = new Battle("E.G");
             var attacker = battle.Creatures.Single(c => c.IsElf);
             var result = GetOptimalMoveFor(attacker, battle);
             Assert.Equal(battle.Grid[1, 0], result);
@@ -303,7 +302,7 @@ namespace AdventOfCode2018
         [Fact]
         public void GetOptimalMoveFor_scenario_2()
         {
-            var battle = CreateBattleFromInput(@"
+            var battle = new Battle(@"
                 ######
                 #E#GE#
                 #....#
@@ -317,7 +316,7 @@ namespace AdventOfCode2018
         [Fact]
         public void GetOptimalMoveFor_scenario_3a()
         {
-            var battle = CreateBattleFromInput(@"
+            var battle = new Battle(@"
                 #########
                 #.......#
                 #...#.G.#
@@ -334,7 +333,7 @@ namespace AdventOfCode2018
         [Fact]
         public void GetOptimalMoveFor_scenario_3b()
         {
-            var battle = CreateBattleFromInput(@"
+            var battle = new Battle(@"
                 #########
                 #.......#
                 #.E.#...#
@@ -351,7 +350,7 @@ namespace AdventOfCode2018
         [Fact]
         public void GetOptimalMoveFor_scenario_3c()
         {
-            var battle = CreateBattleFromInput(@"
+            var battle = new Battle(@"
                 #########
                 #.......#
                 #...#.G.#
@@ -368,7 +367,7 @@ namespace AdventOfCode2018
         [Fact]
         public void GetOptimalMoveFor_scenario_4()
         {
-            var battle = CreateBattleFromInput(@"
+            var battle = new Battle(@"
                 #########
                 #.......#
                 #...#.G.#
@@ -385,7 +384,7 @@ namespace AdventOfCode2018
         [Fact]
         public void GetOptimalMoveFor_scenario_5()
         {
-            var battle = CreateBattleFromInput(@"
+            var battle = new Battle(@"
                 #########
                 #.......#
                 #...#.G.#
@@ -402,7 +401,7 @@ namespace AdventOfCode2018
         [Fact]
         public void GetOptimalMoveFor_scenario_6()
         {
-            var battle = CreateBattleFromInput(@"
+            var battle = new Battle(@"
                 #####
                 #E.G#
                 #.G.#
@@ -416,7 +415,7 @@ namespace AdventOfCode2018
         [Fact]
         public void GetOptimalMoveFor_scenario_7()
         {
-            var battle = CreateBattleFromInput(@"
+            var battle = new Battle(@"
                 ###########
                 #......G..#
                 #.........#
@@ -434,7 +433,7 @@ namespace AdventOfCode2018
         [Fact]
         public void GetOptimalMoveFor_scenario_8()
         {
-            var battle = CreateBattleFromInput(@"
+            var battle = new Battle(@"
                 #########
                 #G..E..G#
                 #########
@@ -513,54 +512,6 @@ namespace AdventOfCode2018
             throw new NoMoveFoundException();
         }
         
-        public class Choice
-        {
-            public Position Direction { get; set; }
-            public int TargetReadingOrder { get; set; }
-            public int DirectionReadingOrder { get; set; }
-        }
-
-        public class PositionWithReadingOrder
-        {
-            public Position Position { get; set; }
-            public int ReadingOrder { get; set; }
-        }
-
-        private static Battle CreateBattleFromInput(string input)
-        {
-            var data = input.SplitByNewline(shouldTrim: true);
-            var width = data.First().Length;
-            var height = data.Length;
-            var battle = new Battle(width, height);
-
-            for (int y = 0; y < height; y++)
-            {
-                for (int x = 0; x < width; x++)
-                {
-                    if (data[y][x] == '#') continue;
-
-                    Creature creature = null;
-                    if (data[y][x] == 'G') creature = Creature.CreateGoblin();
-                    if (data[y][x] == 'E') creature = Creature.CreateElf();
-                    if (creature != null) battle.Creatures.Add(creature);
-
-                    battle.Grid[x, y] = new Position(x, y, creature);
-
-                    if (y > 0 && battle.Grid[x, y - 1] != null)
-                    {
-                        battle.Grid[x, y].ConnectToPositionAbove(battle.Grid[x, y - 1]);
-                    }
-
-                    if (x > 0 && battle.Grid[x - 1, y] != null)
-                    {
-                        battle.Grid[x, y].ConnectToPositionToTheLeft(battle.Grid[x - 1, y]);
-                    }
-                }
-            }
-
-            return battle;
-        }
-
         [Fact]
         public void Creature_enemy_detection_works()
         {
@@ -573,7 +524,7 @@ namespace AdventOfCode2018
         [Fact]
         public void Creature_targets_lowest_hp_enemy_first()
         {
-            var battle = CreateBattleFromInput("EGE");
+            var battle = new Battle("EGE");
             var attacker = battle.Creatures.Single(c => c.IsGoblin);
             var weakTarget = battle.Creatures.Single(c => c.Position.Point.X == 2);
             weakTarget.HitPoints -= 1;
@@ -591,7 +542,7 @@ namespace AdventOfCode2018
         [InlineData("... \n .G. \n .E.", 1, 2)]
         public void Creature_targets_reading_order_enemy_first(string input, int x, int y)
         {
-            var battle = CreateBattleFromInput(input);
+            var battle = new Battle(input);
             var attacker = battle.Creatures.Single(c => c.IsGoblin);
             var expectedTarget = battle.Creatures.Single(c => c.Position.Point.X == x && c.Position.Point.Y == y);
 
@@ -708,13 +659,13 @@ namespace AdventOfCode2018
                 return list;
             }
 
-        public override string ToString() => $"({Point.X}, {Point.Y}) with {Creature?.Rune ?? '.'}";
+            public override string ToString() => $"({Point.X}, {Point.Y}) with {Creature?.Rune ?? '.'}";
         }
 
         [Fact]
         public void ActingOrder_aoc_scenario()
         {
-            var battle = CreateBattleFromInput(@"
+            var battle = new Battle(@"
                 #######
                 #.G.E.#
                 #E.G.E#
@@ -734,36 +685,61 @@ namespace AdventOfCode2018
         [InlineData("EE")]
         [InlineData("GG")]
         [InlineData("EEE")]
-        public void IsOver_true_when_only_one_kind_left(string input) => Assert.True(CreateBattleFromInput(input).IsOver());
+        public void IsOver_true_when_only_one_kind_left(string input) => Assert.True(new Battle(input).IsOver());
 
         [Theory]
         [InlineData("EG")]
         [InlineData("GE")]
         [InlineData("EEG")]
         [InlineData("GGE")]
-        public void IsOver_false_when_only_many_kind_left(string input) => Assert.False(CreateBattleFromInput(input).IsOver());
+        public void IsOver_false_when_only_many_kind_left(string input) => Assert.False(new Battle(input).IsOver());
 
         [Theory]
         [InlineData("EG")]
         [InlineData("GE")]
         public void IsOver_true_when_only_dead_others(string input)
         {
-            var battle = CreateBattleFromInput(input);
+            var battle = new Battle(input);
             battle.Creatures.First().HitPoints = -1;
             Assert.True(battle.IsOver());
         }
 
         public class Battle
         {
-            public Battle(int width, int height)
+            public Battle(string input)
             {
-                Width = width;
-                Height = height;
+                var data = input.SplitByNewline(shouldTrim: true);
+                var width = data.First().Length;
+                var height = data.Length;
+
                 Grid = new Position[width, height];
+
+                for (int y = 0; y < height; y++)
+                {
+                    for (int x = 0; x < width; x++)
+                    {
+                        if (data[y][x] == '#') continue;
+
+                        Creature creature = null;
+                        if (data[y][x] == 'G') creature = Creature.CreateGoblin();
+                        if (data[y][x] == 'E') creature = Creature.CreateElf();
+                        if (creature != null) Creatures.Add(creature);
+
+                        Grid[x, y] = new Position(x, y, creature);
+
+                        if (y > 0 && Grid[x, y - 1] != null)
+                        {
+                            Grid[x, y].ConnectToPositionAbove(Grid[x, y - 1]);
+                        }
+
+                        if (x > 0 && Grid[x - 1, y] != null)
+                        {
+                            Grid[x, y].ConnectToPositionToTheLeft(Grid[x - 1, y]);
+                        }
+                    }
+                }
             }
 
-            public int Width { get; }
-            public int Height { get; }
             public Position[,] Grid { get; }
             public ISet<Creature> Creatures { get; } = new HashSet<Creature>();
 
@@ -793,23 +769,18 @@ namespace AdventOfCode2018
             }
 
             public bool IsOver() => Creatures.All(c => c.IsGoblin || c.IsDead) || Creatures.All(c => c.IsElf || c.IsDead);
-
-            public int GetHitPointsLeft() => Creatures.Sum(x => x.HitPoints);
-
-            public int GetScoreFor(int rounds)
-            {
-                return rounds * GetHitPointsLeft();
-            }
+            public int GetHitPointsLeft() => Creatures.Where(c => !c.IsDead).Sum(x => x.HitPoints);
+            public int GetScoreFor(int completedRounds) => completedRounds * GetHitPointsLeft();
         }
 
         public enum FightResult { JustPain, Death }
         
         private void OutputGrid(Battle battle, bool includeCreatures = false)
         {
-            for (int y = 0; y < battle.Height; y++)
+            for (int y = 0; y < battle.Grid.GetLength(1); y++)
             {
                 var sb = new StringBuilder();
-                for (int x = 0; x < battle.Width; x++)
+                for (int x = 0; x < battle.Grid.GetLength(0); x++)
                 {
                     if (battle.Grid[x, y] == null) sb.Append('█');
                     else sb.Append(battle.Grid[x, y].Rune);

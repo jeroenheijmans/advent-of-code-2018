@@ -4073,11 +4073,14 @@ After:  [1, 2, 1, 3]";
             return output;
         }
 
-        [Fact]
-        public void Doop_aoc_example_mulr()
+        [Theory]
+        [InlineData(mulr)]
+        [InlineData(addi)]
+        [InlineData(seti)]
+        public void Doop_aoc_example_puzzle1(int op)
         {
             var registers = new[] { 3, 2, 1, 1 };
-            Doop(new[] { mulr, 2, 1, 1 }, registers);
+            Doop(new[] { op, 2, 1, 2 }, registers);
             Assert.Equal(new[] { 3, 2, 2, 1 }, registers);
         }
 
@@ -4106,54 +4109,61 @@ After:  [1, 2, 1, 3]";
 
             switch (instructions[0])
             {
-                case addr:
-                    registers[c] = a + b;
+                case addr: // stores into register C the result of adding register A and register B
+                    registers[c] = registers[a] + registers[b];
                     break;
-                case addi:
-                    registers[c] = a + registers[b];
+                case addi: // stores into register C the result of adding register A and value B
+                    registers[c] = b + registers[a];
                     break;
-                case mulr:
+
+                case mulr: // stores into register C the result of multiplying register A and register B
                     registers[c] = a * b;
                     break;
-                case muli:
-                    registers[c] = a * registers[b];
+                case muli: // stores into register C the result of multiplying register A and value B
+                    registers[c] = registers[a] * b;
                     break;
-                case banr:
-                    registers[c] = a & b;
+
+                case banr: // stores into register C the result of the bitwise AND of register A and register B
+                    registers[c] = registers[a] & registers[b];
                     break;
-                case bani:
-                    registers[c] = a & registers[b];
+                case bani: // stores into register C the result of the bitwise AND of register A and value B
+                    registers[c] = registers[a] & b;
                     break;
-                case borr:
-                    registers[c] = a & b;
+
+                case borr: // stores into register C the result of the bitwise OR of register A and register B
+                    registers[c] = registers[a] & registers[b];
                     break;
-                case bori:
-                    registers[c] = a & registers[b];
+                case bori: // stores into register C the result of the bitwise OR of register A and value B
+                    registers[c] = registers[a] & b;
                     break;
-                case setr:
-                    registers[c] = a;
-                    break;
-                case seti:
+
+                case setr: // copies the contents of register A into register C. (Input B is ignored.)
                     registers[c] = registers[a];
                     break;
-                case gtir:
-                    registers[c] = (registers[a] > b) ? 1 : 0;
+                case seti: // stores value A into register C. (Input B is ignored.)
+                    registers[c] = a;
                     break;
-                case gtri:
+
+                case gtir: // sets register C to 1 if value A is greater than register B. Otherwise, register C is set to 0
                     registers[c] = (a > registers[b]) ? 1 : 0;
                     break;
-                case gtrr:
-                    registers[c] = (a > b) ? 1 : 0;
+                case gtri: // sets register C to 1 if register A is greater than value B. Otherwise, register C is set to 0
+                    registers[c] = (registers[a] > b) ? 1 : 0;
                     break;
-                case eqir:
-                    registers[c] = (registers[a] == b) ? 1 : 0;
+                case gtrr: // sets register C to 1 if register A is greater than register B. Otherwise, register C is set to 0
+                    registers[c] = (registers[a] > registers[b]) ? 1 : 0;
                     break;
-                case eqri:
+
+                case eqir: // sets register C to 1 if value A is equal to register B. Otherwise, register C is set to 0
                     registers[c] = (a == registers[b]) ? 1 : 0;
                     break;
-                case eqrr:
-                    registers[c] = (a == b) ? 1 : 0;
+                case eqri: // sets register C to 1 if register A is equal to value B. Otherwise, register C is set to 0
+                    registers[c] = (registers[a] == b) ? 1 : 0;
                     break;
+                case eqrr: // sets register C to 1 if register A is equal to register B. Otherwise, register C is set to 0
+                    registers[c] = (registers[a] == registers[b]) ? 1 : 0;
+                    break;
+
                 default:
                     throw new NotSupportedException();
             }

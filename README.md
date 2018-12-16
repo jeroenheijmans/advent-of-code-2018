@@ -19,16 +19,16 @@ Here's what I learned (or noticed) each day.
 4. I have a healthy fear of DateTime types, and avoid them unless needed.
 5. Using mostly "for each" in app development, I almost forgot "Off By One" errors existed.
 6. Sets are *fast* for 'Contains(...)` operations.
-7. God I wish I knew Python and its graph libraries...
+7. **God I wish I knew Python** and its graph libraries...
 8. Static typing can slow you down a lot in AoC.
 9. Doubly linked lists are the bomb!
 10. Not everything is (nor should be) easily unit-testable
-11. TBD
-12. TBD
-13. TBD
-14. TBD
-15. TBD
-16. TBD
+11. **Having a partner that understands (and puts up with) your hobbies is _golden_!**
+12. Advent of Code is the Game of Life for one month a year.
+13. Object Oriented programming sometimes still shines.
+14. Choose the right data structure for the right job.
+15. **I have determination!** (And also **spent 17+ hours over two days** on this puzzle.)
+16. Bulky, precise work requires concentration.
 17. TBD
 18. TBD
 19. TBD

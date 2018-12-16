@@ -449,102 +449,70 @@ namespace AdventOfCode2018
 
         private static Position GetOptimalMoveFor(Creature creature, Battle battle)
         {
-            var consideredPositions = new HashSet<Position> { creature.Position };
+            var possibleMoves = new Dictionary<Position, int>();
+            if (creature.Position.Up?.HasCreature == false) possibleMoves.Add(creature.Position.Up, 0);
+            if (creature.Position.Left?.HasCreature == false) possibleMoves.Add(creature.Position.Left, 1);
+            if (creature.Position.Right?.HasCreature == false) possibleMoves.Add(creature.Position.Right, 2);
+            if (creature.Position.Down?.HasCreature == false) possibleMoves.Add(creature.Position.Down, 3);
 
-            var enemies = battle.Creatures.Where(c => c.IsEnemyFor(creature));
-            var wantedPositionsWithBestReadingOrder = new Dictionary<Position, int>();
-
-            foreach (var enemy in enemies)
+            var targetsByDirection = new Dictionary<int, ISet<Position>>
             {
-                if (enemy.Position.Up?.HasCreature == false)
-                {
-                    wantedPositionsWithBestReadingOrder[enemy.Position.Up] =
-                        Min(0, wantedPositionsWithBestReadingOrder.GetOrDefault(enemy.Position.Up, int.MaxValue));
-                }
+                { 0, new HashSet<Position>() },
+                { 1, new HashSet<Position>() },
+                { 2, new HashSet<Position>() },
+                { 3, new HashSet<Position>() },
+            };
 
-                if (enemy.Position.Left?.HasCreature == false)
-                {
-                    wantedPositionsWithBestReadingOrder[enemy.Position.Left] =
-                        Min(1, wantedPositionsWithBestReadingOrder.GetOrDefault(enemy.Position.Left, int.MaxValue));
-                }
-
-                if (enemy.Position.Right?.HasCreature == false)
-                {
-                    wantedPositionsWithBestReadingOrder[enemy.Position.Right] =
-                        Min(2, wantedPositionsWithBestReadingOrder.GetOrDefault(enemy.Position.Right, int.MaxValue));
-                }
-
-                if (enemy.Position.Down?.HasCreature == false)
-                {
-                    wantedPositionsWithBestReadingOrder[enemy.Position.Down] =
-                        Min(3, wantedPositionsWithBestReadingOrder.GetOrDefault(enemy.Position.Down, int.MaxValue));
-                }
+            foreach (var pos in battle.Creatures.Where(c => c.IsEnemyFor(creature)).Select(c => c.Position))
+            {
+                if (pos.Up?.HasCreature == false) targetsByDirection[0].Add(pos.Up);
+                if (pos.Left?.HasCreature == false) targetsByDirection[1].Add(pos.Left);
+                if (pos.Right?.HasCreature == false) targetsByDirection[2].Add(pos.Right);
+                if (pos.Down?.HasCreature == false) targetsByDirection[3].Add(pos.Down);
             }
 
-            var initialDirections = new Dictionary<PositionWithReadingOrder, List<Position>>();
+            var visited = new HashSet<Position>();
+            var exhausted = false;
 
-            if (creature.Position.Up?.HasCreature == false) initialDirections[new PositionWithReadingOrder { ReadingOrder = 0, Position = creature.Position.Up }] = new List<Position> { creature.Position.Up };
-            if (creature.Position.Left?.HasCreature == false) initialDirections[new PositionWithReadingOrder { ReadingOrder = 1, Position = creature.Position.Left }] = new List<Position> { creature.Position.Left };
-            if (creature.Position.Right?.HasCreature == false) initialDirections[new PositionWithReadingOrder { ReadingOrder = 2, Position = creature.Position.Right }] = new List<Position> { creature.Position.Right };
-            if (creature.Position.Down?.HasCreature == false) initialDirections[new PositionWithReadingOrder { ReadingOrder = 3, Position = creature.Position.Down }] = new List<Position> { creature.Position.Down };
-
-            bool exhausted = false;
             while (!exhausted)
             {
                 exhausted = true;
 
-                var newDirections = new Dictionary<PositionWithReadingOrder, List<Position>>();
-
-                var choices = new List<Choice>();
-
-                foreach (var dir in initialDirections.Keys.OrderBy(k => k.ReadingOrder))
+                for (int i = 0; i < 4; i++)
                 {
-                    newDirections[dir] = new List<Position>();
-                    
-                    foreach (var target in initialDirections[dir])
+                    var newTargets = new HashSet<Position>();
+
+                    Position bestMove = null;
+                    int bestROrder = int.MaxValue;
+
+                    foreach (var pos in targetsByDirection[i])
                     {
-                        if (consideredPositions.Contains(target))
+                        if (visited.Contains(pos)) continue;
+
+                        visited.Add(pos);
+                        exhausted = false;
+
+                        if (possibleMoves.ContainsKey(pos) && possibleMoves[pos] < bestROrder)
                         {
-                            continue;
+                            bestMove = pos;
+                            bestROrder = possibleMoves[pos];
                         }
 
-                        consideredPositions.Add(target);
-
-                        if (wantedPositionsWithBestReadingOrder.ContainsKey(target))
-                        {
-                            choices.Add(new Choice
-                            {
-                                Direction = dir.Position,
-                                TargetReadingOrder = wantedPositionsWithBestReadingOrder[target],
-                                DirectionReadingOrder = dir.ReadingOrder,
-                            });
-
-                            continue;
-                        }
-
-                        if (target.HasCreature) // Must be a friend... (who's blocking us!)
-                        {
-                            continue;
-                        }
-
-                        var fanout = target.EnumerateAdjacentPositionsInReadingOrder().Where(p => !consideredPositions.Contains(p));
-
-                        if (fanout.Any()) exhausted = false;
-
-                        newDirections[dir].AddRange(fanout);
+                        if (pos.Up?.HasCreature == false) newTargets.Add(pos.Up);
+                        if (pos.Left?.HasCreature == false) newTargets.Add(pos.Left);
+                        if (pos.Right?.HasCreature == false) newTargets.Add(pos.Right);
+                        if (pos.Down?.HasCreature == false) newTargets.Add(pos.Down);
                     }
+
+                    targetsByDirection[i] = newTargets;
+
+                    if (bestMove != null) return bestMove;
                 }
-
-                initialDirections = newDirections;
-                
-                var bestChoice = choices.OrderBy(c => c.TargetReadingOrder).ThenBy(c => c.DirectionReadingOrder).FirstOrDefault();
-
-                if (bestChoice != null) return bestChoice.Direction;
             }
 
             throw new NoMoveFoundException();
         }
-
+        
         public class Choice
         {
             public Position Direction { get; set; }

@@ -179,14 +179,7 @@ namespace AdventOfCode2018
             "));
         }
 
-        // Not: 251877
-        // Not: 244860 ("too low")
-        // Not: 247277 ("too low", of course) after disabling the "IsDead => continue" option
-        // Not: 247192 (after sneakily doing round++ before calculating score)
-        // Not: 244860 (just tried it again...)
-        // Not: 245544 (with search depth 20 and no "consideredPoints" set at all)
-        // Not: 275520 (with the sort-attack-order on Y position disabled)
-        [Fact] public void Solution_1_test_real_input() => Assert.Equal(0, Solve1(puzzleInput));
+        [Fact] public void Solution_1_test_real_input() => Assert.Equal(250594, Solve1(puzzleInput));
 
         private const int StartingHitPoints = 200;
         private const int DefaultAttackPower = 3;
@@ -194,8 +187,8 @@ namespace AdventOfCode2018
         public int Solve1(string input)
         {
             var battle = new Battle(input);
+
             output.WriteLine("Battle is starting...");
-            OutputGrid(battle);
 
             for (int numberOfCompletedRounds = 0; numberOfCompletedRounds < 1_000_000; numberOfCompletedRounds++)
             {
@@ -291,7 +284,7 @@ namespace AdventOfCode2018
         }
 
         [Fact]
-        public void GetOptimalMoveFor_scenario_1()
+        public void GetOptimalMoveFor_scenario_01()
         {
             var battle = new Battle("E.G");
             var attacker = battle.Creatures.Single(c => c.IsElf);
@@ -300,7 +293,7 @@ namespace AdventOfCode2018
         }
 
         [Fact]
-        public void GetOptimalMoveFor_scenario_2()
+        public void GetOptimalMoveFor_scenario_02()
         {
             var battle = new Battle(@"
                 ######
@@ -314,7 +307,7 @@ namespace AdventOfCode2018
         }
 
         [Fact]
-        public void GetOptimalMoveFor_scenario_3a()
+        public void GetOptimalMoveFor_scenario_03a()
         {
             var battle = new Battle(@"
                 #########
@@ -331,7 +324,7 @@ namespace AdventOfCode2018
         }
 
         [Fact]
-        public void GetOptimalMoveFor_scenario_3b()
+        public void GetOptimalMoveFor_scenario_03b()
         {
             var battle = new Battle(@"
                 #########
@@ -348,7 +341,7 @@ namespace AdventOfCode2018
         }
 
         [Fact]
-        public void GetOptimalMoveFor_scenario_3c()
+        public void GetOptimalMoveFor_scenario_03c()
         {
             var battle = new Battle(@"
                 #########
@@ -365,7 +358,7 @@ namespace AdventOfCode2018
         }
 
         [Fact]
-        public void GetOptimalMoveFor_scenario_4()
+        public void GetOptimalMoveFor_scenario_04()
         {
             var battle = new Battle(@"
                 #########
@@ -382,7 +375,7 @@ namespace AdventOfCode2018
         }
 
         [Fact]
-        public void GetOptimalMoveFor_scenario_5()
+        public void GetOptimalMoveFor_scenario_05()
         {
             var battle = new Battle(@"
                 #########
@@ -399,7 +392,7 @@ namespace AdventOfCode2018
         }
 
         [Fact]
-        public void GetOptimalMoveFor_scenario_6()
+        public void GetOptimalMoveFor_scenario_06()
         {
             var battle = new Battle(@"
                 #####
@@ -413,7 +406,7 @@ namespace AdventOfCode2018
         }
 
         [Fact]
-        public void GetOptimalMoveFor_scenario_7()
+        public void GetOptimalMoveFor_scenario_07()
         {
             var battle = new Battle(@"
                 ###########
@@ -431,7 +424,7 @@ namespace AdventOfCode2018
         }
 
         [Fact]
-        public void GetOptimalMoveFor_scenario_8()
+        public void GetOptimalMoveFor_scenario_08()
         {
             var battle = new Battle(@"
                 #########
@@ -440,7 +433,41 @@ namespace AdventOfCode2018
             ");
             var attacker = battle.Creatures.Single(c => c.Position.Point.X == 4);
             var result = GetOptimalMoveFor(attacker, battle);
-            Assert.Equal(battle.Grid[5, 1], result);
+            Assert.Equal(battle.Grid[3, 1], result);
+        }
+
+        [Fact]
+        public void GetOptimalMoveFor_scenario_09()
+        {
+            var battle = new Battle(@"
+                #########
+                #.....G.#
+                #.G..GE##
+                #.....###
+                #########
+            ");
+            var attacker = battle.Creatures.Single(c => c.Position.Point.X == 2);
+            Assert.Throws<NoMoveFoundException>(() => GetOptimalMoveFor(attacker, battle));
+        }
+
+        [Fact]
+        public void GetOptimalMoveFor_scenario_10()
+        {
+            // First elf move in the "larger example of movement" from the puzzle description:
+            var battle = new Battle(@"
+                #########
+                #.G...G.#
+                #...G...#
+                #.......#
+                #.G.E..G#
+                #.......#
+                #.......#
+                #G..G..G#
+                #########
+            ");
+            var attacker = battle.Creatures.Single(c => c.IsElf);
+            var result = GetOptimalMoveFor(attacker, battle);
+            Assert.Equal(battle.Grid[4, 3], result);
         }
 
         public class NoMoveFoundException : Exception
@@ -454,20 +481,14 @@ namespace AdventOfCode2018
             if (creature.Position.Right?.HasCreature == false) possibleMoves.Add(creature.Position.Right, 2);
             if (creature.Position.Down?.HasCreature == false) possibleMoves.Add(creature.Position.Down, 3);
 
-            var targetsByDirection = new Dictionary<int, ISet<Position>>
-            {
-                { 0, new HashSet<Position>() },
-                { 1, new HashSet<Position>() },
-                { 2, new HashSet<Position>() },
-                { 3, new HashSet<Position>() },
-            };
+            var targets = new Dictionary<int, ISet<Position>>();
 
             foreach (var pos in battle.Creatures.Where(c => c.IsEnemyFor(creature)).Select(c => c.Position))
             {
-                if (pos.Up?.HasCreature == false) targetsByDirection[0].Add(pos.Up);
-                if (pos.Left?.HasCreature == false) targetsByDirection[1].Add(pos.Left);
-                if (pos.Right?.HasCreature == false) targetsByDirection[2].Add(pos.Right);
-                if (pos.Down?.HasCreature == false) targetsByDirection[3].Add(pos.Down);
+                if (pos.Up?.HasCreature == false) targets[pos.Up.ReadingOrderValue] = new HashSet<Position> { pos.Up };
+                if (pos.Left?.HasCreature == false) targets[pos.Left.ReadingOrderValue] = new HashSet<Position> { pos.Left };
+                if (pos.Right?.HasCreature == false) targets[pos.Right.ReadingOrderValue] = new HashSet<Position> { pos.Right };
+                if (pos.Down?.HasCreature == false) targets[pos.Down.ReadingOrderValue] = new HashSet<Position> { pos.Down };
             }
 
             var visited = new HashSet<Position>();
@@ -477,14 +498,14 @@ namespace AdventOfCode2018
             {
                 exhausted = true;
 
-                for (int i = 0; i < 4; i++)
+                foreach (var key in targets.Keys.OrderBy(k => k))
                 {
                     var newTargets = new HashSet<Position>();
 
                     Position bestMove = null;
                     int bestROrder = int.MaxValue;
 
-                    foreach (var pos in targetsByDirection[i])
+                    foreach (var pos in targets[key])
                     {
                         if (visited.Contains(pos)) continue;
 
@@ -503,7 +524,7 @@ namespace AdventOfCode2018
                         if (pos.Down?.HasCreature == false) newTargets.Add(pos.Down);
                     }
 
-                    targetsByDirection[i] = newTargets;
+                    targets[key] = newTargets;
 
                     if (bestMove != null) return bestMove;
                 }
@@ -575,11 +596,7 @@ namespace AdventOfCode2018
                 other.Creature = this;
             }
 
-            public bool CanAttack() =>
-                true == Position.Up?.Creature?.IsEnemyFor(this)
-                || true == Position.Left?.Creature?.IsEnemyFor(this)
-                || true == Position.Right?.Creature?.IsEnemyFor(this)
-                || true == Position.Down?.Creature?.IsEnemyFor(this);
+            public bool CanAttack() => FirstOrDefaultTarget() != null;
 
             public Creature FirstOrDefaultTarget()
             {
@@ -608,13 +625,15 @@ namespace AdventOfCode2018
 
         public class Position
         {
-            public Position(int x, int y, Creature creature = null)
+            public Position(int x, int y, int readingOrderValue, Creature creature = null)
             {
+                ReadingOrderValue = readingOrderValue;
                 Point = new Point(x, y);
                 Creature = creature;
                 if (creature != null) creature.Position = this;
             }
 
+            public int ReadingOrderValue { get; set; }
             public Point Point { get; }
             public Creature Creature { get; set; }
             public bool HasCreature => Creature != null;
@@ -725,7 +744,9 @@ namespace AdventOfCode2018
                         if (data[y][x] == 'E') creature = Creature.CreateElf();
                         if (creature != null) Creatures.Add(creature);
 
-                        Grid[x, y] = new Position(x, y, creature);
+                        var value = (y * width) + x;
+
+                        Grid[x, y] = new Position(x, y, value, creature);
 
                         if (y > 0 && Grid[x, y - 1] != null)
                         {

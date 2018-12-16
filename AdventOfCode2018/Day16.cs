@@ -4089,35 +4089,74 @@ After:  [1, 2, 1, 3]";
             var mappings = Enumerable.Range(0, 16)
                 .ToDictionary(i => i, _ => Enumerable.Range(0, 16).ToHashSet());
 
-            while (mappings.Any(kvp => kvp.Value.Count > 1))
+            foreach (var (before, instructions, after) in entries)
             {
-                foreach (var (before, instructions, after) in entries)
+                var realOpCode = instructions[0];
+
+                for (int n = 0; n < 16; n++)
                 {
-                    var applicable = 0;
-                    var realOpCode = instructions[0];
+                    if (!mappings[realOpCode].Contains(n)) continue;
 
-                    for (int n = 0; n < 16; n++)
+                    instructions[0] = n;
+
+                    if (!IsOpPossible(instructions, before, after))
                     {
-                        if (!mappings[realOpCode].Contains(n)) continue;
-
-                        instructions[0] = n;
-
-                        if (IsOpPossible(instructions, before, after))
-                        {
-                            applicable++;
-                        }
-                        else
-                        {
-                            mappings[realOpCode].Remove(n);
-                        }
+                        mappings[realOpCode].Remove(n);
                     }
-
-                    if (applicable == 0) throw new NotSupportedException("No options left");
                 }
             }
 
+            var acted = false;
+            do
+            {
+                acted = false;
+
+                // Pass 1
+                foreach (var single in mappings.Where(m => m.Value.Count == 1))
+                {
+                    foreach (var map in mappings.Where(m => m.Value.Count > 1))
+                    {
+                        if (map.Value.Contains(single.Value.Single()))
+                        {
+                            acted = acted || map.Value.Remove(single.Value.Single());
+                        }
+                    }
+                }
+
+                // Pass 2
+                foreach (var map in mappings.Where(m => m.Value.Count > 1).ToArray())
+                {
+                    foreach (var val in map.Value)
+                    {
+                        var combinedOthers = mappings
+                            .Where(m => m.Key != map.Key)
+                            .SelectMany(m => m.Value)
+                            .ToHashSet();
+
+                        if (!combinedOthers.Contains(val))
+                        {
+                            mappings[map.Key] = new HashSet<int> { val };
+                            acted = true;
+                            break;
+                        }
+                    }
+                }
+
+            } while (acted);
+            
+            OutputMappings(mappings);
+
             // Not: 3 (just a guess :D)
             return 3;
+        }
+
+        private void OutputMappings(Dictionary<int, HashSet<int>> mappings)
+        {
+            foreach (var kvp in mappings)
+            {
+                output.WriteLine(";" + string.Join(";", kvp.Value));
+            }
+            output.WriteLine("");
         }
 
         private bool IsOpPossible(int[] instructions, int[] registers, int[] expected)

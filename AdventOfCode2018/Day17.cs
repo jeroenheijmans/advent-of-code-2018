@@ -1988,7 +1988,8 @@ y=524, x=623..630
 
             // NOT: 4069 (too low)
             // NOT: 64334 (too high)
-            return waterfall.Union(reservoir).Count(p => p.Y <= clay.MaxY && p.Y >= clay.MinY);
+            // return waterfall.Union(reservoir).Count(p => p.Y <= clay.MaxY && p.Y >= clay.MinY);
+            return reservoir.Count(p => p.Y <= clay.MaxY && p.Y >= clay.MinY);
         }
 
         public Point Spring => new Point(500, 0);

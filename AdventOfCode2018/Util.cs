@@ -9,6 +9,31 @@ namespace AdventOfCode2018
 {
     public static class Util
     {
+        public static Point Up(this Point point) => new Point(point.X, point.Y - 1);
+        public static Point Left(this Point point) => new Point(point.X - 1, point.Y);
+        public static Point Right(this Point point) => new Point(point.X + 1, point.Y);
+        public static Point Down(this Point point) => new Point(point.X, point.Y + 1);
+
+        public static int MinOfMany(params int[] items)
+        {
+            var result = items[0];
+            for (int i = 1; i < items.Length; i++)
+            {
+                result = Math.Min(result, items[i]);
+            }
+            return result;
+        }
+
+        public static int MaxOfMany(params int[] items)
+        {
+            var result = items[0];
+            for (int i = 1; i < items.Length; i++)
+            {
+                result = Math.Max(result, items[i]);
+            }
+            return result;
+        }
+
         public static int? Min(int? a, int? b)
         {
             if (a.HasValue && b.HasValue) return Math.Min(a.Value, b.Value);

@@ -1887,7 +1887,6 @@ x=502, y=2..4
         {
             var clay = new Clay(GetClayCoordinates(input));
 
-            var result = 0;
             var watered = new HashSet<Point> { };
             var falling = new HashSet<Point> { new Point(500, 1) };
             var edges = new HashSet<Point> { new Point(500, 1) };
@@ -1907,7 +1906,6 @@ x=502, y=2..4
                             // We can continue falling...
                             newEdges.Add(down);
                             falling.Add(down);
-                            result++;
                         }
                         else if (clay.Coords.Contains(down) || watered.Contains(down))
                         { 
@@ -1924,19 +1922,30 @@ x=502, y=2..4
                                 var left = current.Left();
                                 while (!watered.Contains(left) && !falling.Contains(left) && !clay.Coords.Contains(left))
                                 {
-                                    if (!clay.Coords.Contains(left))
+                                    if (watered.Contains(left))
+                                    {
+                                        left = left.Left();
+                                        continue;
+                                    }
+                                    else if (falling.Contains(left))
+                                    {
+                                        canOverflood = true;
+                                        break;
+                                    }
+                                    else if (!clay.Coords.Contains(left))
                                     {
                                         if (watered.Contains(left.Down()) || clay.Coords.Contains(left.Down()))
                                         {
                                             watered.Add(left);
-                                            result++;
                                         }
                                         else
                                         {
-                                            falling.Add(left);
-                                            newEdges.Add(left);
+                                            if (!falling.Contains(left))
+                                            {
+                                                newEdges.Add(left);
+                                                falling.Add(left);
+                                            }
                                             canOverflood = true;
-                                            result++;
                                             break;
                                         }
                                         left = left.Left();
@@ -1947,19 +1956,30 @@ x=502, y=2..4
                                 var right = current.Right();
                                 while (!watered.Contains(right) && !falling.Contains(right) && !clay.Coords.Contains(right))
                                 {
-                                    if (!clay.Coords.Contains(right))
+                                    if (watered.Contains(right))
+                                    {
+                                        right = right.Right();
+                                        continue;
+                                    }
+                                    else if (falling.Contains(right))
+                                    {
+                                        canOverflood = true;
+                                        break;
+                                    }
+                                    else if (!clay.Coords.Contains(right))
                                     {
                                         if (watered.Contains(right.Down()) || clay.Coords.Contains(right.Down()))
                                         {
                                             watered.Add(right);
-                                            result++;
                                         }
                                         else
                                         {
-                                            falling.Add(right);
-                                            newEdges.Add(right);
+                                            if (!falling.Contains(right))
+                                            {
+                                                newEdges.Add(right);
+                                                falling.Add(right);
+                                            }
                                             canOverflood = true;
-                                            result++;
                                             break;
                                         }
                                         right = right.Right();
@@ -2057,9 +2077,9 @@ x=502, y=2..4
                 {
                     var point = new Point(x, y);
                     if (point == Spring) sb.Append('+');
-                    else if (clay.Coords.Contains(point)) sb.Append('#');
-                    else if (watered.Contains(point)) sb.Append('~');
-                    else if (falling.Contains(point)) sb.Append('|');
+                    else if (clay.Coords.Contains(point)) sb.Append('█');
+                    else if (watered.Contains(point)) sb.Append("╬");
+                    else if (falling.Contains(point)) sb.Append('║');
                     else sb.Append('.');
                 }
                 output.WriteLine(sb.ToString());

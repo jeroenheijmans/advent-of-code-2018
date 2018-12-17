@@ -1878,131 +1878,127 @@ y=524, x=623..630
         [Fact] public void Solution_1_test_real_input() => Assert.Equal(0, Solve1(puzzleInput));
 
         [Fact] public void Solution_1_my_test_scenario_A() => Assert.Equal(19, Solve1(@"
-y=4, x=498..502
-x=498, y=2..4
-x=502, y=2..4
-"));
-        
+            y=4, x=498..502
+            x=498, y=2..4
+            x=502, y=2..4
+        "));
+
+        [Fact] public void Solution_1_my_test_scenario_B() => Assert.Equal(22, Solve1(@"
+            y=7, x=498..504
+            y=5, x=500..502
+            x=498, y=4..7
+            x=500, y=4..5
+            x=502, y=4..5
+            x=504, y=3..7
+        "));
+
         public int Solve1(string input)
         {
             var clay = new Clay(GetClayCoordinates(input));
 
-            var watered = new HashSet<Point> { };
-            var falling = new HashSet<Point> { new Point(500, 1) };
+            var reservoir = new HashSet<Point>();
+            var waterfall = new HashSet<Point> { new Point(500, 1) };
             var edges = new HashSet<Point> { new Point(500, 1) };
-                        
-            while (edges.All(p => p.Y <= clay.MaxY) && edges.Any())
+
+            bool IsClay(Point p) => clay.Coords.Contains(p);
+            bool IsOpenSand(Point p) => !clay.Coords.Contains(p) && !waterfall.Contains(p) && !reservoir.Contains(p);
+
+            while (edges.Any())
             {
                 var newEdges = new HashSet<Point>();
 
-                foreach (var edge in edges.Where(p => !watered.Contains(p) && p.Y <= clay.MaxY))
+                foreach (var edge in edges)
                 {
+                    if (edge.Y > clay.MaxY) continue;
+                    if (clay.Coords.Contains(edge)) throw new NotSupportedException();
+
                     var down = edge.Down();
 
-                    if (falling.Contains(edge))
+                    if (IsOpenSand(down))
                     {
-                        if (!clay.Coords.Contains(down) && !watered.Contains(down) && !falling.Contains(down))
-                        { 
-                            // We can continue falling...
-                            newEdges.Add(down);
-                            falling.Add(down);
-                        }
-                        else if (clay.Coords.Contains(down) || watered.Contains(down))
-                        { 
-                            // We hit a floor or water!
-                            falling.Remove(edge);
-                            watered.Add(edge);
+                        // Keep waterfalling down!
+                        waterfall.Add(down);
+                        newEdges.Add(down);
+                    }
+                    else if (IsClay(down) || reservoir.Contains(down))
+                    {
+                        //////////////////////////////////////////////
+                        // We've hit clay! Time to fill the reservoir.
 
-                            var canOverflood = false;
-                            var current = edge;
+                        var rowToFlood = edge;
+                        var isContained = true;
 
-                            while (!canOverflood)
+                        while (isContained)
+                        {
+                            waterfall.Remove(rowToFlood);
+                            var stuffToAdd = new HashSet<Point> { rowToFlood };
+
+                            var left = rowToFlood.Left();
+                            while (!IsClay(left))
                             {
-                                // look left
-                                var left = current.Left();
-                                while (!watered.Contains(left) && !falling.Contains(left) && !clay.Coords.Contains(left))
+                                if (waterfall.Contains(left))
                                 {
-                                    if (watered.Contains(left))
-                                    {
-                                        left = left.Left();
-                                        continue;
-                                    }
-                                    else if (falling.Contains(left))
-                                    {
-                                        canOverflood = true;
-                                        break;
-                                    }
-                                    else if (!clay.Coords.Contains(left))
-                                    {
-                                        if (watered.Contains(left.Down()) || clay.Coords.Contains(left.Down()))
-                                        {
-                                            watered.Add(left);
-                                        }
-                                        else
-                                        {
-                                            if (!falling.Contains(left))
-                                            {
-                                                newEdges.Add(left);
-                                                falling.Add(left);
-                                            }
-                                            canOverflood = true;
-                                            break;
-                                        }
-                                        left = left.Left();
-                                    }
+                                    isContained = false;
+                                    break;
                                 }
-
-                                // look right
-                                var right = current.Right();
-                                while (!watered.Contains(right) && !falling.Contains(right) && !clay.Coords.Contains(right))
+                                else if (IsOpenSand(left.Down()))
                                 {
-                                    if (watered.Contains(right))
-                                    {
-                                        right = right.Right();
-                                        continue;
-                                    }
-                                    else if (falling.Contains(right))
-                                    {
-                                        canOverflood = true;
-                                        break;
-                                    }
-                                    else if (!clay.Coords.Contains(right))
-                                    {
-                                        if (watered.Contains(right.Down()) || clay.Coords.Contains(right.Down()))
-                                        {
-                                            watered.Add(right);
-                                        }
-                                        else
-                                        {
-                                            if (!falling.Contains(right))
-                                            {
-                                                newEdges.Add(right);
-                                                falling.Add(right);
-                                            }
-                                            canOverflood = true;
-                                            break;
-                                        }
-                                        right = right.Right();
-                                    }
+                                    waterfall.Add(left);
+                                    newEdges.Add(left);
+                                    isContained = false;
+                                    break;
                                 }
+                                else
+                                {
+                                    stuffToAdd.Add(left);
+                                    left = left.Left();
+                                }
+                            }
 
-                                // Push edge up again:
-                                falling.Remove(current);
-                                watered.Add(current);
-                                current = current.Up();
+                            var right = rowToFlood.Right();
+                            while (!IsClay(right))
+                            {
+                                if (waterfall.Contains(right))
+                                {
+                                    isContained = false;
+                                    break;
+                                }
+                                else if (IsOpenSand(right.Down()))
+                                {
+                                    waterfall.Add(right);
+                                    newEdges.Add(right);
+                                    isContained = false;
+                                    break;
+                                }
+                                else
+                                {
+                                    stuffToAdd.Add(right);
+                                    right = right.Right();
+                                }
+                            }
+
+                            if (isContained)
+                            {
+                                reservoir.UnionWith(stuffToAdd);
+                                rowToFlood = rowToFlood.Up();
+                            }
+                            else
+                            {
+                                waterfall.UnionWith(stuffToAdd);
                             }
                         }
+                        //////////////////////////////////////////////
                     }
                 }
 
                 edges = newEdges;
             }
 
-            OutputGrid(clay, watered, falling);
+            OutputGrid(clay, reservoir, waterfall);
 
             // NOT: 4069 (too low)
             // NOT: 64334 (too high)
-            return watered.Union(falling).Count(p => p.Y <= clay.MaxY);
+            return waterfall.Union(reservoir).Count(p => p.Y <= clay.MaxY && p.Y >= clay.MinY);
         }
 
         public Point Spring => new Point(500, 0);
@@ -2078,7 +2074,7 @@ x=502, y=2..4
                     var point = new Point(x, y);
                     if (point == Spring) sb.Append('+');
                     else if (clay.Coords.Contains(point)) sb.Append('█');
-                    else if (watered.Contains(point)) sb.Append("╬");
+                    else if (watered.Contains(point)) sb.Append("▒");
                     else if (falling.Contains(point)) sb.Append('║');
                     else sb.Append('.');
                 }

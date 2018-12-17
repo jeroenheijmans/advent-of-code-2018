@@ -1877,6 +1877,8 @@ y=524, x=623..630
         [Fact] public void Solution_1_test_example() => Assert.Equal(57, Solve1(testInput));
         [Fact] public void Solution_1_test_real_input() => Assert.Equal(40879, Solve1(puzzleInput));
 
+        [Fact] public void Solution_2_test_real_input() => Assert.Equal(34693, Solve2(puzzleInput));
+            
         [Fact] public void Solution_1_my_test_scenario_A() => Assert.Equal(12, Solve1(@"
             y=4, x=498..502
             x=498, y=2..4
@@ -1895,7 +1897,21 @@ y=524, x=623..630
         public int Solve1(string input)
         {
             var clay = new Clay(GetClayCoordinates(input));
+            var (reservoir, waterfall) = SolveInternal(clay);
+            // OutputGrid(clay, reservoir, waterfall);
+            return waterfall.Union(reservoir).Count(p => p.Y <= clay.MaxY && p.Y >= clay.MinY);
+        }
 
+        public int Solve2(string input)
+        {
+            var clay = new Clay(GetClayCoordinates(input));
+            var (reservoir, waterfall) = SolveInternal(clay);
+            // OutputGrid(clay, reservoir, waterfall);
+            return reservoir.Count(p => p.Y <= clay.MaxY && p.Y >= clay.MinY);
+        }
+
+        public (ISet<Point> reservoir, ISet<Point> waterfall) SolveInternal(Clay clay)
+        {
             var reservoir = new HashSet<Point>();
             var waterfall = new HashSet<Point> { new Point(500, 1) };
             var edges = new HashSet<Point> { new Point(500, 1) };
@@ -1984,12 +2000,7 @@ y=524, x=623..630
                 edges = newEdges;
             }
 
-            OutputGrid(clay, reservoir, waterfall);
-
-            // NOT: 4069 (too low)
-            // NOT: 64334 (too high)
-            // return waterfall.Union(reservoir).Count(p => p.Y <= clay.MaxY && p.Y >= clay.MinY);
-            return reservoir.Count(p => p.Y <= clay.MaxY && p.Y >= clay.MinY);
+            return (reservoir, waterfall);
         }
 
         public Point Spring => new Point(500, 0);

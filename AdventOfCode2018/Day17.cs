@@ -1909,9 +1909,9 @@ x=502, y=2..4
                             falling.Add(down);
                             result++;
                         }
-                        else if (clay.Coords.Contains(down))
+                        else if (clay.Coords.Contains(down) || watered.Contains(down))
                         { 
-                            // We hit a floor!
+                            // We hit a floor or water!
                             falling.Remove(edge);
                             watered.Add(edge);
 
@@ -1981,6 +1981,7 @@ x=502, y=2..4
             OutputGrid(clay, watered, falling);
 
             // NOT: 4069 (too low)
+            // NOT: 64334 (too high)
             return watered.Union(falling).Count(p => p.Y <= clay.MaxY);
         }
 

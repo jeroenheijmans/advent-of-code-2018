@@ -1875,15 +1875,15 @@ y=524, x=623..630
 ";
 
         [Fact] public void Solution_1_test_example() => Assert.Equal(57, Solve1(testInput));
-        [Fact] public void Solution_1_test_real_input() => Assert.Equal(0, Solve1(puzzleInput));
+        [Fact] public void Solution_1_test_real_input() => Assert.Equal(40879, Solve1(puzzleInput));
 
-        [Fact] public void Solution_1_my_test_scenario_A() => Assert.Equal(19, Solve1(@"
+        [Fact] public void Solution_1_my_test_scenario_A() => Assert.Equal(12, Solve1(@"
             y=4, x=498..502
             x=498, y=2..4
             x=502, y=2..4
         "));
 
-        [Fact] public void Solution_1_my_test_scenario_B() => Assert.Equal(22, Solve1(@"
+        [Fact] public void Solution_1_my_test_scenario_B() => Assert.Equal(31, Solve1(@"
             y=7, x=498..504
             y=5, x=500..502
             x=498, y=4..7
@@ -1936,12 +1936,7 @@ y=524, x=623..630
                             var left = rowToFlood.Left();
                             while (!IsClay(left))
                             {
-                                if (waterfall.Contains(left))
-                                {
-                                    isContained = false;
-                                    break;
-                                }
-                                else if (IsOpenSand(left.Down()))
+                                if (IsOpenSand(left.Down()))
                                 {
                                     waterfall.Add(left);
                                     newEdges.Add(left);
@@ -1958,12 +1953,7 @@ y=524, x=623..630
                             var right = rowToFlood.Right();
                             while (!IsClay(right))
                             {
-                                if (waterfall.Contains(right))
-                                {
-                                    isContained = false;
-                                    break;
-                                }
-                                else if (IsOpenSand(right.Down()))
+                                if (IsOpenSand(right.Down()))
                                 {
                                     waterfall.Add(right);
                                     newEdges.Add(right);

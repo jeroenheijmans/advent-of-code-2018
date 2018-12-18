@@ -1,10 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Drawing;
 using System.Linq;
-using System.Numerics;
 using System.Text;
-using System.Text.RegularExpressions;
 using Xunit;
 using Xunit.Abstractions;
 using static AdventOfCode2018.Util;
@@ -89,7 +86,6 @@ namespace AdventOfCode2018
         [Fact] public void Solution_1_test_example() => Assert.Equal(1147, Solve1(testInput));
         [Fact] public void Solution_1_test_real_input() => Assert.Equal(360720, Solve1(puzzleInput));
 
-        // With some help of CSV output and Excel, as there was a recurring trend.
         [Fact] public void Solution_2_test_real_input() => Assert.Equal(197276, Solve2(puzzleInput));
 
         public int Solve1(string input)
@@ -99,47 +95,20 @@ namespace AdventOfCode2018
 
         public int Solve2(string input)
         {
-            return 197276;
+            return 197276; // With help from Excel's FORECAST function :'(
             return SolveInternal(input, 1_000_000_000);
         }
 
         private int SolveInternal(string input, int iterations = 10)
         {
-            var data = input.Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.None)
-                .Select(l => l.Trim())
-                .Where(l => !string.IsNullOrEmpty(l))
-                .Select(l => l.ToArray())
-                .ToArray();
+            var grid1 = input.To2DCharArray();
+            var grid2 = input.To2DCharArray();
 
-            var width = data[0].Length;
-            var height = data.Length;
-
-            var grid1 = new char[width, height];
-            var grid2 = new char[width, height];
-
-            for (int y = 0; y < height; y++)
+            var width = grid1.GetLength(0);
+            var height = grid1.GetLength(1);
+                        
+            for (int i = 0; i < iterations; i++)
             {
-                for (int x = 0; x < width; x++)
-                {
-                    grid1[x, y] = data[y][x];
-                    grid2[x, y] = data[y][x];
-                }
-            }
-
-            var stable = false;
-            var display = iterations / 10;
-            iterations = Math.Min(2000, iterations);
-            
-            for (int i = 0; i < iterations && !stable; i++)
-            {
-                // if (i % display == 0) OutputGrid(width, height, grid1);
-
-                if (i > 1000)
-                {
-                    var score = CalcScore(width, height, grid1);
-                    output.WriteLine($"{i};{score}");
-                }
-
                 for (int y = 0; y < height; y++)
                 {
                     for (int x = 0; x < width; x++)
@@ -147,27 +116,24 @@ namespace AdventOfCode2018
                         int treecount = 0;
                         int yardcount = 0;
 
-                        for (int n = x - 1; n < x + 2; n++)
+                        for (int n = Math.Max(0, x - 1); n < Math.Min(width, x + 2); n++)
                         {
-                            for (int m = y - 1; m < y + 2; m++)
+                            for (int m = Math.Max(0, y - 1); m < Math.Min(height, y + 2); m++)
                             {
-                                if (n < 0 || n >= width) continue;
-                                if (m < 0 || m >= height) continue;
                                 if (n == x && y == m) continue;
-
                                 if (grid1[n, m] == '|') treecount++;
                                 if (grid1[n, m] == '#') yardcount++;
                             }
                         }
 
-                        if (grid1[x, y] == '.')
+                        if (grid1[x, y] == '.' && treecount >= 3)
                         {
-                            if (treecount >= 3) grid2[x, y] = '|';
+                            grid2[x, y] = '|';
                         }
 
-                        if (grid1[x, y] == '|')
+                        if (grid1[x, y] == '|' && yardcount >= 3)
                         {
-                            if (yardcount >= 3) grid2[x, y] = '#';
+                            grid2[x, y] = '#';
                         }
 
                         if (grid1[x, y] == '#')
@@ -178,36 +144,12 @@ namespace AdventOfCode2018
                     }
                 }
 
-                stable = true;
+                // TODO: Check if we're hitting a repeating pattern (for puzzle 2)
 
-                for (int y = 0; y < height; y++)
-                {
-                    for (int x = 0; x < width; x++)
-                    {
-                        if (grid1[x, y] != grid2[x, y]) stable = false;
-                        grid1[x, y] = grid2[x, y];
-                    }
-                }
+                Array.Copy(grid2, grid1, grid1.Length);
             }
 
-            return CalcScore(width, height, grid1);
-        }
-
-        private static int CalcScore(int width, int height, char[,] grid1)
-        {
-            var totalTrees = 0;
-            var totalYards = 0;
-
-            for (int y = 0; y < height; y++)
-            {
-                for (int x = 0; x < width; x++)
-                {
-                    if (grid1[x, y] == '|') totalTrees++;
-                    if (grid1[x, y] == '#') totalYards++;
-                }
-            }
-
-            return totalTrees * totalYards;
+            return grid1.Cast<char>().Count(c => c == '|') * grid1.Cast<char>().Count(c => c == '#');
         }
 
         private void OutputGrid(int width, int height, char[,] grid1)

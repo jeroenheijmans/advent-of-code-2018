@@ -90,6 +90,20 @@ namespace AdventOfCode2018
                 .ToArray();
         }
 
+        public static char[,] To2DCharArray(this string input)
+        {
+            var lines = input.SplitByNewline(shouldTrim: true);
+            var result = new char[lines.First().Length, lines.Length];
+            for (int y = 0; y < result.GetLength(1); y++)
+            {
+                for (int x = 0; x < result.GetLength(0); x++)
+                {
+                    result[y, x] = lines[y][x];
+                }
+            }
+            return result;
+        }
+
         // https://stackoverflow.com/a/16193323/419956 by @AdamHouldsWorth
         public static TValue GetOrCreate<TKey, TValue>(this IDictionary<TKey, TValue> dict, TKey key)
             where TValue : new()

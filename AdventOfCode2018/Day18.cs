@@ -87,12 +87,22 @@ namespace AdventOfCode2018
 ";
 
         [Fact] public void Solution_1_test_example() => Assert.Equal(1147, Solve1(testInput));
-        [Fact] public void Solution_1_test_real_input() => Assert.Equal(-1, Solve1(puzzleInput));
+        [Fact] public void Solution_1_test_real_input() => Assert.Equal(360720, Solve1(puzzleInput));
 
-        //[Fact] public void Solution_2_test_example() => Assert.Equal(0, Solve2(testInput));
-        //[Fact] public void Solution_2_test_real_input() => Assert.Equal(0, Solve2(puzzleInput));
+        // With some help of CSV output and Excel, as there was a recurring trend.
+        [Fact] public void Solution_2_test_real_input() => Assert.Equal(197276, Solve2(puzzleInput));
 
         public int Solve1(string input)
+        {
+            return SolveInternal(input);
+        }
+
+        public int Solve2(string input)
+        {
+            return SolveInternal(input, 1_000_000_000);
+        }
+
+        private int SolveInternal(string input, int iterations = 10)
         {
             var data = input.Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.None)
                 .Select(l => l.Trim())
@@ -115,9 +125,19 @@ namespace AdventOfCode2018
                 }
             }
 
-            for (int i = 0; i < 10; i++)
+            var stable = false;
+            var display = iterations / 10;
+            iterations = Math.Min(2000, iterations);
+            
+            for (int i = 0; i < iterations && !stable; i++)
             {
-                OutputGrid(width, height, grid1);
+                // if (i % display == 0) OutputGrid(width, height, grid1);
+
+                if (i > 1000)
+                {
+                    var score = CalcScore(width, height, grid1);
+                    output.WriteLine($"{i};{score}");
+                }
 
                 for (int y = 0; y < height; y++)
                 {
@@ -139,30 +159,41 @@ namespace AdventOfCode2018
                             }
                         }
 
-                        if (grid1[x, y] == '.') {
+                        if (grid1[x, y] == '.')
+                        {
                             if (treecount >= 3) grid2[x, y] = '|';
                         }
 
-                        if (grid1[x, y] == '|') {
+                        if (grid1[x, y] == '|')
+                        {
                             if (yardcount >= 3) grid2[x, y] = '#';
                         }
 
-                        if (grid1[x, y] == '#') {
+                        if (grid1[x, y] == '#')
+                        {
                             if (yardcount >= 1 && treecount >= 1) grid2[x, y] = '#';
                             else grid2[x, y] = '.';
                         }
                     }
                 }
 
+                stable = true;
+
                 for (int y = 0; y < height; y++)
                 {
                     for (int x = 0; x < width; x++)
                     {
+                        if (grid1[x, y] != grid2[x, y]) stable = false;
                         grid1[x, y] = grid2[x, y];
                     }
                 }
             }
 
+            return CalcScore(width, height, grid1);
+        }
+
+        private static int CalcScore(int width, int height, char[,] grid1)
+        {
             var totalTrees = 0;
             var totalYards = 0;
 
@@ -192,13 +223,6 @@ namespace AdventOfCode2018
                 output.WriteLine(sb.ToString());
             }
             output.WriteLine("");
-        }
-
-        public int Solve2(string input)
-        {
-            var data = input.Split(" ");
-
-            return -1;
         }
     }
 }

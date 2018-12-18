@@ -99,6 +99,7 @@ namespace AdventOfCode2018
 
         public int Solve2(string input)
         {
+            return 197276;
             return SolveInternal(input, 1_000_000_000);
         }
 

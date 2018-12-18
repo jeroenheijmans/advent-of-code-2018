@@ -95,7 +95,6 @@ namespace AdventOfCode2018
 
         public int Solve2(string input)
         {
-            return 197276; // With help from Excel's FORECAST function :'(
             return SolveInternal(input, 1_000_000_000);
         }
 
@@ -106,13 +105,19 @@ namespace AdventOfCode2018
 
             var width = grid1.GetLength(0);
             var height = grid1.GetLength(1);
-                        
+
+            var previousStates = new List<string>();
+
             for (int i = 0; i < iterations; i++)
             {
+                var sb = new StringBuilder();
+
                 for (int y = 0; y < height; y++)
                 {
                     for (int x = 0; x < width; x++)
                     {
+                        sb.Append(grid1[x, y]);
+
                         int treecount = 0;
                         int yardcount = 0;
 
@@ -144,7 +149,20 @@ namespace AdventOfCode2018
                     }
                 }
 
-                // TODO: Check if we're hitting a repeating pattern (for puzzle 2)
+                // Repeat state detection is "lucky" as it assumes a state not occurring
+                // extra times in the middle of a cycle.
+                var state = sb.ToString();
+                var idx = previousStates.IndexOf(state);
+                if (idx >= 0)
+                {
+                    var cycleSize = i - idx;
+                    var skipCount = (iterations - i) / cycleSize;
+                    output.WriteLine($"Found repeat at {i} from {idx} (cycle size {cycleSize}).");                    
+                    i += skipCount * cycleSize;
+                    output.WriteLine($"Skipped {skipCount} to {i}.");
+                    previousStates.Clear();
+                }
+                previousStates.Add(state);
 
                 Array.Copy(grid2, grid1, grid1.Length);
             }

@@ -29,8 +29,8 @@ Here's what I learned (or noticed) each day.
 14. Choose the right data structure for the right job.
 15. **I have determination!** (And also **spent 17+ hours over two days** on this puzzle.)
 16. Bulky, precise work requires concentration.
-17. TBD
-18. TBD
+17. Physics are fun!
+18. Excel to the rescue (for a quick & dirty answer). Again.
 19. TBD
 20. TBD
 21. TBD

@@ -103,48 +103,69 @@ seti 0 6 1
 
         public int Solve2(string input)
         {
-            var reg = new[] { 1, 0, 0, 0, 0, 0 };
+            int reg0 = 1, reg2 = 0, reg3 = 0, reg4 = 0, reg5 = 0;
 
-        zero:
-            reg[1] = 17;
+            goto seventeen; // Line 1
+
         one:
-            reg[4] = 1;
+            reg4 = 1;
+
         two:
-            reg[2] = 1;
+            reg2 = 1;
+
         three:
-            reg[5] = reg[2] * reg[4];
-        four:
-            reg[5] = (reg[5] == reg[3]) ? 1 : 0;
-        five:
-        six:
-            if (reg[5] == 1)
+            reg5 = reg2 * reg4;
+
+            if (reg5 != reg3)
             {
-        seven:
-                reg[0] = reg[4] + reg[0];
+                reg0 = reg4 + reg0;
             }
-        eight:
-            reg[2]++;
-        nine:
-            reg[5] = (reg[2] == reg[3]) ? 1 : 0;
-        ten:
-            if (reg[5] == 0)
+
+            reg2++;
+
+            if (reg2 != reg3)
             {
-        eleven:
                 goto three;
             }
-        twelve:
-            reg[4]++;
-        thirteen:
-            reg[5] = (reg[4] > reg[3]) ? 1 : 0;
-        fourteen:
-            if (reg[5] == 0)
+
+            reg4++;
+
+            if (!(reg4 > reg3))
             {
-        fifteen:
                 goto two;
             }
-        sixteen:
-            // Line 16 is [mulr 1 1 1] so that goes to line 257, thus exiting
-            return reg[0];
+
+            goto exit; // Line 16
+
+        seventeen:
+            reg3 += reg2;
+            reg3 *= reg3;
+            reg3 *= 19;
+            reg3 *= 11;
+            reg5 += 7;
+            reg5 *= 22;
+            reg5 += 18;
+            reg3 += reg5;
+            
+            if (reg0 == 0)
+            {
+                goto one;
+            }
+            else
+            {
+                reg5 = 27;
+                reg5 *= 28;
+                reg5 += 29;
+                reg5 *= 30;
+                reg5 *= 13;
+                reg5 *= 32;
+                reg3 += reg5;
+                reg0 = 0;
+                goto one;
+            }
+
+        exit:
+            return reg0;
         }
 
         private int SolveInternal(string input, bool isProductionMode)

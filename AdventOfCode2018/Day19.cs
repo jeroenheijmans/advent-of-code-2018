@@ -89,28 +89,28 @@ seti 0 6 1
 
         private readonly IDictionary<string, int> InstructionNames = new Dictionary<string, int>
         {
-            { "addr", 0 },
-            { "addi", 1 },
-            { "mulr", 2 },
-            { "muli", 3 },
-            { "banr", 4 },
-            { "bani", 5 },
-            { "borr", 6 },
-            { "bori", 7 },
-            { "setr", 8 },
-            { "seti", 9 },
-            { "gtir", 10 },
-            { "gtri", 11 },
-            { "gtrr", 12 },
-            { "eqir", 13 },
-            { "eqri", 14 },
-            { "eqrr", 15 },
+            { "addr", addr },
+            { "addi", addi },
+            { "mulr", mulr },
+            { "muli", muli },
+            { "banr", banr },
+            { "bani", bani },
+            { "borr", borr },
+            { "bori", bori },
+            { "setr", setr },
+            { "seti", seti },
+            { "gtir", gtir },
+            { "gtri", gtri },
+            { "gtrr", gtrr },
+            { "eqir", eqir },
+            { "eqri", eqri },
+            { "eqrr", eqrr },
         };
 
 
         [Fact] public void Solution_1_test_example() => Assert.Equal(6, Solve1(testInput));
 
-        // NOT 1008 ("Curiously, it's the right answer for someone else; you're either logged in to the wrong account, unlucky, or cheating. ")
+        // NOT 1008 ("That's not the right answer; your answer is too low. Curiously, it's the right answer for someone else; you're either logged in to the wrong account, unlucky, or cheating. ")
         // Whuuuutt!? Off by one?
         [Fact] public void Solution_1_test_real_input() => Assert.Equal(-1, Solve1(puzzleInput));
 

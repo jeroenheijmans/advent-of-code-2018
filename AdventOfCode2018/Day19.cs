@@ -130,7 +130,7 @@ seti 0 6 1
 
             reg4++;
 
-            if (!(reg4 > reg3))
+            if (reg4 <= reg3)
             {
                 goto two;
             }

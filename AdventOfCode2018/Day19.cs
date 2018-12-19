@@ -94,6 +94,7 @@ seti 0 6 1
 
         // Not 3224 (too low - just guessed the same as the first puzzle)
         // Not 5 (guessed based on register 1 - what was I thinking!?)
+        // Not 21637008 (too low). Sum of all the integor divisors.
         [Fact] public void Solution_2_test_real_input() => Assert.Equal(-1, Solve2(puzzleInput));
 
         public int Solve1(string input)
@@ -103,6 +104,15 @@ seti 0 6 1
 
         public int Solve2(string input)
         {
+            var sum = 0;
+            var max = 10551408;
+            for (int i = 1; i <= max; i++)
+            {
+                if (10551408 % i == 0) sum += i;
+            }
+
+            return sum;
+
             int reg0 = 1, reg2 = 0, reg3 = 0, reg4 = 0, reg5 = 0;
 
             goto seventeen; // Line 1
@@ -116,26 +126,27 @@ seti 0 6 1
         three:
             reg5 = reg2 * reg4;
 
-            if (reg5 != reg3)
+            if (reg5 != 10551408)
             {
                 reg0 = reg4 + reg0;
             }
 
             reg2++;
 
-            if (reg2 != reg3)
+            if (reg2 != 10551408)
             {
                 goto three;
             }
 
             reg4++;
 
-            if (reg4 <= reg3)
+            if (reg4 <= 10551408)
             {
                 goto two;
             }
 
             goto exit; // Line 16
+
 
         seventeen:
             reg3 += reg2;

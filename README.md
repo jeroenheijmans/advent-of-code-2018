@@ -31,7 +31,7 @@ Here's what I learned (or noticed) each day.
 16. Bulky, precise work requires concentration.
 17. Physics are fun!
 18. Excel to the rescue (for a quick & dirty answer). Again.
-19. TBD
+19. I _despise_ low level programming and debugging.
 20. TBD
 21. TBD
 22. TBD

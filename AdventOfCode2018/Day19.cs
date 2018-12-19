@@ -28,7 +28,8 @@ seti 8 0 4
 seti 9 0 5
 ";
 
-        public const string puzzleInput = @"#ip 1
+        public const string puzzleInput = @"
+#ip 1
 addi 1 16 1
 seti 1 4 4
 seti 1 1 2
@@ -84,6 +85,8 @@ seti 0 6 1
         public const int eqri = 14;
         public const int eqrr = 15;
 
+        private readonly ISet<int> JumpInstructions = new HashSet<int> { seti, setr, addi, addr };
+
         private readonly IDictionary<string, int> InstructionNames = new Dictionary<string, int>
         {
             { "addr", 0 },
@@ -118,8 +121,7 @@ seti 0 6 1
             var ipRegister = int.Parse(data.First().Replace("#ip ", ""));
             var ip = 0;
 
-            var program = data
-                .Skip(1)
+            var program = data.Skip(1)
                 .Select(line => line.Split())
                 .Select(line =>
                 {
@@ -133,37 +135,29 @@ seti 0 6 1
                 .ToArray();
 
             var registers = new[] { 0, 0, 0, 0, 0, 0 };
+            var i = 0;
 
-            while(ip < program.Length)
+            while (ip < program.Length)
             {
-                switch (program[ip][0])
+                if (i++ < 10) OutputRegisters(registers);
+                if (i == 10) output.WriteLine("...");
+
+                if (JumpInstructions.Contains(program[ip][0]))
                 {
-                    case setr:
-                    case seti:
-                    case addr:
-                    case addi:
-                        registers[ipRegister] = ip;
-                        break;
-                    default:
-                        break;
+                    registers[ipRegister] = ip;
                 }
 
                 Doop(program[ip], registers);
 
-                switch (program[ip][0])
+                if (JumpInstructions.Contains(program[ip][0]))
                 {
-                    case setr:
-                    case seti:
-                    case addr:
-                    case addi:
-                        ip = registers[ipRegister];
-                        break;
-                    default:
-                        break;
+                    ip = registers[ipRegister];
                 }
 
                 ip++;
             }
+
+            OutputRegisters(registers);
 
             return registers[0];
         }
@@ -232,6 +226,11 @@ seti 0 6 1
                 default:
                     throw new NotSupportedException();
             }
+        }
+
+        private void OutputRegisters(int[] registers)
+        {
+            output.WriteLine($"REGISTERS: [{string.Join(", ", registers)}]");
         }
     }
 }

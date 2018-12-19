@@ -91,11 +91,7 @@ seti 0 6 1
 
 
         [Fact] public void Solution_1_test_example() => Assert.Equal(6, Solve1(testInput));
-
-        // NOT 1008 ("That's not the right answer; your answer is too low. Curiously, it's the right answer for someone else; you're either logged in to the wrong account, unlucky, or cheating. ")
-        // NOT 1033 ("too low", guessed at needing to give registers[1] instead, since my first line is #ip1)
-        // Whuuuutt!? Off by one?
-        [Fact] public void Solution_1_test_real_input() => Assert.Equal(-1, Solve1(puzzleInput));
+        [Fact] public void Solution_1_test_real_input() => Assert.Equal(3224, Solve1(puzzleInput));
 
         public int Solve1(string input)
         {
@@ -125,17 +121,9 @@ seti 0 6 1
                 if (i++ < 10) OutputRegisters(registers);
                 if (i == 10) output.WriteLine("...");
 
-                if (JumpInstructions.Contains(program[ip][0]))
-                {
-                    registers[ipRegister] = ip;
-                }
-
+                registers[ipRegister] = ip;
                 Day16.Doop(program[ip], registers);
-
-                if (JumpInstructions.Contains(program[ip][0]))
-                {
-                    ip = registers[ipRegister];
-                }
+                ip = registers[ipRegister];
 
                 ip++;
             }

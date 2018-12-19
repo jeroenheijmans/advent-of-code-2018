@@ -103,7 +103,48 @@ seti 0 6 1
 
         public int Solve2(string input)
         {
-            return SolveInternal(input, isProductionMode: true);
+            var reg = new[] { 1, 0, 0, 0, 0, 0 };
+
+        zero:
+            reg[1] = 17;
+        one:
+            reg[4] = 1;
+        two:
+            reg[2] = 1;
+        three:
+            reg[5] = reg[2] * reg[4];
+        four:
+            reg[5] = (reg[5] == reg[3]) ? 1 : 0;
+        five:
+        six:
+            if (reg[5] == 1)
+            {
+        seven:
+                reg[0] = reg[4] + reg[0];
+            }
+        eight:
+            reg[2]++;
+        nine:
+            reg[5] = (reg[2] == reg[3]) ? 1 : 0;
+        ten:
+            if (reg[5] == 0)
+            {
+        eleven:
+                goto three;
+            }
+        twelve:
+            reg[4]++;
+        thirteen:
+            reg[5] = (reg[4] > reg[3]) ? 1 : 0;
+        fourteen:
+            if (reg[5] == 0)
+            {
+        fifteen:
+                goto two;
+            }
+        sixteen:
+            // Line 16 is [mulr 1 1 1] so that goes to line 257, thus exiting
+            return reg[0];
         }
 
         private int SolveInternal(string input, bool isProductionMode)
@@ -126,13 +167,17 @@ seti 0 6 1
                 })
                 .ToArray();
 
+            var nrOfExecutionPerLine = new int[program.Length];
+
             var registers = new[] { isProductionMode ? 1 : 0, 0, 0, 0, 0, 0 };
             var i = 0;
 
             while (ip < program.Length)
             {
                 if (i++ % 500_000 == 0) OutputRegisters(registers, i);
-                if (i > int.MaxValue) throw new Exception("No answer found");
+                if (i > 100_000_000) break; // throw new Exception("No answer found");
+
+                nrOfExecutionPerLine[ip]++;
 
                 registers[ipRegister] = ip;
                 Day16.Doop(program[ip], registers);
@@ -140,6 +185,8 @@ seti 0 6 1
 
                 ip++;
             }
+
+            output.WriteLine(string.Join(";", nrOfExecutionPerLine));
 
             OutputRegisters(registers);
 

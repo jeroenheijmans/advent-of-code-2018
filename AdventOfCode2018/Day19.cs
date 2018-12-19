@@ -93,6 +93,7 @@ seti 0 6 1
         [Fact] public void Solution_1_test_real_input() => Assert.Equal(3224, Solve1(puzzleInput));
 
         // Not 3224 (too low - just guessed the same as the first puzzle)
+        // Not 5 (guessed based on register 1 - what was I thinking!?)
         [Fact] public void Solution_2_test_real_input() => Assert.Equal(-1, Solve2(puzzleInput));
 
         public int Solve1(string input)
@@ -131,7 +132,7 @@ seti 0 6 1
             while (ip < program.Length)
             {
                 if (i++ % 500_000 == 0) OutputRegisters(registers, i);
-                if (i > 450_000_000) break;
+                if (i > int.MaxValue) throw new Exception("No answer found");
 
                 registers[ipRegister] = ip;
                 Day16.Doop(program[ip], registers);

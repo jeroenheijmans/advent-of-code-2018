@@ -4216,7 +4216,7 @@ After:  [1, 2, 1, 3]";
         public const int eqrr = 15;
         #endregion
 
-        private void Doop(int[] instructions, int[] registers)
+        public static void Doop(int[] instructions, int[] registers)
         {
             int a = instructions[1], b = instructions[2], c = instructions[3];
 

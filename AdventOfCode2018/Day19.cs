@@ -89,11 +89,23 @@ seti 0 6 1
             { "eqrr", Day16.eqrr },
         };
 
-
         [Fact] public void Solution_1_test_example() => Assert.Equal(6, Solve1(testInput));
         [Fact] public void Solution_1_test_real_input() => Assert.Equal(3224, Solve1(puzzleInput));
 
+        // Not 3224 (too low - just guessed the same as the first puzzle)
+        [Fact] public void Solution_2_test_real_input() => Assert.Equal(-1, Solve2(puzzleInput));
+
         public int Solve1(string input)
+        {
+            return SolveInternal(input, isProductionMode: false);
+        }
+
+        public int Solve2(string input)
+        {
+            return SolveInternal(input, isProductionMode: true);
+        }
+
+        private int SolveInternal(string input, bool isProductionMode)
         {
             var data = input.SplitByNewline(shouldTrim: true);
 
@@ -113,13 +125,13 @@ seti 0 6 1
                 })
                 .ToArray();
 
-            var registers = new[] { 0, 0, 0, 0, 0, 0 };
+            var registers = new[] { isProductionMode ? 1 : 0, 0, 0, 0, 0, 0 };
             var i = 0;
 
             while (ip < program.Length)
             {
-                if (i++ < 10) OutputRegisters(registers);
-                if (i == 10) output.WriteLine("...");
+                if (i++ % 500_000 == 0) OutputRegisters(registers, i);
+                if (i > 450_000_000) break;
 
                 registers[ipRegister] = ip;
                 Day16.Doop(program[ip], registers);
@@ -133,9 +145,9 @@ seti 0 6 1
             return registers[0];
         }
 
-        private void OutputRegisters(int[] registers)
+        private void OutputRegisters(int[] registers, int? i = null)
         {
-            output.WriteLine($"REGISTERS: [{string.Join(", ", registers)}]");
+            output.WriteLine($"{i};-----;{string.Join(";", registers)}");
         }
     }
 }

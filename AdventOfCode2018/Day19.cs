@@ -92,9 +92,7 @@ seti 0 6 1
         [Fact] public void Solution_1_test_example() => Assert.Equal(6, Solve1(testInput));
         [Fact] public void Solution_1_test_real_input() => Assert.Equal(3224, Solve1(puzzleInput));
 
-        // Not 3224 (too low - just guessed the same as the first puzzle)
-        // Not 5 (guessed based on register 1 - what was I thinking!?)
-        [Fact] public void Solution_2_test_real_input() => Assert.Equal(-1, Solve2(puzzleInput));
+        [Fact] public void Solution_2_test_real_input() => Assert.Equal(32188416, Solve2(puzzleInput));
 
         public int Solve1(string input)
         {
@@ -103,11 +101,50 @@ seti 0 6 1
 
         public int Solve2(string input)
         {
-            return SolveInternal(input, isProductionMode: true);
+            var sum = 0;
+            var max = 10551408;
+            for (int i = 1; i <= max; i++)
+            {
+                if (10551408 % i == 0) sum += i;
+            }
+
+            return sum;
+
+            // Hand-crafted/reduced algorithm from the program code:
+            int reg0 = 0, reg2 = 0, reg3 = 10551408, reg4 = 0, reg5 = 0;
+
+            reg4 = 1;
+        two:
+            reg2 = 1;
+        three:
+            reg5 = reg2 * reg4;
+
+            if (reg5 != reg3)
+            {
+                reg0 += reg4;
+            }
+
+            reg2++;
+
+            if (reg2 != reg3)
+            {
+                goto three;
+            }
+
+            reg4++;
+
+            if (reg4 <= reg3)
+            {
+                goto two;
+            }
+
+            return reg0;
         }
 
         private int SolveInternal(string input, bool isProductionMode)
         {
+            if (isProductionMode) throw new NotSupportedException("The algorithm is too slow for production mode, currently");
+
             var data = input.SplitByNewline(shouldTrim: true);
 
             var ipRegister = int.Parse(data.First().Replace("#ip ", ""));
@@ -127,13 +164,9 @@ seti 0 6 1
                 .ToArray();
 
             var registers = new[] { isProductionMode ? 1 : 0, 0, 0, 0, 0, 0 };
-            var i = 0;
 
             while (ip < program.Length)
             {
-                if (i++ % 500_000 == 0) OutputRegisters(registers, i);
-                if (i > int.MaxValue) throw new Exception("No answer found");
-
                 registers[ipRegister] = ip;
                 Day16.Doop(program[ip], registers);
                 ip = registers[ipRegister];
@@ -141,14 +174,9 @@ seti 0 6 1
                 ip++;
             }
 
-            OutputRegisters(registers);
+            output.WriteLine($"REGISTERS: {string.Join(";", registers)}");
 
             return registers[0];
-        }
-
-        private void OutputRegisters(int[] registers, int? i = null)
-        {
-            output.WriteLine($"{i};-----;{string.Join(";", registers)}");
         }
     }
 }

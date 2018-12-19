@@ -92,10 +92,7 @@ seti 0 6 1
         [Fact] public void Solution_1_test_example() => Assert.Equal(6, Solve1(testInput));
         [Fact] public void Solution_1_test_real_input() => Assert.Equal(3224, Solve1(puzzleInput));
 
-        // Not 3224 (too low - just guessed the same as the first puzzle)
-        // Not 5 (guessed based on register 1 - what was I thinking!?)
-        // Not 21637008 (too low). Sum of all the integor divisors.
-        [Fact] public void Solution_2_test_real_input() => Assert.Equal(-1, Solve2(puzzleInput));
+        [Fact] public void Solution_2_test_real_input() => Assert.Equal(32188416, Solve2(puzzleInput));
 
         public int Solve1(string input)
         {
@@ -113,74 +110,41 @@ seti 0 6 1
 
             return sum;
 
-            int reg0 = 1, reg2 = 0, reg3 = 0, reg4 = 0, reg5 = 0;
+            // Hand-crafted/reduced algorithm from the program code:
+            int reg0 = 0, reg2 = 0, reg3 = 10551408, reg4 = 0, reg5 = 0;
 
-            goto seventeen; // Line 1
-
-        one:
             reg4 = 1;
-
         two:
             reg2 = 1;
-
         three:
             reg5 = reg2 * reg4;
 
-            if (reg5 != 10551408)
+            if (reg5 != reg3)
             {
-                reg0 = reg4 + reg0;
+                reg0 += reg4;
             }
 
             reg2++;
 
-            if (reg2 != 10551408)
+            if (reg2 != reg3)
             {
                 goto three;
             }
 
             reg4++;
 
-            if (reg4 <= 10551408)
+            if (reg4 <= reg3)
             {
                 goto two;
             }
 
-            goto exit; // Line 16
-
-
-        seventeen:
-            reg3 += reg2;
-            reg3 *= reg3;
-            reg3 *= 19;
-            reg3 *= 11;
-            reg5 += 7;
-            reg5 *= 22;
-            reg5 += 18;
-            reg3 += reg5;
-            
-            if (reg0 == 0)
-            {
-                goto one;
-            }
-            else
-            {
-                reg5 = 27;
-                reg5 *= 28;
-                reg5 += 29;
-                reg5 *= 30;
-                reg5 *= 13;
-                reg5 *= 32;
-                reg3 += reg5;
-                reg0 = 0;
-                goto one;
-            }
-
-        exit:
             return reg0;
         }
 
         private int SolveInternal(string input, bool isProductionMode)
         {
+            if (isProductionMode) throw new NotSupportedException("The algorithm is too slow for production mode, currently");
+
             var data = input.SplitByNewline(shouldTrim: true);
 
             var ipRegister = int.Parse(data.First().Replace("#ip ", ""));
@@ -199,18 +163,10 @@ seti 0 6 1
                 })
                 .ToArray();
 
-            var nrOfExecutionPerLine = new int[program.Length];
-
             var registers = new[] { isProductionMode ? 1 : 0, 0, 0, 0, 0, 0 };
-            var i = 0;
 
             while (ip < program.Length)
             {
-                if (i++ % 500_000 == 0) OutputRegisters(registers, i);
-                if (i > 100_000_000) break; // throw new Exception("No answer found");
-
-                nrOfExecutionPerLine[ip]++;
-
                 registers[ipRegister] = ip;
                 Day16.Doop(program[ip], registers);
                 ip = registers[ipRegister];
@@ -218,16 +174,9 @@ seti 0 6 1
                 ip++;
             }
 
-            output.WriteLine(string.Join(";", nrOfExecutionPerLine));
-
-            OutputRegisters(registers);
+            output.WriteLine($"REGISTERS: {string.Join(";", registers)}");
 
             return registers[0];
-        }
-
-        private void OutputRegisters(int[] registers, int? i = null)
-        {
-            output.WriteLine($"{i};-----;{string.Join(";", registers)}");
         }
     }
 }

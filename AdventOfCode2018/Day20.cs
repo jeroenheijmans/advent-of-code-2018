@@ -27,6 +27,7 @@ namespace AdventOfCode2018
         [Fact] public void Solution_1_test_example_5() => Assert.Equal(31, Solve1("^WSSEESWWWNW(S|NENNEEEENN(ESSSSW(NWSW|SSEN)|WSWWN(E|WWS(E|SS))))$"));
 
         [Fact] public void Solution_1_test_real_input() => Assert.Equal(3983, Solve1(puzzleInput));
+        [Fact] public void Solution_2_test_real_input() => Assert.Equal(8486, Solve2(puzzleInput));
 
         public int Solve1(string input)
         {
@@ -38,6 +39,28 @@ namespace AdventOfCode2018
 
             OutputGrid(nodes);
 
+            Dictionary<Node, int> distances = GetDistances(startingNode);
+
+            return distances.Values.Max();
+        }
+
+        public int Solve2(string input)
+        {
+            var startingNode = new Node { Point = new Point(0, 0) };
+            var nodes = new HashSet<Node> { startingNode };
+            var data = input.Substring(1, input.Length - 2);
+
+            TraverseInput(data, startingNode, nodes);
+
+            OutputGrid(nodes);
+
+            Dictionary<Node, int> distances = GetDistances(startingNode);
+
+            return distances.Values.Count(d => d >= 1000);
+        }
+
+        private static Dictionary<Node, int> GetDistances(Node startingNode)
+        {
             var visited = new HashSet<Node>();
             var distances = new Dictionary<Node, int> { { startingNode, 0 } };
             var edges = new HashSet<Node> { startingNode };
@@ -61,7 +84,7 @@ namespace AdventOfCode2018
                 edges = newEdges;
             }
 
-            return distances.Values.Max();
+            return distances;
         }
 
         private readonly ISet<char> directions = new HashSet<char> { 'N', 'E', 'S', 'W' };

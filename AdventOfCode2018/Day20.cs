@@ -31,31 +31,17 @@ namespace AdventOfCode2018
 
         public int Solve1(string input)
         {
-            var startingNode = new Node { Point = new Point(0, 0) };
-            var nodes = new HashSet<Node> { startingNode };
-            var data = input.Substring(1, input.Length - 2);
-
-            TraverseInput(data, startingNode, nodes);
-
+            var (nodes, startingNode) = TraverseInput(input);
             OutputGrid(nodes);
-
-            Dictionary<Node, int> distances = GetDistances(startingNode);
-
+            var distances = GetDistances(startingNode);
             return distances.Values.Max();
         }
 
         public int Solve2(string input)
         {
-            var startingNode = new Node { Point = new Point(0, 0) };
-            var nodes = new HashSet<Node> { startingNode };
-            var data = input.Substring(1, input.Length - 2);
-
-            TraverseInput(data, startingNode, nodes);
-
+            var (nodes, startingNode) = TraverseInput(input);
             OutputGrid(nodes);
-
-            Dictionary<Node, int> distances = GetDistances(startingNode);
-
+            var distances = GetDistances(startingNode);
             return distances.Values.Count(d => d >= 1000);
         }
 
@@ -88,6 +74,16 @@ namespace AdventOfCode2018
         }
 
         private readonly ISet<char> directions = new HashSet<char> { 'N', 'E', 'S', 'W' };
+
+        private (ISet<Node> nodes, Node startingNode) TraverseInput(string input)
+        {
+            var startingNode = new Node { Point = new Point(0, 0) };
+            var nodes = new HashSet<Node> { startingNode };
+            var data = input.Substring(1, input.Length - 2);
+
+            TraverseInput(data, startingNode, nodes);
+            return (nodes, startingNode);
+        }
 
         private void TraverseInput(string input, Node position, ISet<Node> nodes)
         {
@@ -175,7 +171,7 @@ namespace AdventOfCode2018
             public override string ToString() => $"({Point.X},{Point.Y}) connected to {Connections}";
         }
 
-        private void OutputGrid(HashSet<Node> nodes)
+        private void OutputGrid(ISet<Node> nodes)
         {
             var gridItems = new Dictionary<Point, char>();
 

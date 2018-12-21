@@ -64,40 +64,38 @@ seti 5 9 2
         {
             var reg = new long[] { initForRegister0, 0, 0, 0, 0, 0 };
 
-        six:
-            reg[4] = reg[5] | 65536;
-            reg[5] = 15466939;
-
-            while (true)
-            {
-                reg[3] = reg[4] & 255;
-                reg[5] = reg[5] + reg[3];
-                reg[5] = reg[5] & 16777215;
-                reg[5] = reg[5] * 65899;
-                reg[5] = reg[5] & 16777215;
-
-                if (256 > reg[4]) break;
-
-                reg[3] = 0;
+            do
+            { 
+                reg[4] = reg[5] | 65536;
+                reg[5] = 15466939;
 
                 while (true)
                 {
-                    reg[1] = reg[3] + 1;
-                    reg[1] = reg[1] * 256;
-                    reg[1] = (reg[1] > reg[4]) ? 1 : 0;
-                    if (reg[1] == 1) break;
-                    reg[3]++;
+                    reg[3] = reg[4] & 255;
+                    reg[5] = reg[5] + reg[3];
+                    reg[5] = reg[5] & 16777215;
+                    reg[5] = reg[5] * 65899;
+                    reg[5] = reg[5] & 16777215;
+
+                    if (256 > reg[4]) break;
+
+                    reg[3] = 0;
+
+                    while (true)
+                    {
+                        reg[1] = reg[3] + 1;
+                        reg[1] = reg[1] * 256;
+                        reg[1] = (reg[1] > reg[4]) ? 1 : 0;
+                        if (reg[1] == 1) break;
+                        reg[3]++;
+                    }
+
+                    reg[4] = reg[3];
                 }
 
-                reg[4] = reg[3];
-            }
+                reg[3] = (reg[5] == reg[0]) ? 1 : 0;
 
-            reg[3] = (reg[5] == reg[0]) ? 1 : 0;
-
-            if (reg[3] == 0)
-            {
-                goto six;
-            }
+            } while (reg[3] == 0);
 
             return initForRegister0;
         }

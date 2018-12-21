@@ -68,27 +68,7 @@ seti 0 7 0
 seti 0 6 1
 ";
         private readonly ISet<int> JumpInstructions = new HashSet<int> { Day16.seti, Day16.setr, Day16.addi, Day16.addr };
-
-        private readonly IDictionary<string, int> InstructionNames = new Dictionary<string, int>
-        {
-            { "addr", Day16.addr },
-            { "addi", Day16.addi },
-            { "mulr", Day16.mulr },
-            { "muli", Day16.muli },
-            { "banr", Day16.banr },
-            { "bani", Day16.bani },
-            { "borr", Day16.borr },
-            { "bori", Day16.bori },
-            { "setr", Day16.setr },
-            { "seti", Day16.seti },
-            { "gtir", Day16.gtir },
-            { "gtri", Day16.gtri },
-            { "gtrr", Day16.gtrr },
-            { "eqir", Day16.eqir },
-            { "eqri", Day16.eqri },
-            { "eqrr", Day16.eqrr },
-        };
-
+        
         [Fact] public void Solution_1_test_example() => Assert.Equal(6, Solve1(testInput));
         [Fact] public void Solution_1_test_real_input() => Assert.Equal(3224, Solve1(puzzleInput));
 
@@ -98,6 +78,48 @@ seti 0 6 1
         {
             return SolveInternal(input, isProductionMode: false);
         }
+
+        /*
+            Step 1 of interpreting the program:
+         
+            addi    1     16     1       JUMP_TO_17       0:  REG[1] = (0) + 16 = 17
+            seti    1            4                        1:  REG[4] = 1
+            seti    1            2                        2:  REG[2] = 1
+            mulr    4      2     5                        3:  REG[5] = REG[2] x REG[4]
+            eqrr    5      3     5                        4:  REG[5] = (REG[5] == REG[3]) ? 1 : 0
+            addr    5      1     1       JUMP_TO_??       5:  REG[1] = (5) + REG[5]
+            addi    1      1     1       JUMP_TO_08       6:  REG[1] = (6) + 1
+            addr    4      0     0                        7:  REG[0] = REG[4] + REG[0]
+            addi    2      1     2                        8:  REG[2]++
+            gtrr    2      3     5                        9:  REG[5] = (REG[2] == REG[3]) ? 1 : 0
+            addr    1      5     1       jump_to_??      10:  REG[1] = (10) + REG[5]
+            seti    2            1       JUMP_TO_03      11:  REG[1] = 2
+            addi    4      1     4                       12:  REG[4]++
+            gtrr    4      3     5                       13:  REG[5] = (REG[4] > REG[3]) ? 1 : 0
+            addr    5      1     1       JUMP_TO_??      14:  REG[1] = (14) + REG[5]
+            seti    1            1       JUMP_TO_02      15:  REG[1] = 1
+            mulr    1      1     1       JUMP_TO_??      16:  REG[1] = (16 x 16)
+            addi    3      2     3                       17:  REG[3] +=  REG[2]
+            mulr    3      3     3                       18:  REG[3] *= REG[3]
+            mulr    1      3     3                       19:  REG[3] *= (19)
+            muli    3     11     3                       20:  REG[3] *= 11
+            addi    5      7     5                       21:  REG[5] += 7
+            mulr    5      1     5                       22:  REG[5] *= (22)
+            addi    5     18     5                       23:  REG[5] += 18
+            addr    3      5     3                       24:  REG[3] += REG[5]
+            addr    1      0     1       JUMP_TO_??      25:  REG[1] = (25) + REG[0]
+            seti    0            1       JUMP_TO_01      26:  REG[1] = 0
+            setr    1            5                       27:  REG[5] = (27)
+            mulr    5      1     5                       28:  REG[5] *= (28)
+            addr    1      5     5                       29:  REG[5] += (29)
+            mulr    1      5     5                       30:  REG[5] *= (30)
+            muli    5     14     5                       31:  REG[5] *= 14
+            mulr    5      1     5                       32:  REG[5] *= (32)
+            addr    3      5     3                       33:  REG[3] += REG[5]
+            seti    0            0                       34:  REG[0] = 0
+            seti    0            1       JUMP_TO_01      35:  REG[1] = 0
+        */
+
 
         public int Solve2(string input)
         {
@@ -155,7 +177,7 @@ seti 0 6 1
                 .Select(line =>
                 {
                     var inst = new int[4];
-                    inst[0] = InstructionNames[line[0]];
+                    inst[0] = Day16.OpCodesByName[line[0]];
                     inst[1] = int.Parse(line[1]);
                     inst[2] = int.Parse(line[2]);
                     inst[3] = int.Parse(line[3]);

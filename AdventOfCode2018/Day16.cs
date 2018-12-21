@@ -4214,6 +4214,26 @@ After:  [1, 2, 1, 3]";
         public const int eqir = 13;
         public const int eqri = 14;
         public const int eqrr = 15;
+
+        public static readonly IReadOnlyDictionary<string, int> OpCodesByName = new Dictionary<string, int>
+        {
+            { "addr", Day16.addr },
+            { "addi", Day16.addi },
+            { "mulr", Day16.mulr },
+            { "muli", Day16.muli },
+            { "banr", Day16.banr },
+            { "bani", Day16.bani },
+            { "borr", Day16.borr },
+            { "bori", Day16.bori },
+            { "setr", Day16.setr },
+            { "seti", Day16.seti },
+            { "gtir", Day16.gtir },
+            { "gtri", Day16.gtri },
+            { "gtrr", Day16.gtrr },
+            { "eqir", Day16.eqir },
+            { "eqri", Day16.eqri },
+            { "eqrr", Day16.eqrr },
+        };
         #endregion
 
         public static void Doop(int[] instructions, int[] registers)

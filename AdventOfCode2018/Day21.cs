@@ -93,7 +93,7 @@ seti 5 9 2
             var (ipRegister, program) = ElfCodeMachine.ParseInputToProgram(input);
             var answers = new Dictionary<long, int>();
 
-            for (int i = 0; i < 1092; i++)
+            for (int i = 0; i < 1_00_000; i++)
             {
                 var result = HandrolledProgram(i);
                 if (result >= 0)
@@ -134,7 +134,7 @@ seti 5 9 2
                     reg[4] = reg[4] / 256;
                 }
 
-                if (counter++ > 10_000_000) return -1;
+                if (counter++ > 1000) return -1;
 
             } while (reg[5] != reg[0]);
 
@@ -155,7 +155,7 @@ seti 5 9 2
                 ip = registers[ipRegister];
                 ip++;
 
-                if (counter++ > 1_000_000) throw new NoSolutionFoundException();
+                if (counter++ > 1_0) throw new NoSolutionFoundException();
             }
 
             return counter;

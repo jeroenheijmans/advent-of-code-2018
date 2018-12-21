@@ -74,10 +74,7 @@ seti 5 9 2
             reg[5] = reg[5] * 65899;
             reg[5] = reg[5] & 16777215;
             reg[3] = (256 > reg[4]) ? 1 : 0;
-            if (reg[3] == 0)
-            {
-            }
-            else
+            if (reg[3] != 0)
             {
                 goto twentyeight;
             }
@@ -86,10 +83,7 @@ seti 5 9 2
             reg[1] = reg[3] + 1;
             reg[1] = reg[1] * 256;
             reg[1] = (reg[1] > reg[4]) ? 1 : 0;
-            if (reg[1] == 0)
-            {
-            }
-            else
+            if (reg[1] != 0)
             {
                 goto twentysix;
             }

@@ -65,68 +65,43 @@ seti 5 9 2
             var reg = new long[] { initForRegister0, 0, 0, 0, 0, 0 };
 
         six:
-            //  6:
             reg[4] = reg[5] | 65536;
-            //  7:
             reg[5] = 15466939;
-            //  8:
         eight:
             reg[3] = reg[4] & 255;
-            //  9:  
             reg[5] = reg[5] + reg[3];
-            // 10:
             reg[5] = reg[5] & 16777215;
-            // 11:
             reg[5] = reg[5] * 65899;
-            // 12:
             reg[5] = reg[5] & 16777215;
-            // 13:
             reg[3] = (256 > reg[4]) ? 1 : 0;
-            // 14:  ip = 15 + reg[3]
             if (reg[3] == 0)
             {
-                // 15:  ip = 17
             }
             else
             {
-                // 16:  ip = 28
                 goto twentyeight;
             }
-            // 17:
             reg[3] = 0;
-            // 18:
         eightteen:
             reg[1] = reg[3] + 1;
-            // 19:
             reg[1] = reg[1] * 256;
-            // 20:
             reg[1] = (reg[1] > reg[4]) ? 1 : 0;
-            // 21:  ip = 22 + reg[1]
             if (reg[1] == 0)
             {
-                // 22:  ip = 24
             }
             else
             {
-                // 23:  ip = 26
                 goto twentysix;
             }
-            // 24:
             reg[3]++;
-            // 25:  ip = 18
             goto eightteen;
-            // 26:
         twentysix:
             reg[4] = reg[3];
-            // 27:  ip = 8
             goto eight;
-            // 28:
         twentyeight:
             reg[3] = (reg[5] == reg[0]) ? 1 : 0;
-            // 29:  ip = 30 + reg[3]
             if (reg[3] == 0)
             {
-                // 30:  ip = 6
                 goto six;
             }
 

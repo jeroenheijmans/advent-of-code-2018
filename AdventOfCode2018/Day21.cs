@@ -59,98 +59,52 @@ seti 5 9 2
         {
             var initForRegister0 = 0;
 
-            var reg = new[] { initForRegister0, 0, 0, 0, 0, 0 };
+            var reg = new[] { initForRegister0, 0, 0, 0, 0, 123 };
 
-            //  0:  
-            reg[5] = 123;
-            //  1:
         one:
             reg[5] = reg[5] & 456;
-            //  2:  
-            reg[5] = (reg[5] == 72) ? 1 : 0;
-            //  3:  
-            if (reg[5] == 0)
-            {
-                //  4:
-                goto one;
-            }
-            else
-            {
-                //  5:  
-                reg[5] = 0;
-            }
-            //  6:
+            if (reg[5] == 72) reg[5] = 0;
+            else goto one;
+
         six:
             reg[4] = reg[5] | 65536;
-            //  7:
             reg[5] = 15466939;
-            //  8:
+
         eight:
             reg[3] = reg[4] & 255;
-            //  9:  
             reg[5] = reg[5] + reg[3];
-            // 10:  
             reg[5] = reg[5] & 16777215;
-            // 11:  
             reg[5] = reg[5] * 65899;
-            // 12:  
             reg[5] = reg[5] & 16777215;
-            // 13:  
-            reg[3] = (256 > reg[4]) ? 1 : 0;
-            // 14:
-            if (reg[3] == 0)
-            {
-                // 15:
-                goto seventeen;
-            }
-            else
-            {
-                // 16:
-                goto twentyeight;
-            }
-            // 17:
+
+            if (256 > reg[4]) goto twentyeight;
+            else goto seventeen;
+
         seventeen:
             reg[3] = 0;
+
         eighteen:
-            // 18:
-            reg[1] = reg[3] + 1;
-            // 19:
-            reg[1] = reg[1] * 256;
-            // 20:
-            reg[1] = (reg[1] > reg[4]) ? 1 : 0;
-            // 21:  ip = 21 + reg[1]
-            if (reg[1] == 0)
-            {
-                // 22:
-                goto twentyfour;
-            }
-            else
-            {
-                // 23:
-                goto twentysix;
-            }
-        // 24:  
+            reg[1] = (reg[3] + 1) * 256;
+
+            if (reg[1] > reg[4]) goto twentysix;
+            else goto twentyfour;
+
         twentyfour:
             reg[3]++;
-            // 25:
             goto eighteen;
-            // 26:
+
         twentysix:
             reg[4] = reg[3];
-            // 27:
             goto eight;
-            // 28:
+
         twentyeight:
-            reg[3] = (reg[5] == reg[0]) ? 1 : 0;
-            // 29:
-            if (reg[3] == 0)
+            if (reg[5] == reg[0])
             {
-                // 30:
-                goto six;
+                throw new Exception("Program halts, but we have no clue anymore how many instructions it was");
             }
             else
             {
-                throw new Exception("Program halts, but we have no clue anymore how many instructions it was");
+                goto six;
             }
 
             throw new NoSolutionFoundException();

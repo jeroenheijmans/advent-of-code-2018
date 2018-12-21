@@ -4154,7 +4154,7 @@ After:  [1, 2, 1, 3]";
             foreach (var line in program)
             {
                 line[0] = realMapping[line[0]];
-                Doop(line, registers);
+                ElfCodeMachine.Doop(line, registers);
             }
 
             return registers[0];
@@ -4173,7 +4173,7 @@ After:  [1, 2, 1, 3]";
         {
             var clone = Clone(registers);
 
-            Doop(instructions, clone);
+            ElfCodeMachine.Doop(instructions, clone);
 
             return (clone[0] == expected[0]
                     && clone[1] == expected[1]
@@ -4187,119 +4187,14 @@ After:  [1, 2, 1, 3]";
         }
 
         [Theory]
-        [InlineData(mulr)]
-        [InlineData(addi)]
-        [InlineData(seti)]
+        [InlineData(ElfCodeMachine.mulr)]
+        [InlineData(ElfCodeMachine.addi)]
+        [InlineData(ElfCodeMachine.seti)]
         public void Doop_aoc_example_puzzle1(int op)
         {
             var registers = new[] { 3, 2, 1, 1 };
-            Doop(new[] { op, 2, 1, 2 }, registers);
+            ElfCodeMachine.Doop(new[] { op, 2, 1, 2 }, registers);
             Assert.Equal(new[] { 3, 2, 2, 1 }, registers);
-        }
-
-        #region OpCodes
-        public const int addr = 0;
-        public const int addi = 1;
-        public const int mulr = 2;
-        public const int muli = 3;
-        public const int banr = 4;
-        public const int bani = 5;
-        public const int borr = 6;
-        public const int bori = 7;
-        public const int setr = 8;
-        public const int seti = 9;
-        public const int gtir = 10;
-        public const int gtri = 11;
-        public const int gtrr = 12;
-        public const int eqir = 13;
-        public const int eqri = 14;
-        public const int eqrr = 15;
-
-        public static readonly IReadOnlyDictionary<string, int> OpCodesByName = new Dictionary<string, int>
-        {
-            { "addr", Day16.addr },
-            { "addi", Day16.addi },
-            { "mulr", Day16.mulr },
-            { "muli", Day16.muli },
-            { "banr", Day16.banr },
-            { "bani", Day16.bani },
-            { "borr", Day16.borr },
-            { "bori", Day16.bori },
-            { "setr", Day16.setr },
-            { "seti", Day16.seti },
-            { "gtir", Day16.gtir },
-            { "gtri", Day16.gtri },
-            { "gtrr", Day16.gtrr },
-            { "eqir", Day16.eqir },
-            { "eqri", Day16.eqri },
-            { "eqrr", Day16.eqrr },
-        };
-        #endregion
-
-        public static void Doop(int[] instructions, int[] registers)
-        {
-            int a = instructions[1], b = instructions[2], c = instructions[3];
-
-            switch (instructions[0])
-            {
-                case addr: // stores into register C the result of adding register A and register B
-                    registers[c] = registers[a] + registers[b];
-                    break;
-                case addi: // stores into register C the result of adding register A and value B
-                    registers[c] = registers[a] + b;
-                    break;
-
-                case mulr: // stores into register C the result of multiplying register A and register B
-                    registers[c] = registers[a] * registers[b];
-                    break;
-                case muli: // stores into register C the result of multiplying register A and value B
-                    registers[c] = registers[a] * b;
-                    break;
-
-                case banr: // stores into register C the result of the bitwise AND of register A and register B
-                    registers[c] = registers[a] & registers[b];
-                    break;
-                case bani: // stores into register C the result of the bitwise AND of register A and value B
-                    registers[c] = registers[a] & b;
-                    break;
-
-                case borr: // stores into register C the result of the bitwise OR of register A and register B
-                    registers[c] = registers[a] | registers[b];
-                    break;
-                case bori: // stores into register C the result of the bitwise OR of register A and value B
-                    registers[c] = registers[a] | b;
-                    break;
-
-                case setr: // copies the contents of register A into register C. (Input B is ignored.)
-                    registers[c] = registers[a];
-                    break;
-                case seti: // stores value A into register C. (Input B is ignored.)
-                    registers[c] = a;
-                    break;
-
-                case gtir: // sets register C to 1 if value A is greater than register B. Otherwise, register C is set to 0
-                    registers[c] = (a > registers[b]) ? 1 : 0;
-                    break;
-                case gtri: // sets register C to 1 if register A is greater than value B. Otherwise, register C is set to 0
-                    registers[c] = (registers[a] > b) ? 1 : 0;
-                    break;
-                case gtrr: // sets register C to 1 if register A is greater than register B. Otherwise, register C is set to 0
-                    registers[c] = (registers[a] > registers[b]) ? 1 : 0;
-                    break;
-
-                case eqir: // sets register C to 1 if value A is equal to register B. Otherwise, register C is set to 0
-                    registers[c] = (a == registers[b]) ? 1 : 0;
-                    break;
-                case eqri: // sets register C to 1 if register A is equal to value B. Otherwise, register C is set to 0
-                    registers[c] = (registers[a] == b) ? 1 : 0;
-                    break;
-                case eqrr: // sets register C to 1 if register A is equal to register B. Otherwise, register C is set to 0
-                    registers[c] = (registers[a] == registers[b]) ? 1 : 0;
-                    break;
-
-                default:
-                    throw new NotSupportedException();
-            }
         }
     }
 }

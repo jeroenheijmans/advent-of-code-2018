@@ -121,7 +121,7 @@ seti 5 9 2
                 .Select(line =>
                 {
                     var inst = new int[4];
-                    inst[0] = Day16.OpCodesByName[line[0]];
+                    inst[0] = ElfCodeMachine.OpCodesByName[line[0]];
                     inst[1] = int.Parse(line[1]);
                     inst[2] = int.Parse(line[2]);
                     inst[3] = int.Parse(line[3]);
@@ -147,7 +147,7 @@ seti 5 9 2
             while (ip < program.Length)
             {
                 registers[ipRegister] = ip;
-                Day16.Doop(program[ip], registers);
+                ElfCodeMachine.Doop(program[ip], registers);
                 ip = registers[ipRegister];
 
                 ip++;

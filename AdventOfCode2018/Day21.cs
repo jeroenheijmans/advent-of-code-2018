@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
 using System.Text;
@@ -56,41 +57,107 @@ seti 5 9 2
 
         public int Solve1(string input)
         {
-            /*  #ip 2
+            var initForRegister0 = 0;
 
-                seti   123                   5                         0:  reg[5] = 123
-                bani   5          456        5                         1:  reg[5] = reg[5] & 456
-                eqri   5          72         5                         2:  reg[5] = (reg[5] == 72) ? 1 : 0
-                addr   5          2          2    JUMP_TO_04_OR_05     3:  ip = 3 + reg[5]
-                seti   0                     2    JUMP_TO_01           4:  ip = 0
-                seti   0                     5                         5:  reg[5] = 0
-                bori   5          65536      4                         6:  reg[4] = reg[5] | 65536
-                seti   15466939              5                         7:  reg[5] = 15466939
-                bani   4          255        3                         8:  reg[3] = reg[4] & 255
-                addr   5          3          5                         9:  reg[5] = reg[5] + reg[3]
-                bani   5          16777215   5                        10:  reg[5] = reg[5] & 16777215
-                muli   5          65899      5                        11:  reg[5] = reg[5] * 65899
-                bani   5          16777215   5                        12:  reg[5] = reg[5] & 16777215
-                gtir   256        4          3                        13:  reg[3] = (256 > reg[4]) ? 1 : 0
-                addr   3          2          2    JUMP_TO_15_OR_16    14:  ip = 14 + reg[3]
-                addi   2          1          2    JUMP_TO_17          15:  ip = 16
-                seti   27                    2    JUMP_TO_28          16:  ip = 27
-                seti   0                     3                        17:  reg[3] = 0
-                addi   3          1          1                        18:  reg[1] = reg[3] + 1
-                muli   1          256        1                        19:  reg[1] = reg[1] * 256
-                gtrr   1          4          1                        20:  reg[1] = (reg[1] > reg[4]) ? 1 : 0
-                addr   1          2          2    JUMP_TO_22_OR_23    21:  ip = 21 + reg[1]
-                addi   2          1          2    JUMP_TO_24          22:  ip = 23
-                seti   25                    2    JUMP_TO_26          23:  ip = 25
-                addi   3          1          3                        24:  reg[3]++
-                seti   17                    2    JUMP_TO_18          25:  ip = 17
-                setr   3                     4                        26:  reg[4] = reg[3]
-                seti   7                     2    JUMP_TO_08          27:  ip = 7
-                eqrr   5          0          3                        28:  REG[3] = (REG[5] == REG[0]) ? 1 : 0
-                addr   3          2          2    JUMP_TO_30_OR_EXIT  29:  ip = 29 + reg[3]
-                seti   5                     2    JUMP_TO_06          30:  ip = 5
-            */
+            var reg = new[] { initForRegister0, 0, 0, 0, 0, 0 };
 
+            //  0:  
+            reg[5] = 123;
+            //  1:
+        one:
+            reg[5] = reg[5] & 456;
+            //  2:  
+            reg[5] = (reg[5] == 72) ? 1 : 0;
+            //  3:  
+            if (reg[5] == 0)
+            {
+                //  4:
+                goto one;
+            }
+            else
+            {
+                //  5:  
+                reg[5] = 0;
+            }
+            //  6:
+        six:
+            reg[4] = reg[5] | 65536;
+            //  7:
+            reg[5] = 15466939;
+            //  8:
+        eight:
+            reg[3] = reg[4] & 255;
+            //  9:  
+            reg[5] = reg[5] + reg[3];
+            // 10:  
+            reg[5] = reg[5] & 16777215;
+            // 11:  
+            reg[5] = reg[5] * 65899;
+            // 12:  
+            reg[5] = reg[5] & 16777215;
+            // 13:  
+            reg[3] = (256 > reg[4]) ? 1 : 0;
+            // 14:
+            if (reg[3] == 0)
+            {
+                // 15:
+                goto seventeen;
+            }
+            else
+            {
+                // 16:
+                goto twentyeight;
+            }
+            // 17:
+        seventeen:
+            reg[3] = 0;
+        eighteen:
+            // 18:
+            reg[1] = reg[3] + 1;
+            // 19:
+            reg[1] = reg[1] * 256;
+            // 20:
+            reg[1] = (reg[1] > reg[4]) ? 1 : 0;
+            // 21:  ip = 21 + reg[1]
+            if (reg[1] == 0)
+            {
+                // 22:
+                goto twentyfour;
+            }
+            else
+            {
+                // 23:
+                goto twentysix;
+            }
+        // 24:  
+        twentyfour:
+            reg[3]++;
+            // 25:
+            goto eighteen;
+            // 26:
+        twentysix:
+            reg[4] = reg[3];
+            // 27:
+            goto eight;
+            // 28:
+        twentyeight:
+            reg[3] = (reg[5] == reg[0]) ? 1 : 0;
+            // 29:
+            if (reg[3] == 0)
+            {
+                // 30:
+                goto six;
+            }
+            else
+            {
+                throw new Exception("Program halts, but we have no clue anymore how many instructions it was");
+            }
+
+            throw new NoSolutionFoundException();
+        } 
+
+        public int Solve1BruteForce(string input)
+        {
             var data = input.SplitByNewline(shouldTrim: true);
 
             var ipRegister = int.Parse(data.First().Replace("#ip ", ""));

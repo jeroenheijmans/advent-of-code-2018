@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
 using System.Text;
@@ -9,7 +8,7 @@ using static AdventOfCode2018.Util;
 
 namespace AdventOfCode2018
 {
-    public class Day21
+    public partial class Day21
     {
         private readonly ITestOutputHelper output;
 
@@ -92,11 +91,52 @@ seti 5 9 2
                 seti   5                     2    JUMP_TO_06          30:  ip = 5
             */
 
+            var data = input.SplitByNewline(shouldTrim: true);
 
-            // To answer:
-            // > What is the lowest non-negative integer value for register 0 that causes the 
-            // > program to halt after executing the fewest instructions?
-            return -1;
+            var ipRegister = int.Parse(data.First().Replace("#ip ", ""));
+
+            var program = data.Skip(1)
+                .Select(line => line.Split())
+                .Select(line =>
+                {
+                    var inst = new int[4];
+                    inst[0] = Day16.OpCodesByName[line[0]];
+                    inst[1] = int.Parse(line[1]);
+                    inst[2] = int.Parse(line[2]);
+                    inst[3] = int.Parse(line[3]);
+                    return inst;
+                })
+                .ToArray();
+
+            for (int i = 0; i < 10_000; i++)
+            {
+                var result = SolveInternal(program, ipRegister, initForRegister0: i);
+                if (result >= 0) return i;
+            }
+
+            throw new NoSolutionFoundException();
+        }
+
+        private int SolveInternal(int[][] program, int ipRegister, int initForRegister0, int maxExecutions = 1_000)
+        {
+            var ip = 0;
+            var registers = new[] { initForRegister0, 0, 0, 0, 0, 0 };
+            var counter = 0;
+
+            while (ip < program.Length)
+            {
+                registers[ipRegister] = ip;
+                Day16.Doop(program[ip], registers);
+                ip = registers[ipRegister];
+
+                ip++;
+
+                if (counter++ > maxExecutions) return -1;
+            }
+
+            output.WriteLine($"REGISTERS after {counter} executions: {string.Join(";", registers)}");
+
+            return registers[0];
         }
     }
 }

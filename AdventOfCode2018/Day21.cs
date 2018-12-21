@@ -56,7 +56,7 @@ seti 5 9 2
         [Fact] public void Solution_1_test_real_input() => Assert.Equal(-1, Solve1(puzzleInput));
 
         public int Solve1(string input)
-        {            
+        {
             throw new NoSolutionFoundException();
         }
 
@@ -66,38 +66,57 @@ seti 5 9 2
 
             do
             { 
-                reg[4] = reg[5] | 65536;
+                reg[4] = reg[5] | 0b1_0000_0000_0000_0000;
                 reg[5] = 15466939;
 
                 while (true)
                 {
-                    reg[3] = reg[4] & 255;
-                    reg[5] = reg[5] + reg[3];
-                    reg[5] = reg[5] & 16777215;
+                    reg[5] = reg[5] + (reg[4] & 0b1111_1111);
+                    reg[5] = reg[5] & 0b1111_1111_1111_1111_1111_1111; 
                     reg[5] = reg[5] * 65899;
-                    reg[5] = reg[5] & 16777215;
+                    reg[5] = reg[5] & 0b1111_1111_1111_1111_1111_1111;
 
-                    if (256 > reg[4]) break;
+                    if (reg[4] < 256) break;
 
-                    reg[3] = 0;
-
-                    while (true)
-                    {
-                        reg[1] = reg[3] + 1;
-                        reg[1] = reg[1] * 256;
-                        reg[1] = (reg[1] > reg[4]) ? 1 : 0;
-                        if (reg[1] == 1) break;
-                        reg[3]++;
-                    }
-
-                    reg[4] = reg[3];
+                    reg[4] = reg[4] / 256;
                 }
 
-                reg[3] = (reg[5] == reg[0]) ? 1 : 0;
-
-            } while (reg[3] == 0);
+            } while (reg[5] != reg[0]);
 
             return initForRegister0;
+        }
+
+        [Fact] public void Sanity_check_on_integer_as_binary_16777215() => Assert.Equal(16777215, 0b1111_1111_1111_1111_1111_1111);
+        [Fact] public void Sanity_check_on_integer_as_binary_65899() => Assert.Equal(65899, 0b1_0000_0001_0110_1011);
+        [Fact] public void Sanity_check_on_integer_as_binary_65536() => Assert.Equal(65536, 0b1_0000_0000_0000_0000);
+        [Fact] public void Sanity_check_on_integer_as_binary_255() => Assert.Equal(255, 0b1111_1111);
+
+        [Theory]
+        [InlineData(0, 0)]
+        [InlineData(255, 0)]
+        [InlineData(256, 1)]
+        [InlineData(257, 1)]
+        [InlineData(511, 1)]
+        [InlineData(512, 2)]
+        [InlineData(1234, 4)]
+        public void Sanity_check_on_loop_logic(int reg4, int expected)
+        {
+            var reg = new long[] { 0, 0, 0, 0, reg4 };
+
+            // New algorithm:
+            reg[4] = reg[4] / 256;
+
+            // For reference, the 'original' logic from the disassembly:
+            //
+            //reg[3] = 0;
+            //while (true)
+            //{
+            //    if (((reg[3] + 1) * 256) > reg[4]) break;
+            //    reg[3]++;
+            //}
+            //reg[4] = reg[3];
+
+            Assert.Equal(expected, reg[4]);
         }
     }
 }

@@ -4041,13 +4041,13 @@ After:  [1, 2, 1, 3]";
         {
             var output = 0;
             var data = input.SplitByNewline(shouldTrim: true);
-            var entries = new List<(int[] before, int[] instructions, int[] after)>();
+            var entries = new List<(long[] before, int[] instructions, long[] after)>();
 
             for (int i = 0; i < data.Length; i++)
             {
-                int[] before = data[i].Replace("Before: [", "").Replace("]", "").Split(", ").Select(int.Parse).ToArray();
+                long[] before = data[i].Replace("Before: [", "").Replace("]", "").Split(", ").Select(long.Parse).ToArray();
                 int[] instructions = data[++i].Split().Select(int.Parse).ToArray();
-                int[] after = data[++i].Replace("After:  [", "").Replace("]", "").Split(", ").Select(int.Parse).ToArray();
+                long[] after = data[++i].Replace("After:  [", "").Replace("]", "").Split(", ").Select(long.Parse).ToArray();
 
                 entries.Add((before, instructions, after));
             }
@@ -4075,13 +4075,13 @@ After:  [1, 2, 1, 3]";
         public int Solve2(string input, string input2)
         {
             var data = input.SplitByNewline(shouldTrim: true);
-            var entries = new List<(int[] before, int[] instructions, int[] after)>();
+            var entries = new List<(long[] before, int[] instructions, long[] after)>();
 
             for (int i = 0; i < data.Length; i++)
             {
-                int[] before = data[i].Replace("Before: [", "").Replace("]", "").Split(", ").Select(int.Parse).ToArray();
+                long[] before = data[i].Replace("Before: [", "").Replace("]", "").Split(", ").Select(long.Parse).ToArray();
                 int[] instructions = data[++i].Split().Select(int.Parse).ToArray();
-                int[] after = data[++i].Replace("After:  [", "").Replace("]", "").Split(", ").Select(int.Parse).ToArray();
+                long[] after = data[++i].Replace("After:  [", "").Replace("]", "").Split(", ").Select(long.Parse).ToArray();
 
                 entries.Add((before, instructions, after));
             }
@@ -4150,14 +4150,14 @@ After:  [1, 2, 1, 3]";
 
             var program = input2.SplitByNewline().Select(l => l.Split().Select(int.Parse).ToArray());
 
-            var registers = new[] { 0, 0, 0, 0 };
+            var registers = new long[] { 0, 0, 0, 0 };
             foreach (var line in program)
             {
                 line[0] = realMapping[line[0]];
                 ElfCodeMachine.Doop(line, registers);
             }
 
-            return registers[0];
+            return (int)registers[0];
         }
 
         private void OutputMappings(Dictionary<int, HashSet<int>> mappings)
@@ -4169,7 +4169,7 @@ After:  [1, 2, 1, 3]";
             output.WriteLine("");
         }
 
-        private bool IsOpPossible(int[] instructions, int[] registers, int[] expected)
+        private bool IsOpPossible(int[] instructions, long[] registers, long[] expected)
         {
             var clone = Clone(registers);
 
@@ -4181,9 +4181,9 @@ After:  [1, 2, 1, 3]";
                     && clone[3] == expected[3]);
         }
 
-        private static int[] Clone(int[] before)
+        private static long[] Clone(long[] before)
         {
-            return new[] { before[0], before[1], before[2], before[3] };
+            return new long[] { before[0], before[1], before[2], before[3] };
         }
 
         [Theory]
@@ -4192,9 +4192,9 @@ After:  [1, 2, 1, 3]";
         [InlineData(ElfCodeMachine.seti)]
         public void Doop_aoc_example_puzzle1(int op)
         {
-            var registers = new[] { 3, 2, 1, 1 };
-            ElfCodeMachine.Doop(new[] { op, 2, 1, 2 }, registers);
-            Assert.Equal(new[] { 3, 2, 2, 1 }, registers);
+            var registers = new long[] { 3, 2, 1, 1 };
+            ElfCodeMachine.Doop(new [] { op, 2, 1, 2 }, registers);
+            Assert.Equal(new long[] { 3, 2, 2, 1 }, registers);
         }
     }
 }

@@ -54,6 +54,7 @@ seti 5 9 2
 ";
 
         [Fact] public void Solution_1_test_real_input() => Assert.Equal(15615244, Solve1(puzzleInput));
+        [Fact] public void Solution_2_test_real_input() => Assert.Equal(0, Solve2(puzzleInput));
 
         public long Solve1(string input)
         {
@@ -87,6 +88,30 @@ seti 5 9 2
             return answers.OrderBy(kvp => kvp.Value).First().Key;
         }
 
+        public long Solve2(string input)
+        {
+            var (ipRegister, program) = ElfCodeMachine.ParseInputToProgram(input);
+            var answers = new Dictionary<long, int>();
+
+            for (int i = 0; i < 2500; i++)
+            {
+                var result = HandrolledProgram(i);
+                if (result >= 0)
+                {
+                    try
+                    {
+                        output.WriteLine($"Trying to get nr for {i}");
+                        var nr = FindNumberOfInstructionsNeeded(ipRegister, program);
+                        answers.Add(result, nr);
+                    }
+                    catch (NoSolutionFoundException) { }
+                }
+            }
+
+            // Not: 1092
+            return answers.OrderByDescending(kvp => kvp.Value).First().Key;
+        }
+
         private int HandrolledProgram(int initForRegister0)
         {
             var counter = 0;
@@ -109,7 +134,7 @@ seti 5 9 2
                     reg[4] = reg[4] / 256;
                 }
 
-                if (counter++ > 1) return -1;
+                if (counter++ > 100_000) return -1;
 
             } while (reg[5] != reg[0]);
 
@@ -130,7 +155,7 @@ seti 5 9 2
                 ip = registers[ipRegister];
                 ip++;
 
-                if (counter++ > 10_000) throw new NoSolutionFoundException();
+                if (counter++ > 1_000_000) throw new NoSolutionFoundException();
             }
 
             return counter;

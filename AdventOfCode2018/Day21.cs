@@ -67,32 +67,33 @@ seti 5 9 2
         six:
             reg[4] = reg[5] | 65536;
             reg[5] = 15466939;
-        eight:
-            reg[3] = reg[4] & 255;
-            reg[5] = reg[5] + reg[3];
-            reg[5] = reg[5] & 16777215;
-            reg[5] = reg[5] * 65899;
-            reg[5] = reg[5] & 16777215;
-            if (256 > reg[4])
+
+            while (true)
             {
-                goto twentyeight;
+                reg[3] = reg[4] & 255;
+                reg[5] = reg[5] + reg[3];
+                reg[5] = reg[5] & 16777215;
+                reg[5] = reg[5] * 65899;
+                reg[5] = reg[5] & 16777215;
+
+                if (256 > reg[4]) break;
+
+                reg[3] = 0;
+
+                while (true)
+                {
+                    reg[1] = reg[3] + 1;
+                    reg[1] = reg[1] * 256;
+                    reg[1] = (reg[1] > reg[4]) ? 1 : 0;
+                    if (reg[1] == 1) break;
+                    reg[3]++;
+                }
+
+                reg[4] = reg[3];
             }
-            reg[3] = 0;
-        eightteen:
-            reg[1] = reg[3] + 1;
-            reg[1] = reg[1] * 256;
-            reg[1] = (reg[1] > reg[4]) ? 1 : 0;
-            if (reg[1] == 1)
-            {
-                goto twentysix;
-            }
-            reg[3]++;
-            goto eightteen;
-        twentysix:
-            reg[4] = reg[3];
-            goto eight;
-        twentyeight:
+
             reg[3] = (reg[5] == reg[0]) ? 1 : 0;
+
             if (reg[3] == 0)
             {
                 goto six;

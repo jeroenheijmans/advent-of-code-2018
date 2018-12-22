@@ -65,9 +65,9 @@ namespace AdventOfCode2018
             return (ipRegister, program);
         }
 
-        public static void Doop(int[] instructions, int[] registers)
+        public static void Doop(int[] instructions, long[] registers)
         {
-            int a = instructions[1], b = instructions[2], c = instructions[3];
+            long a = instructions[1], b = instructions[2], c = instructions[3];
 
             switch (instructions[0])
             {

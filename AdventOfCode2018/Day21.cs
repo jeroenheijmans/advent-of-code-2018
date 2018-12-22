@@ -53,111 +53,142 @@ addr 3 2 2
 seti 5 9 2
 ";
 
-        [Fact] public void Solution_1_test_real_input() => Assert.Equal(-1, Solve1(puzzleInput));
+        [Fact] public void Solution_1_test_real_input() => Assert.Equal(15615244, Solve1(puzzleInput));
+        [Fact] public void Solution_2_test_real_input() => Assert.Equal(12963935, Solve2(puzzleInput));
 
-        public int Solve1(string input)
+        public long Solve1(string input)
         {
-            var initForRegister0 = 0;
+            return GetAnswer().First();
+        }
 
-            var reg = new[] { initForRegister0, 0, 0, 0, 0, 123 };
-
-        one:
-            reg[5] = reg[5] & 456;
-            if (reg[5] == 72) reg[5] = 0;
-            else goto one;
-
-        six:
-            reg[4] = reg[5] | 65536;
-            reg[5] = 15466939;
-
-        eight:
-            reg[3] = reg[4] & 255;
-            reg[5] = reg[5] + reg[3];
-            reg[5] = reg[5] & 16777215;
-            reg[5] = reg[5] * 65899;
-            reg[5] = reg[5] & 16777215;
-
-            if (256 > reg[4]) goto twentyeight;
-            else goto seventeen;
-
-        seventeen:
-            reg[3] = 0;
-
-        eighteen:
-            reg[1] = (reg[3] + 1) * 256;
-
-            if (reg[1] > reg[4]) goto twentysix;
-            else goto twentyfour;
-
-        twentyfour:
-            reg[3]++;
-            goto eighteen;
-
-        twentysix:
-            reg[4] = reg[3];
-            goto eight;
-
-        twentyeight:
-            if (reg[5] == reg[0])
-            {
-                throw new Exception("Program halts, but we have no clue anymore how many instructions it was");
-            }
-            else
-            {
-                goto six;
-            }
-
-            throw new NoSolutionFoundException();
-        } 
-
-        public int Solve1BruteForce(string input)
+        public long Solve2(string input)
         {
-            var data = input.SplitByNewline(shouldTrim: true);
+            return GetAnswer().Last();
+        }
 
-            var ipRegister = int.Parse(data.First().Replace("#ip ", ""));
+        [Theory]
+        [InlineData(1092)]
+        [InlineData(5285447)]
+        [InlineData(15615244)]
+        public void HandrolledProgram_still_working(int register0)
+        {
+            Assert.True(HandrolledProgram(register0, 100_000) > 0);
+        }
 
-            var program = data.Skip(1)
-                .Select(line => line.Split())
-                .Select(line =>
-                {
-                    var inst = new int[4];
-                    inst[0] = ElfCodeMachine.OpCodesByName[line[0]];
-                    inst[1] = int.Parse(line[1]);
-                    inst[2] = int.Parse(line[2]);
-                    inst[3] = int.Parse(line[3]);
-                    return inst;
-                })
-                .ToArray();
+        private ICollection<long> GetAnswer()
+        {
+            var chain = new List<long>();
+            
+            long reg4 = 0;
+            long reg5 = 0;
 
-            for (int i = 0; i < 10_000; i++)
+            while (true)
             {
-                var result = SolveInternal(program, ipRegister, initForRegister0: i);
-                if (result >= 0) return i;
+                reg4 = reg5 | 65536;
+                reg5 = 15466939;
+
+                reg5 = ((reg5 + (reg4 & 255)) * 65899) & 16777215;
+                reg4 = reg4 >> 8;
+                reg5 = ((reg5 + (reg4 & 255)) * 65899) & 16777215;
+                reg4 = reg4 >> 8;
+                reg5 = ((reg5 + (reg4 & 255)) * 65899) & 16777215;
+
+                if (chain.Contains(reg5)) return chain;
+                chain.Add(reg5);
+            }
+        }
+
+        private int HandrolledProgram(long initForRegister0, int maxLoops = 1)
+        {
+            var counter = 0;
+            long reg4 = 0;
+            long reg5 = 0;
+
+            while (true)
+            {
+                reg4 = reg5 | 65536;
+                reg5 = 15466939;
+
+                reg5 = ((reg5 + (reg4 & 255)) * 65899) & 16777215;
+                reg4 = reg4 >> 8;
+                reg5 = ((reg5 + (reg4 & 255)) * 65899) & 16777215;
+                reg4 = reg4 >> 8;
+                reg5 = ((reg5 + (reg4 & 255)) * 65899) & 16777215;
+
+                if (counter++ > maxLoops) return -1;
+                if (reg5 == initForRegister0) return counter;
             }
 
             throw new NoSolutionFoundException();
         }
 
-        private int SolveInternal(int[][] program, int ipRegister, int initForRegister0, int maxExecutions = 1_000)
+        private int FindNumberOfInstructionsNeeded(int ipRegister, int[][] program, int maxLoops = 1000)
         {
-            var ip = 0;
-            var registers = new[] { initForRegister0, 0, 0, 0, 0, 0 };
             var counter = 0;
+
+            long ip = 0;
+            var registers = new long[] { 0, 0, 0, 0, 0, 0 };
 
             while (ip < program.Length)
             {
                 registers[ipRegister] = ip;
                 ElfCodeMachine.Doop(program[ip], registers);
                 ip = registers[ipRegister];
-
                 ip++;
 
-                if (counter++ > maxExecutions) return -1;
+                if (counter++ > maxLoops) throw new NoSolutionFoundException();
             }
 
-            output.WriteLine($"REGISTERS after {counter} executions: {string.Join(";", registers)}");
+            return counter;
+        }
 
-            return registers[0];
+        [Theory]
+        [InlineData(0)]
+        [InlineData(1)]
+        [InlineData(255)]
+        [InlineData(256)]
+        [InlineData(257)]
+        [InlineData(1234)]
+        [InlineData(1092)]
+        [InlineData(5285447)]
+        [InlineData(15615244)]
+        [InlineData(16777215)]
+        public void Sanity_check_on_division_by_256(int number)
+        {
+            Assert.Equal(number / 256, number >> 8);
+        }
+
+        [Fact] public void Sanity_check_on_integer_as_binary_16777215() => Assert.Equal(16777215, 0b1111_1111_1111_1111_1111_1111);
+        [Fact] public void Sanity_check_on_integer_as_binary_65899() => Assert.Equal(65899, 0b1_0000_0001_0110_1011);
+        [Fact] public void Sanity_check_on_integer_as_binary_65536() => Assert.Equal(65536, 0b1_0000_0000_0000_0000);
+        [Fact] public void Sanity_check_on_integer_as_binary_255() => Assert.Equal(255, 0b1111_1111);
+
+        [Theory]
+        [InlineData(0, 0)]
+        [InlineData(255, 0)]
+        [InlineData(256, 1)]
+        [InlineData(257, 1)]
+        [InlineData(511, 1)]
+        [InlineData(512, 2)]
+        [InlineData(1234, 4)]
+        public void Sanity_check_on_loop_logic(int reg4, int expected)
+        {
+            var reg = new long[] { 0, 0, 0, 0, reg4 };
+
+            // New algorithm:
+            reg[4] = reg[4] / 256;
+
+            // For reference, the 'original' logic from the disassembly:
+            //
+            //reg[3] = 0;
+            //while (true)
+            //{
+            //    if (((reg[3] + 1) * 256) > reg[4]) break;
+            //    reg[3]++;
+            //}
+            //reg[4] = reg[3];
+
+            Assert.Equal(expected, reg[4]);
         }
     }
 }

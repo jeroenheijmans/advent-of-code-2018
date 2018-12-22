@@ -76,8 +76,8 @@ seti 0 6 1
         public int Solve1(string input)
         {
             var (ipRegister, program) = ElfCodeMachine.ParseInputToProgram(input);
-            var ip = 0;
-            var registers = new[] { 0, 0, 0, 0, 0, 0 };
+            long ip = 0;
+            var registers = new long[] { 0, 0, 0, 0, 0, 0 };
 
             while (ip < program.Length)
             {
@@ -89,7 +89,7 @@ seti 0 6 1
 
             output.WriteLine($"REGISTERS: {string.Join(";", registers)}");
 
-            return registers[0];
+            return (int)registers[0];
         }
 
         public int Solve2(string input)

@@ -73,7 +73,7 @@ seti 5 9 2
             var (ipRegister, program) = ElfCodeMachine.ParseInputToProgram(input);
             var answers = new Dictionary<long, int>();
 
-            for (int i = 0; i < 100_000; i++)
+            for (int i = 0; i < 257; i++)
             {
                 var result = HandrolledProgram(i, maxLoops: 10_000);
                 if (result >= 0)
@@ -109,15 +109,15 @@ seti 5 9 2
 
             while (true)
             {
-                reg4 = reg5 | 0b0000_0000_0000_0001_0000_0000_0000_0000;
-                reg5 =        0b0000_0000_1110_1100_0000_0001_1011_1011;
+                reg4 = reg5 | 65536; // 0b0000_0000_0000_0001_0000_0000_0000_0000
+                reg5 = 15466939;
 
                 while (true)
                 {
                     reg5 = reg5 + (reg4 & 0b1111_1111);
-                    reg5 = reg5 & 0b0000_0000_1111_1111_1111_1111_1111_1111;
-                    reg5 = reg5 * 0b0000_0000_0000_0001_0000_0001_0110_1011;
-                    reg5 = reg5 & 0b0000_0000_1111_1111_1111_1111_1111_1111;
+                    reg5 = reg5 & 16777215; // 0b0000_0000_1111_1111_1111_1111_1111_1111
+                    reg5 = reg5 * 65899;
+                    reg5 = reg5 & 16777215; // 0b0000_0000_1111_1111_1111_1111_1111_1111
 
                     if (reg4 < 256) break;
 

@@ -58,19 +58,12 @@ seti 5 9 2
 
         public long Solve1(string input)
         {
-            // The solution below finds that between 0 and int.MaxValue that 
-            // only 5285447 and 15615244 need *one* iteration in the handrolled
-            // program. For neither the real program halts within 10_000 steps
-            // so we just guessed both, the latter turned out to be right.
-            // 
-            // Let's just shortcut that answer here, and come back later to 
-            // optimze it. (See git history for version used to determine answer.)
-            return 15615244;
+            return GetAnswer().First();
         }
 
         public long Solve2(string input)
         {
-            return GetAnswer();
+            return GetAnswer().Last();
         }
 
         [Theory]
@@ -82,7 +75,7 @@ seti 5 9 2
             Assert.True(HandrolledProgram(register0, 100_000) > 0);
         }
 
-        private long GetAnswer()
+        private ICollection<long> GetAnswer()
         {
             var chain = new List<long>();
             
@@ -100,7 +93,7 @@ seti 5 9 2
                 reg4 = reg4 >> 8;
                 reg5 = ((reg5 + (reg4 & 255)) * 65899) & 16777215;
 
-                if (chain.Contains(reg5)) return chain.Last();
+                if (chain.Contains(reg5)) return chain;
                 chain.Add(reg5);
             }
         }

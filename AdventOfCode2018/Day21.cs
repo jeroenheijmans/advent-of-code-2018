@@ -64,28 +64,8 @@ seti 5 9 2
             // so we just guessed both, the latter turned out to be right.
             // 
             // Let's just shortcut that answer here, and come back later to 
-            // optimze it.
+            // optimze it. (See git history for version used to determine answer.)
             return 15615244;
-
-            var (ipRegister, program) = ElfCodeMachine.ParseInputToProgram(input);
-            var answers = new Dictionary<long, int>();
-
-            for (int i = 0; i < int.MaxValue; i++)
-            {
-                var result = HandrolledProgram(i);
-                if (result >= 0)
-                {
-                    try
-                    {
-                        output.WriteLine($"Trying to get nr for {i}");
-                        var nr = FindNumberOfInstructionsNeeded(ipRegister, program);
-                        answers.Add(result, nr);
-                    }
-                    catch (NoSolutionFoundException) { }
-                }
-            }
-
-            return answers.OrderBy(kvp => kvp.Value).First().Key;
         }
 
         public long Solve2(string input)
@@ -93,15 +73,15 @@ seti 5 9 2
             var (ipRegister, program) = ElfCodeMachine.ParseInputToProgram(input);
             var answers = new Dictionary<long, int>();
 
-            for (int i = 0; i < 10; i++)
+            for (int i = 0; i < 10_000; i++)
             {
-                var result = HandrolledProgram(i);
+                var result = HandrolledProgram(i, maxLoops: 10_000);
                 if (result >= 0)
                 {
                     try
                     {
                         output.WriteLine($"Trying to get nr for {i}");
-                        var nr = FindNumberOfInstructionsNeeded(ipRegister, program);
+                        var nr = FindNumberOfInstructionsNeeded(ipRegister, program, maxLoops: 0);
                         answers.Add(result, nr);
                     }
                     catch (NoSolutionFoundException) { }
@@ -118,10 +98,10 @@ seti 5 9 2
         [InlineData(15615244)]
         public void HandrolledProgram_still_working(int register0)
         {
-            Assert.Equal(register0, HandrolledProgram(register0));
+            Assert.True(HandrolledProgram(register0, 100_000) > 0);
         }
 
-        private int HandrolledProgram(int initForRegister0)
+        private int HandrolledProgram(int initForRegister0, int maxLoops = 1)
         {
             var counter = 0;
             var reg = new long[] { initForRegister0, 0, 0, 0, 0, 0 };
@@ -143,14 +123,14 @@ seti 5 9 2
                     reg[4] = reg[4] / 256;
                 }
 
-                if (counter++ > 100_000) return -1;
+                if (counter++ > maxLoops) return -1;
 
             } while (reg[5] != reg[0]);
 
-            return initForRegister0;
+            return counter;
         }
 
-        private int FindNumberOfInstructionsNeeded(int ipRegister, int[][] program)
+        private int FindNumberOfInstructionsNeeded(int ipRegister, int[][] program, int maxLoops = 1000)
         {
             var counter = 0;
 
@@ -164,7 +144,7 @@ seti 5 9 2
                 ip = registers[ipRegister];
                 ip++;
 
-                if (counter++ > 1_0) throw new NoSolutionFoundException();
+                if (counter++ > maxLoops) throw new NoSolutionFoundException();
             }
 
             return counter;

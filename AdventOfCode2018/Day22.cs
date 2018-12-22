@@ -73,9 +73,12 @@ namespace AdventOfCode2018
 
         public int Solve2(int depth, int targetX, int targetY)
         {
-            var types = new int[targetX + 1, targetY + 1];
-            var geos = new int[targetX + 1, targetY + 1];
-            var erosions = new int[targetX + 1, targetY + 1];
+            var maxx = targetX + 10;
+            var maxy = targetY + 20;
+
+            var types = new int[maxx, maxy];
+            var geos = new int[maxx, maxy];
+            var erosions = new int[maxx, maxy];
 
             var edges = new HashSet<Point> { new Point(0, 0) };
 
@@ -104,9 +107,12 @@ namespace AdventOfCode2018
                     erosions[x, y] = (geoidx + depth) % 20183;
                     types[x, y] = erosions[x, y] % 3;
 
-                    if (x < targetX) newEdges.Add(new Point(x + 1, y));
-                    if (y < targetY) newEdges.Add(new Point(x, y + 1));
-                    // TODO: "The fastest route might involve entering regions beyond the X or Y coordinate of the target."
+                    // > The fastest route might involve entering regions beyond 
+                    // > the X or Y coordinate of the target.
+                    //
+                    // Let's just take a wide margin?
+                    if (x < maxx - 1) newEdges.Add(new Point(x + 1, y));
+                    if (y < maxy - 1) newEdges.Add(new Point(x, y + 1));
 
                     var options = new HashSet<SearchNode>();
                     var point = new Point(x, y);
@@ -136,15 +142,14 @@ namespace AdventOfCode2018
                         var left = point.Left();
                         var up = point.Up();
 
-                        var candidates = searchNodes.Where(n => n.Id.Item1 == left || n.Id.Item1 == up);
+                        var candidates = searchNodes
+                            .Where(n => n.Point == left || n.Point == up)
+                            .Where(n => n.Equipment == option.Equipment);
 
                         foreach (var candidate in candidates)
                         {
-                            if (candidate.Id.Item2 == option.Id.Item2)
-                            {
-                                option.ConnectionsWithCost.Add(candidate, 1);
-                                candidate.ConnectionsWithCost.Add(option, 1);
-                            }
+                            option.ConnectionsWithCost.Add(candidate, 1);
+                            candidate.ConnectionsWithCost.Add(option, 1);
                         }
                     }
                 }
@@ -154,53 +159,61 @@ namespace AdventOfCode2018
 
             OutputGrid(targetX, targetY, types);
 
-            var originPoint = new Point(0, 0);
-            var origin = searchNodes.Single(n => n.Id.Item1 == originPoint && n.Id.Item2 == Equipment.Torch);
-
-            var targetPoint = new Point(targetX, targetY);
-            var target = searchNodes.Single(n => n.Id.Item1 == targetPoint && n.Id.Item2 == Equipment.Torch);
-
-            return GetMinDistance(origin, target, new HashSet<SearchNode>());
+            return GetMinDistance(searchNodes, new Point(0, 0), new Point(targetX, targetY));
         }
 
-        public int GetMinDistance(SearchNode current, SearchNode target, HashSet<SearchNode> visited, int distance = 0, int recur = 0)
+        public int GetMinDistance(ISet<SearchNode> searchNodes, Point originPoint, Point targetPoint)
         {
-            if (recur > 10) return int.MaxValue;
+            var origin = searchNodes.Single(n => n.Point == originPoint && n.Equipment == Equipment.Torch);
+            var target = searchNodes.Single(n => n.Point == targetPoint && n.Equipment == Equipment.Torch);
 
-            if (current == target)
+            var visited = new HashSet<SearchNode>();
+            var edges = new HashSet<SearchNode> { origin };
+            var minDistances = new Dictionary<SearchNode, int> { { origin, 0 } };
+
+            while (edges.Any())
             {
-                return 0;
+                var newEdges = new HashSet<SearchNode>();
+
+                foreach (var edge in edges)
+                {
+                    if (visited.Contains(edge)) continue;
+
+                    visited.Add(edge);
+                    var myCost = minDistances[edge];
+
+                    foreach (var option in edge.ConnectionsWithCost)
+                    {
+                        var cost = myCost + option.Value;
+                        if (minDistances.ContainsKey(option.Key)) minDistances[option.Key] = Math.Min(minDistances[option.Key], cost);
+                        else minDistances[option.Key] = cost;
+
+                        newEdges.Add(option.Key);
+                    }
+                }
+
+                edges = newEdges;
             }
 
-            var dist = int.MaxValue;
-
-            foreach (var option in current.ConnectionsWithCost)
-            {
-                if (visited.Contains(option.Key)) continue;
-                
-                if (option.Key.Id.Item1 != current.Id.Item1 && visited.Any(o => o.Id.Item1 == option.Key.Id.Item1)) continue;
-                
-                var set = new HashSet<SearchNode>(visited);
-                set.Add(option.Key);
-                dist = Math.Min(dist, GetMinDistance(option.Key, target, set, option.Value + distance, recur + 1));
-            }
-
-            return dist;
+            // NOT: 1125 (too high)
+            return minDistances[target];
         }
 
         public class SearchNode
         {
             public SearchNode(Point p, Equipment e)
             {
-                Id = new ValueTuple<Point, Equipment>(p, e);
+                Point = p;
+                Equipment = e;
             }
 
-            public ValueTuple<Point, Equipment> Id { get; set; }
+            public Point Point { get; }
+            public Equipment Equipment { get; }
             public IDictionary<SearchNode, int> ConnectionsWithCost { get; } = new Dictionary<SearchNode, int>();
 
             public override string ToString()
             {
-                return $"({Id.Item1.X}, {Id.Item1.Y}) with {Id.Item2} and {ConnectionsWithCost.Count()} connections";
+                return $"({Point.X}, {Point.Y}) with {Equipment} and {ConnectionsWithCost.Count()} connections";
             }
         }
 

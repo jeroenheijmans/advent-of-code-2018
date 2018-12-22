@@ -22,7 +22,7 @@ namespace AdventOfCode2018
         [Fact] public void Solution_1_test_real_input() => Assert.Equal(7299, Solve1(11109, 9, 731));
 
         [Fact] public void Solution_2_test_example_1() => Assert.Equal(45, Solve2(510, 10, 10));
-        [Fact] public void Solution_2_test_real_input() => Assert.Equal(-1, Solve2(11109, 9, 731));
+        [Fact] public void Solution_2_test_real_input() => Assert.Equal(1008, Solve2(11109, 9, 731));
 
         public int Solve1(int depth, int targetX, int targetY)
         {
@@ -66,7 +66,7 @@ namespace AdventOfCode2018
                 edges = newEdges;
             }
 
-            OutputGrid(targetX, targetY, types);
+            OutputGrid(targetX + 1, targetY + 1, targetX, targetY, types);
 
             return riskLevel;
         }
@@ -77,8 +77,8 @@ namespace AdventOfCode2018
             // > the X or Y coordinate of the target.
             //
             // Let's just take a wide margin?
-            var maxx = targetX + 200;
-            var maxy = targetY + 200;
+            var maxx = targetX + 30;
+            var maxy = targetY + 30;
 
             var types = new int[maxx, maxy];
             var geos = new int[maxx, maxy];
@@ -117,6 +117,9 @@ namespace AdventOfCode2018
 
                     var options = new HashSet<SearchNode>();
                     var point = new Point(x, y);
+
+                    if (x == targetX && y == targetY && types[x, y] != 0) throw new Exception("Target should be rock according to AoC");
+                    if (x == 0 && y == 0 && types[x, y] != 0) throw new Exception("Origin should be rock according to AoC");
 
                     if (types[x, y] == 0)
                     {
@@ -163,7 +166,7 @@ namespace AdventOfCode2018
                 edges = newEdges;
             }
 
-            OutputGrid(maxx, maxy, types);
+            OutputGrid(maxx, maxy, targetX, targetY, types);
             
             return GetMinDistance(searchNodes, new Point(0, 0), new Point(targetX, targetY));
         }
@@ -176,10 +179,27 @@ namespace AdventOfCode2018
             var visited = new HashSet<SearchNode>();
             var edges = new HashSet<SearchNode> { origin };
             var minDistances = new Dictionary<SearchNode, int> { { origin, 0 } };
+            var discoveryTimers = new List<DiscoveryTimer>();
 
-            while (edges.Any())
+            while (edges.Any() || discoveryTimers.Any())
             {
                 var newEdges = new HashSet<SearchNode>();
+
+                var timers = discoveryTimers.ToArray();
+                foreach (var timer in timers)
+                {
+                    timer.Ticks--;
+
+                    if (timer.Ticks == 0)
+                    {
+                        if (minDistances.ContainsKey(timer.SearchNode)) minDistances[timer.SearchNode] = Math.Min(minDistances[timer.SearchNode], timer.TargetCost);
+                        else minDistances[timer.SearchNode] = timer.TargetCost;
+
+                        newEdges.Add(timer.SearchNode);
+
+                        discoveryTimers.Remove(timer);
+                    }
+                }
 
                 foreach (var edge in edges)
                 {
@@ -190,11 +210,22 @@ namespace AdventOfCode2018
 
                     foreach (var option in edge.ConnectionsWithCost)
                     {
-                        var cost = myCost + option.Value;
-                        if (minDistances.ContainsKey(option.Key)) minDistances[option.Key] = Math.Min(minDistances[option.Key], cost);
-                        else minDistances[option.Key] = cost;
+                        if (option.Value == 1)
+                        {
+                            var cost = myCost + option.Value;
+                            if (minDistances.ContainsKey(option.Key)) minDistances[option.Key] = Math.Min(minDistances[option.Key], cost);
+                            else minDistances[option.Key] = cost;
 
-                        newEdges.Add(option.Key);
+                            newEdges.Add(option.Key);
+                        }
+                        else if (option.Value == 7)
+                        {
+                            discoveryTimers.Add(new DiscoveryTimer { SearchNode = option.Key, TargetCost = myCost + 7 });
+                        }
+                        else
+                        {
+                            throw new NotSupportedException();
+                        }
                     }
                 }
 
@@ -204,6 +235,13 @@ namespace AdventOfCode2018
             // NOT: 1115 (too high)
             // NOT: 1125 (too high)
             return minDistances[target];
+        }
+
+        public class DiscoveryTimer
+        {
+            public SearchNode SearchNode { get; set; }
+            public int TargetCost { get; set; }
+            public int Ticks { get; set; } = 7;
         }
 
         public class SearchNode
@@ -231,7 +269,7 @@ namespace AdventOfCode2018
             Neither,
         }
 
-        private void OutputGrid(int maxx, int maxy, int[,] types)
+        private void OutputGrid(int maxx, int maxy, int targetX, int targetY, int[,] types)
         {
             for (int y = 0; y < maxy; y++)
             {
@@ -239,7 +277,7 @@ namespace AdventOfCode2018
                 for (int x = 0; x < maxx; x++)
                 {
                     if (x == 0 && y == 0) sb.Append('X');
-                    else if (x == maxx && y == maxy) sb.Append('T');
+                    else if (x == targetX && y == targetY) sb.Append('T');
                     else if (types[x, y] == 0) sb.Append('.');
                     else if (types[x, y] == 1) sb.Append('=');
                     else if (types[x, y] == 2) sb.Append('|');

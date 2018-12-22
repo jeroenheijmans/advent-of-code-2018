@@ -178,26 +178,24 @@ namespace AdventOfCode2018
 
             var visited = new HashSet<SearchNode>();
             var edges = new HashSet<SearchNode> { origin };
-            var minDistances = new Dictionary<SearchNode, int> { { origin, 0 } };
+            var distances = new Dictionary<SearchNode, int> { { origin, 0 } };
             var discoveryTimers = new List<DiscoveryTimer>();
 
             while (edges.Any() || discoveryTimers.Any())
             {
                 var newEdges = new HashSet<SearchNode>();
 
-                var timers = discoveryTimers.ToArray();
-                foreach (var timer in timers)
+                for (int i = discoveryTimers.Count - 1; i >= 0; i--)
                 {
+                    var timer = discoveryTimers[i];
+
                     timer.Ticks--;
 
                     if (timer.Ticks == 0)
                     {
-                        if (minDistances.ContainsKey(timer.SearchNode)) minDistances[timer.SearchNode] = Math.Min(minDistances[timer.SearchNode], timer.TargetCost);
-                        else minDistances[timer.SearchNode] = timer.TargetCost;
-
+                        distances[timer.SearchNode] = Math.Min(timer.TargetCost, distances.GetOrMaxInt(timer.SearchNode));
                         newEdges.Add(timer.SearchNode);
-
-                        discoveryTimers.Remove(timer);
+                        discoveryTimers.RemoveAt(i);
                     }
                 }
 
@@ -206,25 +204,17 @@ namespace AdventOfCode2018
                     if (visited.Contains(edge)) continue;
 
                     visited.Add(edge);
-                    var myCost = minDistances[edge];
 
                     foreach (var option in edge.ConnectionsWithCost)
                     {
                         if (option.Value == 1)
                         {
-                            var cost = myCost + option.Value;
-                            if (minDistances.ContainsKey(option.Key)) minDistances[option.Key] = Math.Min(minDistances[option.Key], cost);
-                            else minDistances[option.Key] = cost;
-
+                            distances[option.Key] = Math.Min(distances[edge] + 1, distances.GetOrMaxInt(option.Key));
                             newEdges.Add(option.Key);
-                        }
-                        else if (option.Value == 7)
-                        {
-                            discoveryTimers.Add(new DiscoveryTimer { SearchNode = option.Key, TargetCost = myCost + 7 });
                         }
                         else
                         {
-                            throw new NotSupportedException();
+                            discoveryTimers.Add(new DiscoveryTimer { SearchNode = option.Key, TargetCost = distances[edge] + 7 });
                         }
                     }
                 }
@@ -232,16 +222,14 @@ namespace AdventOfCode2018
                 edges = newEdges;
             }
 
-            // NOT: 1115 (too high)
-            // NOT: 1125 (too high)
-            return minDistances[target];
+            return distances[target];
         }
 
         public class DiscoveryTimer
         {
             public SearchNode SearchNode { get; set; }
             public int TargetCost { get; set; }
-            public int Ticks { get; set; } = 7;
+            public int Ticks { get; set; } = 6;
         }
 
         public class SearchNode

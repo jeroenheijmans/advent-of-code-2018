@@ -54,6 +54,12 @@ namespace AdventOfCode2018
             return dictionary.TryGetValue(key, out item) ? item : fallback;
         }
 
+        public static int GetOrMaxInt<TKey>(this IDictionary<TKey, int> dictionary, TKey key)
+        {
+            int item;
+            return dictionary.TryGetValue(key, out item) ? item : int.MaxValue;
+        }
+
         public static string[] SubGroups(this string input, string pattern)
         {
             return Regex.Matches(input, pattern)

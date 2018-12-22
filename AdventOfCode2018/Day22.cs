@@ -17,18 +17,54 @@ namespace AdventOfCode2018
         {
             this.output = output;
         }
+        
+        [Fact] public void Solution_1_test_example_1() => Assert.Equal(114, Solve1(510, 10, 10));
 
-        public const string testInput = @"";
+        [Fact] public void Solution_1_test_real_input() => Assert.Equal(7299, Solve1(11109, 9, 731));
 
-        public const string puzzleInput = @"";
-
-        [Fact] public void Solution_1_test_example_1() => Assert.Equal(-1, Solve1(testInput));
-
-        [Fact] public void Solution_1_test_real_input() => Assert.Equal(-1, Solve1(puzzleInput));
-
-        public int Solve1(string input)
+        public int Solve1(int depth, int targetX, int targetY)
         {
-            return 0;
+            var riskLevel = 0;
+
+            var types = new int[targetX + 1, targetY + 1];
+            var geos = new int[targetX + 1, targetY + 1];
+            var erosions = new int[targetX + 1, targetY + 1];
+
+            var edges = new HashSet<Point> { new Point(0, 0) };
+
+            while (edges.Any())
+            {
+                var newEdges = new HashSet<Point>();
+
+                foreach (var edge in edges)
+                {
+                    var x = edge.X;
+                    var y = edge.Y;
+                    var geoidx = 0;
+
+                    if (x == 0 && y == 0) geoidx = 0;
+                    else if (y == 0) geoidx = x * 16807;
+                    else if (x == 0) geoidx = y * 48271;
+                    else if (x == targetX && y == targetY) geoidx = 0;
+                    else
+                    {
+                        geoidx = erosions[x - 1, y] * erosions[x, y - 1];
+                    }
+
+                    geos[x, y] = geoidx;
+                    erosions[x, y] = (geoidx + depth) % 20183;
+                    types[x, y] = erosions[x, y] % 3;
+
+                    riskLevel += types[x, y];
+
+                    if (x < targetX) newEdges.Add(new Point(x + 1, y));
+                    if (y < targetY) newEdges.Add(new Point(x, y + 1));
+                }
+
+                edges = newEdges;
+            }
+
+            return riskLevel;
         }
     }
 }

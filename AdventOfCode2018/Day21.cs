@@ -93,7 +93,7 @@ seti 5 9 2
             var (ipRegister, program) = ElfCodeMachine.ParseInputToProgram(input);
             var answers = new Dictionary<long, int>();
 
-            for (int i = 0; i < 1_00_000; i++)
+            for (int i = 0; i < 10; i++)
             {
                 var result = HandrolledProgram(i);
                 if (result >= 0)
@@ -110,6 +110,15 @@ seti 5 9 2
 
             // Not: 1092
             return answers.OrderByDescending(kvp => kvp.Value).First().Key;
+        }
+
+        [Theory]
+        [InlineData(1092)]
+        [InlineData(5285447)]
+        [InlineData(15615244)]
+        public void HandrolledProgram_still_working(int register0)
+        {
+            Assert.Equal(register0, HandrolledProgram(register0));
         }
 
         private int HandrolledProgram(int initForRegister0)
@@ -134,7 +143,7 @@ seti 5 9 2
                     reg[4] = reg[4] / 256;
                 }
 
-                if (counter++ > 1000) return -1;
+                if (counter++ > 100_000) return -1;
 
             } while (reg[5] != reg[0]);
 

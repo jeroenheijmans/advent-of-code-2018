@@ -73,8 +73,8 @@ namespace AdventOfCode2018
 
         public int Solve2(int depth, int targetX, int targetY)
         {
-            var maxx = targetX + 10;
-            var maxy = targetY + 20;
+            var maxx = targetX + 40;
+            var maxy = targetY + 40;
 
             var types = new int[maxx, maxy];
             var geos = new int[maxx, maxy];
@@ -195,6 +195,7 @@ namespace AdventOfCode2018
                 edges = newEdges;
             }
 
+            // NOT: 1115 (too high)
             // NOT: 1125 (too high)
             return minDistances[target];
         }

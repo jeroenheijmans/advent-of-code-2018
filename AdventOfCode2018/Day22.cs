@@ -73,8 +73,12 @@ namespace AdventOfCode2018
 
         public int Solve2(int depth, int targetX, int targetY)
         {
-            var maxx = targetX + 40;
-            var maxy = targetY + 40;
+            // > The fastest route might involve entering regions beyond 
+            // > the X or Y coordinate of the target.
+            //
+            // Let's just take a wide margin?
+            var maxx = targetX + 200;
+            var maxy = targetY + 200;
 
             var types = new int[maxx, maxy];
             var geos = new int[maxx, maxy];
@@ -83,6 +87,7 @@ namespace AdventOfCode2018
             var edges = new HashSet<Point> { new Point(0, 0) };
 
             var searchNodes = new HashSet<SearchNode>();
+            var lookup = new Dictionary<ValueTuple<Point, Equipment>, SearchNode>();
 
             while (edges.Any())
             {
@@ -107,10 +112,6 @@ namespace AdventOfCode2018
                     erosions[x, y] = (geoidx + depth) % 20183;
                     types[x, y] = erosions[x, y] % 3;
 
-                    // > The fastest route might involve entering regions beyond 
-                    // > the X or Y coordinate of the target.
-                    //
-                    // Let's just take a wide margin?
                     if (x < maxx - 1) newEdges.Add(new Point(x + 1, y));
                     if (y < maxy - 1) newEdges.Add(new Point(x, y + 1));
 
@@ -135,21 +136,26 @@ namespace AdventOfCode2018
 
                     foreach (var option in options)
                     {
+                        var id = new ValueTuple<Point, Equipment>(option.Point, option.Equipment);
+                        lookup.Add(id, option);
+
                         searchNodes.Add(option);
                         var otherOption = options.Single(o => o != option);
                         option.ConnectionsWithCost.Add(otherOption, 7);
 
-                        var left = point.Left();
-                        var up = point.Up();
+                        var left = new ValueTuple<Point, Equipment>(point.Left(), option.Equipment);
+                        var up = new ValueTuple<Point, Equipment>(point.Up(), option.Equipment);
 
-                        var candidates = searchNodes
-                            .Where(n => n.Point == left || n.Point == up)
-                            .Where(n => n.Equipment == option.Equipment);
-
-                        foreach (var candidate in candidates)
+                        if (lookup.TryGetValue(left, out var reach1))
                         {
-                            option.ConnectionsWithCost.Add(candidate, 1);
-                            candidate.ConnectionsWithCost.Add(option, 1);
+                            option.ConnectionsWithCost.Add(reach1, 1);
+                            reach1.ConnectionsWithCost.Add(option, 1);
+                        }
+
+                        if (lookup.TryGetValue(up, out var reach2))
+                        {
+                            option.ConnectionsWithCost.Add(reach2, 1);
+                            reach2.ConnectionsWithCost.Add(option, 1);
                         }
                     }
                 }
@@ -157,8 +163,8 @@ namespace AdventOfCode2018
                 edges = newEdges;
             }
 
-            OutputGrid(targetX, targetY, types);
-
+            OutputGrid(maxx, maxy, types);
+            
             return GetMinDistance(searchNodes, new Point(0, 0), new Point(targetX, targetY));
         }
 
@@ -225,15 +231,15 @@ namespace AdventOfCode2018
             Neither,
         }
 
-        private void OutputGrid(int targetX, int targetY, int[,] types)
+        private void OutputGrid(int maxx, int maxy, int[,] types)
         {
-            for (int y = 0; y <= targetY; y++)
+            for (int y = 0; y < maxy; y++)
             {
                 var sb = new StringBuilder();
-                for (int x = 0; x <= targetX; x++)
+                for (int x = 0; x < maxx; x++)
                 {
                     if (x == 0 && y == 0) sb.Append('X');
-                    else if (x == targetX && y == targetY) sb.Append('T');
+                    else if (x == maxx && y == maxy) sb.Append('T');
                     else if (types[x, y] == 0) sb.Append('.');
                     else if (types[x, y] == 1) sb.Append('=');
                     else if (types[x, y] == 2) sb.Append('|');

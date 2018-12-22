@@ -145,6 +145,11 @@ namespace AdventOfCode2018
             );
         }
 
+        public static int ManhattanDistanceTo(this Point p1, Point p2)
+        {
+            return GetManhattanDistance(p1.X, p1.Y, p2.X, p2.Y);
+        }
+
         public static int GetManhattanDistance(Point p1, Point p2)
         {
             return GetManhattanDistance(p1.X, p1.Y, p2.X, p2.Y);

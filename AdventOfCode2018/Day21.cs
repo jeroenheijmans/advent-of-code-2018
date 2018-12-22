@@ -104,28 +104,29 @@ seti 5 9 2
         private int HandrolledProgram(int initForRegister0, int maxLoops = 1)
         {
             var counter = 0;
-            var reg = new long[] { initForRegister0, 0, 0, 0, 0, 0 };
+            var reg4 = 0;
+            var reg5 = 0;
 
             do
             { 
-                reg[4] = reg[5] | 0b1_0000_0000_0000_0000;
-                reg[5] = 15466939;
+                reg4 = reg5 | 0b0000_0000_0000_0001_0000_0000_0000_0000;
+                reg5 = 0b0000_0000_1110_1100_0000_0001_1011_1011;
 
                 while (true)
                 {
-                    reg[5] = reg[5] + (reg[4] & 0b1111_1111);
-                    reg[5] = reg[5] & 0b1111_1111_1111_1111_1111_1111; 
-                    reg[5] = reg[5] * 65899;
-                    reg[5] = reg[5] & 0b1111_1111_1111_1111_1111_1111;
+                    reg5 = reg5 + (reg4 & 0b1111_1111);
+                    reg5 = reg5 & 0b0000_0000_1111_1111_1111_1111_1111_1111; 
+                    reg5 = reg5 * 0b0000_0000_0000_0001_0000_0001_0110_1011;
+                    reg5 = reg5 & 0b0000_0000_1111_1111_1111_1111_1111_1111;
 
-                    if (reg[4] < 256) break;
+                    if (reg4 < 0b0000_0000_0000_0000_0000_0001_0000_0000) break;
 
-                    reg[4] = reg[4] / 256;
+                    reg4 = reg4 / 0b0000_0000_0000_0000_0000_0001_0000_0000;
                 }
 
                 if (counter++ > maxLoops) return -1;
 
-            } while (reg[5] != reg[0]);
+            } while (reg5 != initForRegister0);
 
             return counter;
         }

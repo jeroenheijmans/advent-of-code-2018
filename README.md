@@ -32,9 +32,9 @@ Here's what I learned (or noticed) each day.
 17. Physics are fun!
 18. Excel to the rescue (for a quick & dirty answer). Again.
 19. I _despise_ low level programming and debugging.
-20. TBD
-21. TBD
-22. TBD
+20. Real regex engines must be mindbending to build. 
+21. I ***abhor*** low level programming and debugging.
+22. Pathfinding in puzzles is tricky. Pathfinding in real games must be grueling.
 23. TBD
 24. TBD
 25. TBD

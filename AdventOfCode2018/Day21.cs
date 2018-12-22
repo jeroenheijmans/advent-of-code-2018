@@ -54,7 +54,7 @@ seti 5 9 2
 ";
 
         [Fact] public void Solution_1_test_real_input() => Assert.Equal(15615244, Solve1(puzzleInput));
-        [Fact] public void Solution_2_test_real_input() => Assert.Equal(0, Solve2(puzzleInput));
+        [Fact] public void Solution_2_test_real_input() => Assert.Equal(12963935, Solve2(puzzleInput));
 
         public long Solve1(string input)
         {
@@ -70,26 +70,7 @@ seti 5 9 2
 
         public long Solve2(string input)
         {
-            var (ipRegister, program) = ElfCodeMachine.ParseInputToProgram(input);
-            var answers = new Dictionary<long, int>();
-
-            for (int i = 0; i < 257; i++)
-            {
-                var result = HandrolledProgram(i, maxLoops: 10_000);
-                if (result >= 0)
-                {
-                    try
-                    {
-                        output.WriteLine($"Halted {Convert.ToString(i, 2).PadLeft(32)} - {i.ToString().PadLeft(10)} - {result.ToString().PadLeft(6)}");
-                        var nr = FindNumberOfInstructionsNeeded(ipRegister, program, maxLoops: 0);
-                        answers.Add(result, nr);
-                    }
-                    catch (NoSolutionFoundException) { }
-                }
-            }
-
-            // Not: 1092
-            return answers.OrderByDescending(kvp => kvp.Value).First().Key;
+            return GetAnswer();
         }
 
         [Theory]
@@ -99,6 +80,29 @@ seti 5 9 2
         public void HandrolledProgram_still_working(int register0)
         {
             Assert.True(HandrolledProgram(register0, 100_000) > 0);
+        }
+
+        private long GetAnswer()
+        {
+            var chain = new List<long>();
+            
+            long reg4 = 0;
+            long reg5 = 0;
+
+            while (true)
+            {
+                reg4 = reg5 | 65536;
+                reg5 = 15466939;
+
+                reg5 = ((reg5 + (reg4 & 255)) * 65899) & 16777215;
+                reg4 = reg4 >> 8;
+                reg5 = ((reg5 + (reg4 & 255)) * 65899) & 16777215;
+                reg4 = reg4 >> 8;
+                reg5 = ((reg5 + (reg4 & 255)) * 65899) & 16777215;
+
+                if (chain.Contains(reg5)) return chain.Last();
+                chain.Add(reg5);
+            }
         }
 
         private int HandrolledProgram(long initForRegister0, int maxLoops = 1)
@@ -113,13 +117,9 @@ seti 5 9 2
                 reg5 = 15466939;
 
                 reg5 = ((reg5 + (reg4 & 255)) * 65899) & 16777215;
-
                 reg4 = reg4 >> 8;
-
                 reg5 = ((reg5 + (reg4 & 255)) * 65899) & 16777215;
-
                 reg4 = reg4 >> 8;
-
                 reg5 = ((reg5 + (reg4 & 255)) * 65899) & 16777215;
 
                 if (counter++ > maxLoops) return -1;

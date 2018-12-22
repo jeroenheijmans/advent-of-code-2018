@@ -73,14 +73,14 @@ seti 5 9 2
             var (ipRegister, program) = ElfCodeMachine.ParseInputToProgram(input);
             var answers = new Dictionary<long, int>();
 
-            for (int i = 0; i < 10_000; i++)
+            for (int i = 0; i < 100_000; i++)
             {
                 var result = HandrolledProgram(i, maxLoops: 10_000);
                 if (result >= 0)
                 {
                     try
                     {
-                        output.WriteLine($"Trying to get nr for {i}");
+                        output.WriteLine($"Halted {Convert.ToString(i, 2).PadLeft(32)} - {i.ToString().PadLeft(10)} - {result.ToString().PadLeft(6)}");
                         var nr = FindNumberOfInstructionsNeeded(ipRegister, program, maxLoops: 0);
                         answers.Add(result, nr);
                     }
@@ -101,34 +101,34 @@ seti 5 9 2
             Assert.True(HandrolledProgram(register0, 100_000) > 0);
         }
 
-        private int HandrolledProgram(int initForRegister0, int maxLoops = 1)
+        private int HandrolledProgram(long initForRegister0, int maxLoops = 1)
         {
             var counter = 0;
-            var reg4 = 0;
-            var reg5 = 0;
+            long reg4 = 0;
+            long reg5 = 0;
 
-            do
-            { 
+            while (true)
+            {
                 reg4 = reg5 | 0b0000_0000_0000_0001_0000_0000_0000_0000;
-                reg5 = 0b0000_0000_1110_1100_0000_0001_1011_1011;
+                reg5 =        0b0000_0000_1110_1100_0000_0001_1011_1011;
 
                 while (true)
                 {
                     reg5 = reg5 + (reg4 & 0b1111_1111);
-                    reg5 = reg5 & 0b0000_0000_1111_1111_1111_1111_1111_1111; 
+                    reg5 = reg5 & 0b0000_0000_1111_1111_1111_1111_1111_1111;
                     reg5 = reg5 * 0b0000_0000_0000_0001_0000_0001_0110_1011;
                     reg5 = reg5 & 0b0000_0000_1111_1111_1111_1111_1111_1111;
 
-                    if (reg4 < 0b0000_0000_0000_0000_0000_0001_0000_0000) break;
+                    if (reg4 < 256) break;
 
-                    reg4 = reg4 / 0b0000_0000_0000_0000_0000_0001_0000_0000;
+                    reg4 = reg4 >> 8; // Divide by 256
                 }
 
                 if (counter++ > maxLoops) return -1;
+                if (reg5 == initForRegister0) return counter;
+            }
 
-            } while (reg5 != initForRegister0);
-
-            return counter;
+            throw new NoSolutionFoundException();
         }
 
         private int FindNumberOfInstructionsNeeded(int ipRegister, int[][] program, int maxLoops = 1000)
@@ -149,6 +149,22 @@ seti 5 9 2
             }
 
             return counter;
+        }
+
+        [Theory]
+        [InlineData(0)]
+        [InlineData(1)]
+        [InlineData(255)]
+        [InlineData(256)]
+        [InlineData(257)]
+        [InlineData(1234)]
+        [InlineData(1092)]
+        [InlineData(5285447)]
+        [InlineData(15615244)]
+        [InlineData(16777215)]
+        public void Sanity_check_on_division_by_256(int number)
+        {
+            Assert.Equal(number / 256, number >> 8);
         }
 
         [Fact] public void Sanity_check_on_integer_as_binary_16777215() => Assert.Equal(16777215, 0b1111_1111_1111_1111_1111_1111);

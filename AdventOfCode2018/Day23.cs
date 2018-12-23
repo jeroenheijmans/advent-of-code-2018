@@ -18,17 +18,6 @@ namespace AdventOfCode2018
             this.output = output;
         }
 
-        private const string testInput = @"
-pos=<0,0,0>, r=4
-pos=<1,0,0>, r=1
-pos=<4,0,0>, r=3
-pos=<0,2,0>, r=1
-pos=<0,5,0>, r=3
-pos=<0,0,3>, r=1
-pos=<1,1,1>, r=1
-pos=<1,1,2>, r=1
-pos=<1,3,1>, r=1
-";
         private const string puzzleInput = @"
 pos=<41289914,12552653,-7638886>, r=70344373
 pos=<55620527,-29131587,68797069>, r=72087685
@@ -1030,9 +1019,31 @@ pos=<93383711,24299537,28961747>, r=65831118
 pos=<57145643,5660580,44650728>, r=89711021
 pos=<75708952,-11530344,55348542>, r=61126407
 pos=<94756071,-6719168,42291145>, r=71380536";
-        
-        [Fact] public void Solution_1_test_example_1() => Assert.Equal(7, Solve1(testInput));
-        [Fact] public void Solution_1_test_real_input() => Assert.Equal(-1, Solve1(puzzleInput));
+
+        [Fact] public void Solution_1_test_example_1() => Assert.Equal(7, Solve1(@"
+            pos=<0,0,0>, r=4
+            pos=<1,0,0>, r=1
+            pos=<4,0,0>, r=3
+            pos=<0,2,0>, r=1
+            pos=<0,5,0>, r=3
+            pos=<0,0,3>, r=1
+            pos=<1,1,1>, r=1
+            pos=<1,1,2>, r=1
+            pos=<1,3,1>, r=1
+        "));
+
+        [Fact] public void Solution_1_test_real_input() => Assert.Equal(240, Solve1(puzzleInput));
+
+        [Fact] public void Solution_2_test_example_1() => Assert.Equal(36, Solve2(@"
+            pos=<10,12,12>, r=2
+            pos=<12,14,12>, r=2
+            pos=<16,12,12>, r=4
+            pos=<14,14,14>, r=6
+            pos=<50,50,50>, r=200
+            pos=<10,10,10>, r=5
+        "));
+
+        [Fact] public void Solution_2_test_real_input() => Assert.Equal(-1, Solve2(puzzleInput));
 
         public int Solve1(string input)
         {
@@ -1042,20 +1053,36 @@ pos=<94756071,-6719168,42291145>, r=71380536";
                 .ToArray();
 
             var strongest = data.OrderByDescending(d => d[3]).First();
+            
+            return data.Count(other => GetManhattanDistance(strongest, other) <= strongest[3]);
+        }
 
-            var result = 0;
+        public int Solve2(string input)
+        {
+            var data = input.SplitByNewline(shouldTrim: true)
+                .Select(line => line.Replace("pos=<", "").Replace(">", "").Replace(" r=", ""))
+                .Select(line => line.Split(",").Select(int.Parse).ToArray())
+                .ToArray();
 
-            foreach (var bot in data)
-            {
-                var dist = Math.Abs(bot[0] - strongest[0]) + Math.Abs(bot[1] - strongest[1]) + Math.Abs(bot[2] - strongest[2]);
+            // TODO
 
-                if (dist <= strongest[3])
-                {
-                    result++;
-                }
-            }
+            return 0;
+        }
 
-            return result;
+        private static int GetManhattanDistance(int[] bot, int[] other)
+        {
+            return GetManhattanDistance(bot[0], bot[1], bot[2], other[0], other[1], other[2]);
+
+        }
+
+        private static int GetManhattanDistance(int[] bot, int x, int y, int z)
+        {
+            return GetManhattanDistance(bot[0], bot[1], bot[2], x, y, z);
+        }
+
+        private static int GetManhattanDistance(int x1, int y1, int z1, int x2, int y2, int z2)
+        {
+            return Math.Abs(x1 - x2) + Math.Abs(y1 - y2) + Math.Abs(z1 - z2);
         }
     }
 }

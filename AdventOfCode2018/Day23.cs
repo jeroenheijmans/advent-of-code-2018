@@ -1064,45 +1064,82 @@ pos=<94756071,-6719168,42291145>, r=71380536";
                 .Select(line => line.Split(",").Select(int.Parse).ToArray())
                 .ToArray();
 
-            var friends = new Dictionary<int[], ISet<int[]>>();
+            var minx = data.Min(b => b[0]);
+            var maxx = data.Max(b => b[0]);
+            var miny = data.Min(b => b[1]);
+            var maxy = data.Max(b => b[1]);
+            var minz = data.Min(b => b[2]);
+            var maxz = data.Max(b => b[2]);
+
+            var xs = new HashSet<int>();
+            var ys = new HashSet<int>();
+            var zs = new HashSet<int>();
+            var bestCount = 0;
 
             foreach (var bot in data)
             {
-                var inRange = data.Where(other => other != bot && GetManhattanDistance(bot, other) <= bot[3]).ToHashSet();
-                friends.Add(bot, inRange);
+                for (int r = -bot[3]; r <= bot[3]; r++)
+                {
+                    xs.Add(bot[0] + r);
+                    ys.Add(bot[1] + r);
+                    zs.Add(bot[2] + r);
+                }
             }
 
-            var strongest = friends.OrderByDescending(f => f.Value.Count).First();
-            var radius = strongest.Key[3];
-
-            var bestCount = 0;
-            var bestDistToOrigin = int.MaxValue;
-
-            for (int x = -radius; x <= radius; x++)
+            foreach (var x in xs.ToArray())
             {
-                var a = strongest.Key[0] + x;
-                for (int y = -radius; y <= radius; y++)
+                var count = data.Count(b => x >= (b[0] - b[3]) && x <= (b[0] + b[3]));
+                if (count > bestCount) xs.Clear();
+                if (count >= bestCount) { bestCount = count; xs.Add(x); }
+            }
+
+            bestCount = 0;
+
+            foreach (var y in ys.ToArray())
+            {
+                var count = data.Count(b => y >= (b[1] - b[3]) && y <= (b[1] + b[3]));
+                if (count > bestCount) ys.Clear();
+                if (count >= bestCount) { bestCount = count; ys.Add(y); }
+            }
+
+            bestCount = 0;
+
+            foreach (var z in zs.ToArray())
+            {
+                var count = data.Count(b => z >= (b[2] - b[3]) && z <= (b[2] + b[3]));
+                if (count > bestCount) zs.Clear();
+                if (count >= bestCount) { bestCount = count; zs.Add(z); }
+            }
+
+            bestCount = 0;
+            var distances = new HashSet<int>();
+            
+            foreach (var x in xs)
+            {
+                foreach (var y in ys)
                 {
-                    var b = strongest.Key[1] + y;
-                    for (int z = -radius; z <= radius; z++)
+                    foreach (var z in zs)
                     {
-                        // We looping through a cube, but should check a sphere, so:
-                        if (GetManhattanDistance(strongest.Key, x, y, z) > radius) continue;
-
-                        var c = strongest.Key[2] + z;
-
-                        var count = strongest.Value.Count(other => GetManhattanDistance(other, a, b, c) <= other[3]);
+                        var count = data.Count(bot =>
+                            Math.Abs(x - bot[0]) + Math.Abs(y - bot[1]) + Math.Abs(z - bot[2])
+                            <= bot[3]);
 
                         if (count >= bestCount)
                         {
-                            bestCount = count;
-                            bestDistToOrigin = Math.Min(bestDistToOrigin, GetManhattanDistance(a, b, c, 0, 0, 0));                            
+                            if (count > bestCount)
+                            {
+                                distances.Clear();
+                                bestCount = count;
+                            }
+
+                            distances.Add(GetManhattanDistance(x, y, z, 0, 0, 0));                            
                         }
+
                     }
                 }
             }
 
-            return bestDistToOrigin;
+            return distances.Min();
         }
 
         private static int GetManhattanDistance(int[] bot, int[] other)

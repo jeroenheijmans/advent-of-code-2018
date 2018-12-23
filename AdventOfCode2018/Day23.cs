@@ -1064,117 +1064,32 @@ pos=<94756071,-6719168,42291145>, r=71380536";
                 .Select(line => line.Split(",").Select(int.Parse).ToArray())
                 .ToArray();
 
-            var minx = data.Min(b => b[0]);
-            var maxx = data.Max(b => b[0]);
-            var miny = data.Min(b => b[1]);
-            var maxy = data.Max(b => b[1]);
-            var minz = data.Min(b => b[2]);
-            var maxz = data.Max(b => b[2]);
 
-            var slices = new[]
-            {
-                new HashSet<KeyValuePair<int, int>>(),
-                new HashSet<KeyValuePair<int, int>>(),
-                new HashSet<KeyValuePair<int, int>>(),
-            };
-
+            const int max = 20;
             var bestCount = 0;
+            var bestDist = int.MaxValue;
 
-            foreach (var bot in data)
+            for (int x = -max; x <= max; x++)
             {
-                slices[0].Add(new KeyValuePair<int, int>(bot[0] - bot[3], bot[0] + bot[3]));
-                slices[1].Add(new KeyValuePair<int, int>(bot[1] - bot[3], bot[1] + bot[3]));
-                slices[2].Add(new KeyValuePair<int, int>(bot[2] - bot[3], bot[2] + bot[3]));
-            }
-
-            for (int i = 0; i < 3; i++)
-            {
-                var vals = slices[i].Select(s => s.Value);
-                var keys = slices[i].Select(s => s.Key);
-                var points = keys.Union(vals).OrderBy(p => p).ToArray();
-
-                var newSlices = new HashSet<KeyValuePair<int, int>>();
-                int? start = null;
-
-                for (int n = 0; n < points.Length; n++)
+                for (int y = -max; y <= max; y++)
                 {
-                    if (start == null) { start = points[n]; continue; }
-                    if (slices[i].Any(s => s.Key <= points[n] && s.Value > points[n])) continue;
-
-                    newSlices.Add(new KeyValuePair<int, int>(start.Value, points[n]));
-                    start = null;
-                }
-
-                slices[i] = newSlices;
-            }
-
-            var xs = new HashSet<int>();
-            var ys = new HashSet<int>();
-            var zs = new HashSet<int>();
-
-            foreach (var slice in slices[0])
-            {
-                for (int x = slice.Key; x <= slice.Value; x++)
-                {
-                    var count = data.Count(b => x >= (b[0] - b[3]) && x <= (b[0] + b[3]));
-                    if (count > bestCount) xs.Clear();
-                    if (count >= bestCount) { bestCount = count; xs.Add(x); }
-                }
-            }
-
-            bestCount = 0;
-
-            foreach (var slice in slices[1])
-            {
-                for (int y = slice.Key; y <= slice.Value; y++)
-                {
-                    var count = data.Count(b => y >= (b[1] - b[3]) && y <= (b[1] + b[3]));
-                    if (count > bestCount) ys.Clear();
-                    if (count >= bestCount) { bestCount = count; ys.Add(y); }
-                }
-            }
-
-            bestCount = 0;
-
-            foreach (var slice in slices[2])
-            {
-                for (int z = slice.Key; z <= slice.Value; z++)
-                {
-                    var count = data.Count(b => z >= (b[2] - b[3]) && z <= (b[2] + b[3]));
-                    if (count > bestCount) zs.Clear();
-                    if (count >= bestCount) { bestCount = count; zs.Add(z); }
-                }
-            }
-
-            bestCount = 0;
-            var distances = new HashSet<int>();
-
-            foreach (var x in xs)
-            {
-                foreach (var y in ys)
-                {
-                    foreach (var z in zs)
+                    for (int z = -max; z <= max; z++)
                     {
-                        var count = data.Count(bot =>
-                            Math.Abs(x - bot[0]) + Math.Abs(y - bot[1]) + Math.Abs(z - bot[2])
-                            <= bot[3]);
-
+                        var count = data.Count(b => GetManhattanDistance(b, x, y, z) <= b[3]);
                         if (count >= bestCount)
                         {
                             if (count > bestCount)
                             {
-                                distances.Clear();
                                 bestCount = count;
+                                bestDist = int.MaxValue;
                             }
-
-                            distances.Add(GetManhattanDistance(x, y, z, 0, 0, 0));
+                            bestDist = Math.Min(bestDist, GetManhattanDistance(x, y, z, 0, 0, 0));
                         }
-
                     }
                 }
             }
 
-            return distances.Min();
+            return bestDist;
         }
 
         private static int GetManhattanDistance(int[] bot, int[] other)

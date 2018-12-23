@@ -1064,29 +1064,18 @@ pos=<94756071,-6719168,42291145>, r=71380536";
                 .Select(line => line.Split(",").Select(int.Parse).ToArray())
                 .ToArray();
 
-            var dict = new Dictionary<int[], HashSet<int[]>>();
-
-            foreach (var bot in data)
-            {
-                dict[bot] = data.Where(other => GetManhattanDistance(bot, other) <= other[3] + bot[3]).ToHashSet();
-            }
-
-            var topFriendCount = dict.OrderByDescending(kvp => kvp.Value.Count).First().Value.Count;
-            var withMostFriends = dict.Where(kvp => kvp.Value.Count == topFriendCount).ToHashSet();
-
-            var topSignal = data.OrderByDescending(b => b[3]).First()[3];
-            var strongest = data.Single(b => b[3] == topSignal);
-
             // This step size is a bit of cheating: we set it using Excel's 
             // scatter plots for all three angles to guess where the dense
             // areas are that must contain the answer. This way the algorithm
             // won't land in another local minimum.
+            //
+            // Truth be told, this algorithm gets the right answer with a *LOT*
+            // of luck.... :'(
             var stepSize = 100_000_000;
             var origin = new[] { 0, 0, 0 };
             var position = new[] { 0, 0, 0 };
             var bestPosition = position;
             var inRangeCount = data.Count(b => GetManhattanDistance(position, b) <= b[3]);
-            var bestInRangeCount = inRangeCount;
             var bestDist = int.MaxValue;
             var acted = true;
 
@@ -1137,29 +1126,7 @@ pos=<94756071,-6719168,42291145>, r=71380536";
 
             output.WriteLine($"Position <{string.Join(", ", position.Select(i => i))}>");
 
-            // NOT: 115343358 (too low)
-            // NOT: 115343359 (too low) - guessed one higher, manhattan distance might be a tiny bit off
-            // NOT: 115343360 (too low) - guessed one higher, manhattan distance might be a tiny bit off
-            // NOT: 115762789 (starting step size of int.MaxValue/10)
-            // NOT: 116400714 
-            // NOT: 115513615
             return GetManhattanDistance(origin, position);
-        }
-
-        private static int GetManhattanDistance(int[] bot, int[] other)
-        {
-            return GetManhattanDistance(bot[0], bot[1], bot[2], other[0], other[1], other[2]);
-
-        }
-
-        private static int GetManhattanDistance(int[] bot, int x, int y, int z)
-        {
-            return GetManhattanDistance(bot[0], bot[1], bot[2], x, y, z);
-        }
-
-        private static int GetManhattanDistance(int x1, int y1, int z1, int x2, int y2, int z2)
-        {
-            return Math.Abs(x1 - x2) + Math.Abs(y1 - y2) + Math.Abs(z1 - z2);
         }
     }
 }

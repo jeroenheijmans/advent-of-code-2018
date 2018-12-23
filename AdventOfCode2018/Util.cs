@@ -170,5 +170,20 @@ namespace AdventOfCode2018
         {
             return Math.Abs(x1 - x2) + Math.Abs(y1 - y2);
         }
+
+        public static int GetManhattanDistance(int[] bot, int[] other)
+        {
+            return GetManhattanDistance(bot[0], bot[1], bot[2], other[0], other[1], other[2]);
+        }
+
+        public static int GetManhattanDistance(int[] bot, int x, int y, int z)
+        {
+            return GetManhattanDistance(bot[0], bot[1], bot[2], x, y, z);
+        }
+
+        public static int GetManhattanDistance(int x1, int y1, int z1, int x2, int y2, int z2)
+        {
+            return Math.Abs(x1 - x2) + Math.Abs(y1 - y2) + Math.Abs(z1 - z2);
+        }
     }
 }

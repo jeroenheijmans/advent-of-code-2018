@@ -1077,7 +1077,7 @@ pos=<94756071,-6719168,42291145>, r=71380536";
             var topSignal = data.OrderByDescending(b => b[3]).First()[3];
             var strongest = data.Single(b => b[3] == topSignal);
 
-            var stepSize = int.MaxValue / 4;
+            var stepSize = int.MaxValue / 10;
             var origin = new[] { 0, 0, 0 };
             var position = new[] { 0, 0, 0 };
             var bestPosition = position;
@@ -1114,11 +1114,14 @@ pos=<94756071,-6719168,42291145>, r=71380536";
                 }
             }
 
+
+
             output.WriteLine($"Position <{string.Join(", ", position.Select(i => i))}>");
 
             // NOT: 115343358 (too low)
             // NOT: 115343359 (too low) - guessed one higher, manhattan distance might be a tiny bit off
             // NOT: 115343360 (too low) - guessed one higher, manhattan distance might be a tiny bit off
+            // NOT: 115762789 (starting step size of int.MaxValue/10)
             return GetManhattanDistance(origin, position);
         }
 

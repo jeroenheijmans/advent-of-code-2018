@@ -1064,9 +1064,45 @@ pos=<94756071,-6719168,42291145>, r=71380536";
                 .Select(line => line.Split(",").Select(int.Parse).ToArray())
                 .ToArray();
 
-            // TODO
+            var friends = new Dictionary<int[], ISet<int[]>>();
 
-            return 0;
+            foreach (var bot in data)
+            {
+                var inRange = data.Where(other => other != bot && GetManhattanDistance(bot, other) <= bot[3]).ToHashSet();
+                friends.Add(bot, inRange);
+            }
+
+            var strongest = friends.OrderByDescending(f => f.Value.Count).First();
+            var radius = strongest.Key[3];
+
+            var bestCount = 0;
+            var bestDistToOrigin = int.MaxValue;
+
+            for (int x = -radius; x <= radius; x++)
+            {
+                var a = strongest.Key[0] + x;
+                for (int y = -radius; y <= radius; y++)
+                {
+                    var b = strongest.Key[1] + y;
+                    for (int z = -radius; z <= radius; z++)
+                    {
+                        // We looping through a cube, but should check a sphere, so:
+                        if (GetManhattanDistance(strongest.Key, x, y, z) > radius) continue;
+
+                        var c = strongest.Key[2] + z;
+
+                        var count = strongest.Value.Count(other => GetManhattanDistance(other, a, b, c) <= other[3]);
+
+                        if (count >= bestCount)
+                        {
+                            bestCount = count;
+                            bestDistToOrigin = Math.Min(bestDistToOrigin, GetManhattanDistance(a, b, c, 0, 0, 0));                            
+                        }
+                    }
+                }
+            }
+
+            return bestDistToOrigin;
         }
 
         private static int GetManhattanDistance(int[] bot, int[] other)

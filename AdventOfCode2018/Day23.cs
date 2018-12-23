@@ -1084,7 +1084,7 @@ pos=<94756071,-6719168,42291145>, r=71380536";
             var inRangeCount = data.Count(b => GetManhattanDistance(position, b) <= b[3]);
             var bestInRangeCount = inRangeCount;
 
-            while (stepSize > 1)
+            while (stepSize >= 1)
             {
                 for (var x = -1; x <= 1; x++)
                 {
@@ -1114,7 +1114,11 @@ pos=<94756071,-6719168,42291145>, r=71380536";
                 }
             }
 
+            output.WriteLine($"Position <{string.Join(", ", position.Select(i => i))}>");
+
             // NOT: 115343358 (too low)
+            // NOT: 115343359 (too low) - guessed one higher, manhattan distance might be a tiny bit off
+            // NOT: 115343360 (too low) - guessed one higher, manhattan distance might be a tiny bit off
             return GetManhattanDistance(origin, position);
         }
 

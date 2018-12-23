@@ -1064,32 +1064,37 @@ pos=<94756071,-6719168,42291145>, r=71380536";
                 .Select(line => line.Split(",").Select(int.Parse).ToArray())
                 .ToArray();
 
+            var minx = data.Min(b => b[0]);
+            var maxx = data.Max(b => b[0]);
+            var miny = data.Min(b => b[1]);
+            var maxy = data.Max(b => b[1]);
+            var minz = data.Min(b => b[2]);
+            var maxz = data.Max(b => b[2]);
 
-            const int max = 20;
-            var bestCount = 0;
-            var bestDist = int.MaxValue;
+            var dx = maxx - minx;
+            var dy = maxy - miny;
+            var dz = maxy - minz;
 
-            for (int x = -max; x <= max; x++)
+            var dict = new Dictionary<int[], HashSet<int[]>>();
+
+            foreach (var bot in data)
             {
-                for (int y = -max; y <= max; y++)
-                {
-                    for (int z = -max; z <= max; z++)
-                    {
-                        var count = data.Count(b => GetManhattanDistance(b, x, y, z) <= b[3]);
-                        if (count >= bestCount)
-                        {
-                            if (count > bestCount)
-                            {
-                                bestCount = count;
-                                bestDist = int.MaxValue;
-                            }
-                            bestDist = Math.Min(bestDist, GetManhattanDistance(x, y, z, 0, 0, 0));
-                        }
-                    }
-                }
+                dict[bot] = data.Where(other => GetManhattanDistance(bot, other) <= other[3] + bot[3]).ToHashSet();
             }
 
-            return bestDist;
+            var mostfriends = dict.OrderByDescending(kvp => kvp.Value.Count).First().Key;
+            var strongest = data.OrderByDescending(b => b[3]).First();
+
+            foreach (var kvp in dict.OrderByDescending(x => x.Value.Count))
+            {
+                var bot = kvp.Key;
+                var ids = "";
+                if (bot == strongest) ids += " strongest";
+                if (bot == mostfriends) ids += " mostfriends";
+                output.WriteLine($"<{string.Join(",", bot.Select(i => i.ToString().PadLeft(10)))}> with {dict[bot].Count.ToString().PadLeft(5)} friends {ids}");
+            }
+
+            return 0;
         }
 
         private static int GetManhattanDistance(int[] bot, int[] other)

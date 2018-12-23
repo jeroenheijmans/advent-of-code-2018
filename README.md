@@ -35,7 +35,7 @@ Here's what I learned (or noticed) each day.
 20. Real regex engines must be mindbending to build. 
 21. I ***abhor*** low level programming and debugging.
 22. Pathfinding in puzzles is tricky. Pathfinding in real games must be grueling.
-23. TBD
+23. I didn't know what "[SMT](https://en.wikipedia.org/wiki/Satisfiability_modulo_theories)" was, and am apparently quite bad at handcrafting one.
 24. TBD
 25. TBD
 

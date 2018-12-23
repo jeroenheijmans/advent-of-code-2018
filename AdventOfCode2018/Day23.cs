@@ -1043,7 +1043,7 @@ pos=<94756071,-6719168,42291145>, r=71380536";
             pos=<10,10,10>, r=5
         "));
 
-        [Fact] public void Solution_2_test_real_input() => Assert.Equal(-1, Solve2(puzzleInput));
+        [Fact] public void Solution_2_test_real_input() => Assert.Equal(116547949, Solve2(puzzleInput));
 
         public int Solve1(string input)
         {
@@ -1077,15 +1077,23 @@ pos=<94756071,-6719168,42291145>, r=71380536";
             var topSignal = data.OrderByDescending(b => b[3]).First()[3];
             var strongest = data.Single(b => b[3] == topSignal);
 
-            var stepSize = int.MaxValue / 8;
+            // This step size is a bit of cheating: we set it using Excel's 
+            // scatter plots for all three angles to guess where the dense
+            // areas are that must contain the answer. This way the algorithm
+            // won't land in another local minimum.
+            var stepSize = 100_000_000;
             var origin = new[] { 0, 0, 0 };
             var position = new[] { 0, 0, 0 };
             var bestPosition = position;
             var inRangeCount = data.Count(b => GetManhattanDistance(position, b) <= b[3]);
             var bestInRangeCount = inRangeCount;
+            var bestDist = int.MaxValue;
+            var acted = true;
 
-            while (stepSize > 1)
+            while (stepSize > 1 || acted)
             {
+                acted = false;
+
                 for (var x = -1; x <= 1; x++)
                 {
                     for (var y = -1; y <= 1; y++)
@@ -1099,6 +1107,19 @@ pos=<94756071,-6719168,42291145>, r=71380536";
                             {
                                 inRangeCount = newInRangeCount;
                                 bestPosition = newPos;
+                                bestDist = GetManhattanDistance(origin, newPos);
+                                acted = true;
+                            }
+                            else if (newInRangeCount == inRangeCount)
+                            {
+                                var dist = GetManhattanDistance(origin, newPos);
+                                if (bestDist > dist)
+                                {
+                                    inRangeCount = newInRangeCount;
+                                    bestPosition = newPos;
+                                    bestDist = dist;
+                                    acted = true;
+                                }
                             }
                         }
                     }
@@ -1113,8 +1134,6 @@ pos=<94756071,-6719168,42291145>, r=71380536";
                     position = bestPosition;
                 }
             }
-
-
 
             output.WriteLine($"Position <{string.Join(", ", position.Select(i => i))}>");
 

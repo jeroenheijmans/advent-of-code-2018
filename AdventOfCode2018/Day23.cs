@@ -1064,17 +1064,6 @@ pos=<94756071,-6719168,42291145>, r=71380536";
                 .Select(line => line.Split(",").Select(int.Parse).ToArray())
                 .ToArray();
 
-            var minx = data.Min(b => b[0]);
-            var maxx = data.Max(b => b[0]);
-            var miny = data.Min(b => b[1]);
-            var maxy = data.Max(b => b[1]);
-            var minz = data.Min(b => b[2]);
-            var maxz = data.Max(b => b[2]);
-
-            var dx = maxx - minx;
-            var dy = maxy - miny;
-            var dz = maxy - minz;
-
             var dict = new Dictionary<int[], HashSet<int[]>>();
 
             foreach (var bot in data)
@@ -1082,19 +1071,51 @@ pos=<94756071,-6719168,42291145>, r=71380536";
                 dict[bot] = data.Where(other => GetManhattanDistance(bot, other) <= other[3] + bot[3]).ToHashSet();
             }
 
-            var mostfriends = dict.OrderByDescending(kvp => kvp.Value.Count).First().Key;
-            var strongest = data.OrderByDescending(b => b[3]).First();
+            var topFriendCount = dict.OrderByDescending(kvp => kvp.Value.Count).First().Value.Count;
+            var withMostFriends = dict.Where(kvp => kvp.Value.Count == topFriendCount).ToHashSet();
 
-            foreach (var kvp in dict.OrderByDescending(x => x.Value.Count))
+            var topSignal = data.OrderByDescending(b => b[3]).First()[3];
+            var strongest = data.Single(b => b[3] == topSignal);
+
+            var stepSize = int.MaxValue / 4;
+            var origin = new[] { 0, 0, 0 };
+            var position = new[] { 0, 0, 0 };
+            var bestPosition = position;
+            var inRangeCount = data.Count(b => GetManhattanDistance(position, b) <= b[3]);
+            var bestInRangeCount = inRangeCount;
+
+            while (stepSize > 1)
             {
-                var bot = kvp.Key;
-                var ids = "";
-                if (bot == strongest) ids += " strongest";
-                if (bot == mostfriends) ids += " mostfriends";
-                output.WriteLine($"<{string.Join(",", bot.Select(i => i.ToString().PadLeft(10)))}> with {dict[bot].Count.ToString().PadLeft(5)} friends {ids}");
+                for (var x = -1; x <= 1; x++)
+                {
+                    for (var y = -1; y <= 1; y++)
+                    {
+                        for (var z = -1; z <= 1; z++)
+                        {
+                            var newPos = new[] { position[0] + (x * stepSize), position[1] + (y * stepSize), position[2] + (z * stepSize) };
+                            var newInRangeCount = data.Count(b => GetManhattanDistance(newPos, b) <= b[3]);
+
+                            if (newInRangeCount > inRangeCount)
+                            {
+                                inRangeCount = newInRangeCount;
+                                bestPosition = newPos;
+                            }
+                        }
+                    }
+                }
+
+                if (bestPosition == position)
+                {
+                    stepSize /= 2;
+                }
+                else
+                {
+                    position = bestPosition;
+                }
             }
 
-            return 0;
+            // NOT: 115343358 (too low)
+            return GetManhattanDistance(origin, position);
         }
 
         private static int GetManhattanDistance(int[] bot, int[] other)

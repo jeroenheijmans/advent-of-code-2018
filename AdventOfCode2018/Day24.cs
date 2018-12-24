@@ -55,27 +55,29 @@ Infection:
 
         [Fact] public void Solution_1_test_example_1() => Assert.Equal(5216, Solve1(testInput));
 
-        [Fact] public void Solution_1_test_real_input() => Assert.Equal(-1, Solve1(puzzleInput));
+        [Fact] public void Solution_1_test_real_input() => Assert.Equal(10723, Solve1(puzzleInput));
 
         public int Solve1(string input)
         {
             var combat = new Combat { Squads = ParseSquadsFromInput(input) };
-            var round = 1;
+            var round = 0;
+            const int maxRoundsLogged = 10;
 
             while (!combat.IsOver())
             {
                 var deadlocked = true;
 
-                if (round++ < 5)
+                if (round++ < maxRoundsLogged)
                 {
-                    output.WriteLine("---------------------------- " + round.ToString());
+                    output.WriteLine("");
+                    output.WriteLine($"---------------------------- round {round} -----------------------------");
                     foreach (var squad in combat.Squads) output.WriteLine(squad.ToString());
                     output.WriteLine("");
                 }
 
                 // Target selection
                 var targets = new Dictionary<Squad, Squad>();
-                var potentialTargets = combat.Squads.ToHashSet();
+                var potentialTargets = combat.GetLivingSquads().ToHashSet();
                 var squadsInOrder = combat.GetLivingSquads()
                     .OrderByDescending(s => s.EffectivePower)
                     .ThenByDescending(s => s.Initiative)
@@ -84,7 +86,8 @@ Infection:
                 foreach (var squad in squadsInOrder)
                 {
                     var enemy = potentialTargets
-                        .Where(s => s.IsEnemeyFor(squad))
+                        .Where(s => squad.IsEnemeyFor(s))
+                        .Where(s => squad.PotentialDamageTo(s) > 0)
                         .OrderByDescending(s => squad.PotentialDamageTo(s))
                         .ThenByDescending(s => s.EffectivePower)
                         .ThenByDescending(s => s.Initiative)
@@ -96,13 +99,13 @@ Infection:
 
                     potentialTargets.Remove(enemy);
 
-                    if (round < 5)
+                    if (round < maxRoundsLogged)
                     {
                         output.WriteLine($"{squad.Type} {squad.Id} would deal squad {enemy.Id} {squad.PotentialDamageTo(enemy)} damage");
                     }
                 }
 
-                if (round < 10) output.WriteLine("");
+                if (round < maxRoundsLogged) output.WriteLine("");
 
                 // Attacking
                 squadsInOrder = combat.GetLivingSquads()
@@ -117,7 +120,7 @@ Infection:
                     var result = squad.Fight(targets[squad]);
                     deadlocked = false;
 
-                    if (round < 5)
+                    if (round < maxRoundsLogged)
                     {
                         output.WriteLine($"{squad.Type} {squad.Id} attacks {targets[squad].Id} killing {result.UnitsKilled} units ({result.Damage} damage) {(result.IsElimination ? "ELIMINATION!" : "")}");
                     }
@@ -126,7 +129,6 @@ Infection:
                 if (deadlocked) throw new NoSolutionFoundException("Deadlocked!");
             }
 
-            // NOT: 15347 (too high)
             return combat.CalculateScore();
         }
 

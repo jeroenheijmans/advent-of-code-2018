@@ -57,11 +57,11 @@ Infection:
         [Fact] public void Solution_1_test_real_input() => Assert.Equal(10723, Solve1(puzzleInput));
 
         [Fact] public void Solution_2_test_example_1() => Assert.Equal(51, Solve2(testInput));
-        [Fact] public void Solution_2_test_real_input() => Assert.Equal(-1, Solve2(puzzleInput));
+        [Fact] public void Solution_2_test_real_input() => Assert.Equal(5120, Solve2(puzzleInput));
 
         public int Solve1(string input)
         {
-            var (score, infectionLoss) = SimulateCombatAndGetScore(input, maxRoundsLogged: 10);
+            var (score, isVictory) = SimulateCombatAndGetScore(input, maxRoundsLogged: 10);
             return score;
         }
 
@@ -69,17 +69,32 @@ Infection:
         {
             const int maxRoundsLogged = 0;
 
-            for (int boost = 0; boost < 10000; boost++)
-            {
-                var (score, infectionLoss) = SimulateCombatAndGetScore(input, maxRoundsLogged, boost);
+            var lowerBound = 0;
+            var upperBound = 256 * 256 * 2;
+            var boost = upperBound / 2;
 
-                if (infectionLoss == true) return score;
+            while (upperBound - lowerBound != 1)
+            {
+                try
+                {
+                    var (score, isVictory) = SimulateCombatAndGetScore(input, maxRoundsLogged, boost);
+
+                    if (isVictory == true) upperBound = boost;
+                    else lowerBound = boost;
+                }
+                catch (NoSolutionFoundException) // Deadlocks count as a loss
+                {
+                    lowerBound = boost;
+                }
+
+                boost = ((upperBound - lowerBound + 1) / 2) + lowerBound;
             }
 
-            throw new NoSolutionFoundException();
+            var (s, i) = SimulateCombatAndGetScore(input, maxRoundsLogged, boost);
+            return s;
         }
 
-        private (int score, bool infectionLoss) SimulateCombatAndGetScore(string input, int maxRoundsLogged, int immuneSystemBoost = 0)
+        private (int score, bool isVictory) SimulateCombatAndGetScore(string input, int maxRoundsLogged, int immuneSystemBoost = 0)
         {
             var combat = new Combat { Squads = ParseSquadsFromInput(input, immuneSystemBoost) };
             var round = 0;

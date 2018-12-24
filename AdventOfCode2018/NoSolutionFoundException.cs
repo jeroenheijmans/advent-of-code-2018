@@ -2,9 +2,14 @@
 
 namespace AdventOfCode2018
 {
-    public partial class Day21
+    public class NoSolutionFoundException : Exception
     {
-        public class NoSolutionFoundException : Exception
+        public NoSolutionFoundException()
+            : base()
+        { }
+
+        public NoSolutionFoundException(string message)
+            : base(message)
         { }
     }
 }

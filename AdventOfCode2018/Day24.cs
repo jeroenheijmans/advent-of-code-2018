@@ -64,6 +64,8 @@ Infection:
 
             while (!combat.IsOver())
             {
+                var deadlocked = true;
+
                 if (round++ < 5)
                 {
                     output.WriteLine("---------------------------- " + round.ToString());
@@ -92,6 +94,8 @@ Infection:
 
                     if (enemy == null) continue;
 
+                    potentialTargets.Remove(enemy);
+
                     if (round < 5)
                     {
                         output.WriteLine($"{squad.Type} {squad.Id} would deal squad {enemy.Id} {squad.PotentialDamageTo(enemy)} damage");
@@ -109,16 +113,20 @@ Infection:
                 {
                     if (squad.Units <= 0) continue;
                     if (targets[squad] == null) continue;
+                    
+                    var result = squad.Fight(targets[squad]);
+                    deadlocked = false;
 
                     if (round < 5)
                     {
-                        output.WriteLine($"{squad.Type} {squad.Id} does enemy {targets[squad].Id} potentially {squad.PotentialDamageTo(targets[squad])} damage");
+                        output.WriteLine($"{squad.Type} {squad.Id} attacks {targets[squad].Id} killing {result.UnitsKilled} units ({result.Damage} damage) {(result.IsElimination ? "ELIMINATION!" : "")}");
                     }
-
-                    squad.Fight(targets[squad]);
                 }
+
+                if (deadlocked) throw new NoSolutionFoundException("Deadlocked!");
             }
 
+            // NOT: 15347 (too high)
             return combat.CalculateScore();
         }
 
@@ -135,39 +143,46 @@ Infection:
                 if (line.StartsWith("Immune")) { isImmuneSystem = true; continue; }
                 if (line.StartsWith("Infection")) { isImmuneSystem = false; id = 1; continue; }
 
-                const string pattern = @"(\d+) \D+ (\d+) hit points (.*)with .+ does (\d+) (\w+) damage at initiative (\d+)";
+                Squad squad = ParseSquadFromLine(line, isImmuneSystem);
 
-                var groups = line.SubGroups(pattern);
-
-                var squad = new Squad
-                {
-                    Id = id++,
-                    IsImmuneSystem = isImmuneSystem,
-                    Units = int.Parse(groups[0]),
-                    HitPoints = int.Parse(groups[1]),
-                    // Immunities = ...,
-                    AttackPower = int.Parse(groups[3]),
-                    AttackType = groups[4],
-                    Initiative = int.Parse(groups[5]),
-                };
-
-                foreach (var vuln in groups[2].Replace("(", "").Replace(")", "").Split("; "))
-                {
-                    if (vuln.StartsWith("immune to "))
-                    {
-                        squad.Immunities = vuln.Replace("immune to ", "").Split(", ").ToHashSet();
-                    }
-
-                    if (vuln.StartsWith("weak to "))
-                    {
-                        squad.Weaknesses = vuln.Replace("weak to ", "").Split(", ").ToHashSet();
-                    }
-                }
-
+                squad.Id = id++;
                 squads.Add(squad);
             }
 
             return squads;
+        }
+
+        private static Squad ParseSquadFromLine(string line, bool isImmuneSystem)
+        {
+            const string pattern = @"(\d+) \D+ (\d+) hit points (.*)with .+ does (\d+) (\w+) damage at initiative (\d+)";
+
+            var groups = line.SubGroups(pattern);
+
+            var squad = new Squad
+            {
+                IsImmuneSystem = isImmuneSystem,
+                Units = int.Parse(groups[0]),
+                HitPoints = int.Parse(groups[1]),
+                // Immunities = ...,
+                AttackPower = int.Parse(groups[3]),
+                AttackType = groups[4],
+                Initiative = int.Parse(groups[5]),
+            };
+
+            foreach (var vuln in groups[2].Replace("(", "").Replace(")", "").Split("; "))
+            {
+                if (vuln.StartsWith("immune to "))
+                {
+                    squad.Immunities = vuln.Replace("immune to ", "").Split(", ").Select(v => v.Trim()).ToHashSet();
+                }
+
+                if (vuln.StartsWith("weak to "))
+                {
+                    squad.Weaknesses = vuln.Replace("weak to ", "").Split(", ").Select(v => v.Trim()).ToHashSet();
+                }
+            }
+
+            return squad;
         }
 
         public class Combat
@@ -189,6 +204,17 @@ Infection:
             Assert.Equal(3, defender.Units);
         }
 
+        [Fact]
+        public void Squad_fight_regression_test_1()
+        {
+            var defender = ParseSquadFromLine(@"17 units each with 5390 hit points (weak to radiation, bludgeoning) with n attack that does 4507 fire damage at initiative 2", true);
+            var attacker = ParseSquadFromLine(@"801 units each with 4706 hit points (weak to radiation) with an attack that does 116 bludgeoning damage at initiative 1", false);
+
+            var result = attacker.Fight(defender);
+
+            Assert.Equal(17, result.UnitsKilled);
+        }
+
         public class Squad
         {
             public int Id { get; set; }
@@ -207,11 +233,18 @@ Infection:
 
             public bool IsEnemeyFor(Squad other) => IsImmuneSystem != other.IsImmuneSystem;
 
-            public void Fight(Squad other)
+            public FightResult Fight(Squad other)
             {
                 if (!IsEnemeyFor(other)) throw new InvalidOperationException("No friendly fire allowed!");
                 var damage = PotentialDamageTo(other);
-                other.Units = (int)Math.Ceiling(((1.0 * other.Units * other.HitPoints) - damage) / other.HitPoints);
+                var result = new FightResult
+                {
+                    Damage = damage,
+                    UnitsKilled = Math.Min(other.Units, damage / other.HitPoints),
+                };
+                result.IsElimination = result.UnitsKilled == other.Units;
+                other.Units -= result.UnitsKilled;
+                return result;
             }
 
             public int PotentialDamageTo(Squad other)
@@ -225,6 +258,13 @@ Infection:
             {
                 return $"Squad {Id} ({Type}) with {Units} units of {HitPoints} HP and {AttackPower} AP (effectively {EffectivePower}). Initiative: {Initiative}.";
             }
+        }
+
+        public class FightResult
+        {
+            public int Damage { get; set; }
+            public int UnitsKilled { get; set; }
+            public bool IsElimination { get; set; }
         }
     }
 }

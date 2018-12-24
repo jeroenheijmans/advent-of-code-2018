@@ -54,14 +54,35 @@ Infection:
 1641 units each with 7807 hit points (weak to fire; immune to slashing, bludgeoning) with an attack that does 7 radiation damage at initiative 3";
 
         [Fact] public void Solution_1_test_example_1() => Assert.Equal(5216, Solve1(testInput));
-
         [Fact] public void Solution_1_test_real_input() => Assert.Equal(10723, Solve1(puzzleInput));
+
+        [Fact] public void Solution_2_test_example_1() => Assert.Equal(51, Solve2(testInput));
+        [Fact] public void Solution_2_test_real_input() => Assert.Equal(-1, Solve2(puzzleInput));
 
         public int Solve1(string input)
         {
-            var combat = new Combat { Squads = ParseSquadsFromInput(input) };
+            var (score, infectionLoss) = SimulateCombatAndGetScore(input, maxRoundsLogged: 10);
+            return score;
+        }
+
+        public int Solve2(string input)
+        {
+            const int maxRoundsLogged = 0;
+
+            for (int boost = 0; boost < 10000; boost++)
+            {
+                var (score, infectionLoss) = SimulateCombatAndGetScore(input, maxRoundsLogged, boost);
+
+                if (infectionLoss == true) return score;
+            }
+
+            throw new NoSolutionFoundException();
+        }
+
+        private (int score, bool infectionLoss) SimulateCombatAndGetScore(string input, int maxRoundsLogged, int immuneSystemBoost = 0)
+        {
+            var combat = new Combat { Squads = ParseSquadsFromInput(input, immuneSystemBoost) };
             var round = 0;
-            const int maxRoundsLogged = 10;
 
             while (!combat.IsOver())
             {
@@ -116,7 +137,7 @@ Infection:
                 {
                     if (squad.Units <= 0) continue;
                     if (targets[squad] == null) continue;
-                    
+
                     var result = squad.Fight(targets[squad]);
                     deadlocked = false;
 
@@ -129,10 +150,10 @@ Infection:
                 if (deadlocked) throw new NoSolutionFoundException("Deadlocked!");
             }
 
-            return combat.CalculateScore();
+            return (combat.CalculateScore(), !combat.GetLivingSquads().Any(s => s.IsInfection));
         }
 
-        private static ISet<Squad> ParseSquadsFromInput(string input)
+        private static ISet<Squad> ParseSquadsFromInput(string input, int immuneSystemBoost)
         {
             var lines = input.SplitByNewline(shouldTrim: true);
 
@@ -145,7 +166,7 @@ Infection:
                 if (line.StartsWith("Immune")) { isImmuneSystem = true; continue; }
                 if (line.StartsWith("Infection")) { isImmuneSystem = false; id = 1; continue; }
 
-                Squad squad = ParseSquadFromLine(line, isImmuneSystem);
+                Squad squad = ParseSquadFromLine(line, isImmuneSystem, immuneSystemBoost);
 
                 squad.Id = id++;
                 squads.Add(squad);
@@ -154,7 +175,7 @@ Infection:
             return squads;
         }
 
-        private static Squad ParseSquadFromLine(string line, bool isImmuneSystem)
+        private static Squad ParseSquadFromLine(string line, bool isImmuneSystem, int immuneSystemBoost = 0)
         {
             const string pattern = @"(\d+) \D+ (\d+) hit points (.*)with .+ does (\d+) (\w+) damage at initiative (\d+)";
 
@@ -166,7 +187,7 @@ Infection:
                 Units = int.Parse(groups[0]),
                 HitPoints = int.Parse(groups[1]),
                 // Immunities = ...,
-                AttackPower = int.Parse(groups[3]),
+                AttackPower = int.Parse(groups[3]) + (isImmuneSystem ? immuneSystemBoost : 0),
                 AttackType = groups[4],
                 Initiative = int.Parse(groups[5]),
             };

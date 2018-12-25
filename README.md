@@ -36,8 +36,8 @@ Here's what I learned (or noticed) each day.
 21. I ***abhor*** low level programming and debugging.
 22. Pathfinding in puzzles is tricky. Pathfinding in real games must be grueling.
 23. I didn't know what "[SMT](https://en.wikipedia.org/wiki/Satisfiability_modulo_theories)" was, and am apparently quite bad at handcrafting one.
-24. TBD
-25. TBD
+24. Flavor and context to problems mean a _lot_ to me!
+25. Being precise is hard. Being precise at 05:00 in the morning is harder.
 
 ## Compendium Repositories
 

@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Drawing;
 using System.Linq;
 using System.Text;
@@ -84,34 +83,27 @@ namespace AdventOfCode2018
 
             var origin = new Point(0, 0);
             var goal = new Point(size - 1, size - 1);
-            var position = origin;
-
             var state = Regex.Replace(input, "\r?\n", "");
             var time = 0;
-
             var visited = new HashSet<(string state, Point position)>();
-            var edges = new HashSet<(string state, Point position, int distance)> { (state, position, 0) };
-
-            var i = 0;
-
-            while (edges.Any() && i++ < 10_000)
+            var edges = new HashSet<(string state, Point position, int distance)> { (state, origin, 0) };
+            
+            while (edges.Any())
             {
                 var newEdges = new HashSet<(string state, Point position, int distance)>();
 
                 foreach (var edge in edges)
                 {
                     if (visited.Contains((edge.state, edge.position))) continue;
+
                     if (edge.position == goal)
                     {
                         output.WriteLine("Found winning position!");
                         OutputGrid(edge.state, edge.position, size, time);
-                        // NOT 40 (early guess)
-                        // NOT 34 (with output...?)
-                        // NOT 33 (off by one, guessed?)
                         return edge.distance;
                     }
 
-                    OutputGrid(edge.state, edge.position, size, time);
+                    // OutputGrid(edge.state, edge.position, size, time);
 
                     visited.Add((edge.state, edge.position));
 
@@ -123,13 +115,12 @@ namespace AdventOfCode2018
                             var newpos = GetTarget(edge.position, dir);
                             newpos = ShiftSantaIfNeeded(newpos, time, size);
                             newEdges.Add((newstate, newpos, edge.distance + 1));
-                            if (newpos == goal) { output.WriteLine("Will find winning move!"); OutputGrid(edge.state, edge.position, size, time); }
                         }
                     }
                 }
 
                 edges = newEdges;
-                time = (time + 1) % size;
+                time = ++time % size;
             }
 
             throw new NoSolutionFoundException();

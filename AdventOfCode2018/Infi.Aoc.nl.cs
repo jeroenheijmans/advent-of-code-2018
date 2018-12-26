@@ -6,11 +6,19 @@ using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using Xunit;
+using Xunit.Abstractions;
 
 namespace AdventOfCode2018
 {
     public class Infi
     {
+        private readonly ITestOutputHelper output;
+
+        public Infi(ITestOutputHelper output)
+        {
+            this.output = output;
+        }
+
         public const string puzzleInput = @"
 ╠╬╗══╝╠╗╔═╠╦╬║╚╩╦╣╩╔
 ╣╩║╠╚╬╦╠╬╣╗╔╗╣╗╗╚╝╩║
@@ -90,12 +98,21 @@ namespace AdventOfCode2018
             {
                 var newEdges = new HashSet<(string state, Point position, int distance)>();
                 var newstate = Shift(state, size, time);
-                time = (time + 1) % size;
 
                 foreach (var edge in edges)
                 {
                     if (visited.Contains((edge.state, edge.position))) continue;
-                    if (edge.position == goal) return edge.distance;
+                    if (edge.position == goal)
+                    {
+                        output.WriteLine("Found winning position!");
+                        OutputGrid(edge.state, edge.position, size, time);
+                        // NOT 40 (early guess)
+                        // NOT 34 (with output...?)
+                        // NOT 33 (off by one, guessed?)
+                        return edge.distance;
+                    }
+
+                    OutputGrid(edge.state, edge.position, size, time);
 
                     visited.Add((edge.state, edge.position));
 
@@ -106,14 +123,33 @@ namespace AdventOfCode2018
                             var newpos = GetTarget(edge.position, dir);
                             newpos = ShiftSantaIfNeeded(newpos, time, size);
                             newEdges.Add((newstate, newpos, edge.distance + 1));
+                            if (newpos == goal) { output.WriteLine("Will find winning move!"); OutputGrid(edge.state, edge.position, size, time); }
                         }
                     }
                 }
 
                 edges = newEdges;
+                time = (time + 1) % size;
             }
 
             throw new NoSolutionFoundException();
+        }
+
+        private void OutputGrid(string state, Point position, int size, int time)
+        {
+            output.WriteLine($"At time {time}");
+            for (int y = 0; y < size; y++)
+            {
+                var sb = new StringBuilder();
+                for (int x = 0; x < size; x++)
+                {
+                    var c = state[y * size + x];
+                    if (position.X == x && position.Y == y) sb.Append($"O");
+                    else sb.Append($"{c}");
+                }
+                output.WriteLine(sb.ToString());
+            }
+            output.WriteLine("");
         }
 
         private static int GetGridSize(string input)
@@ -175,8 +211,9 @@ namespace AdventOfCode2018
 
         [Fact] public void ShiftSanta_sample_1() => Assert.Equal(new Point(0, 0), ShiftSantaIfNeeded(new Point(0, 0), 5, 20));
         [Fact] public void ShiftSanta_sample_2() => Assert.Equal(new Point(2, 0), ShiftSantaIfNeeded(new Point(1, 0), 0, 20));
-        [Fact] public void ShiftSanta_sample_3() => Assert.Equal(new Point(0, 0), ShiftSantaIfNeeded(new Point(0, 0), 1, 20));
-        [Fact] public void ShiftSanta_sample_4() => Assert.Equal(new Point(1, 1), ShiftSantaIfNeeded(new Point(1, 0), 1, 20));
+        [Fact] public void ShiftSanta_sample_3() => Assert.Equal(new Point(1, 0), ShiftSantaIfNeeded(new Point(0, 0), 0, 20));
+        [Fact] public void ShiftSanta_sample_4() => Assert.Equal(new Point(0, 0), ShiftSantaIfNeeded(new Point(0, 0), 1, 20));
+        [Fact] public void ShiftSanta_sample_5() => Assert.Equal(new Point(1, 1), ShiftSantaIfNeeded(new Point(1, 0), 1, 20));
 
         private static Point ShiftSantaIfNeeded(Point current, int time, int size)
         {

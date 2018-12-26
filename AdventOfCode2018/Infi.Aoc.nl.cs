@@ -42,7 +42,7 @@ namespace AdventOfCode2018
 ╦║╦╩╔╩╗╚═╝╝╦╝═╦╠╚═╩╣";
 
         [Fact] public void Solve_puzzle_1() => Assert.Equal(42, Solve1(puzzleInput));
-        [Fact] public void Solve_puzzle_2() => Assert.Equal(0, Solve2(puzzleInput));
+        [Fact] public void Solve_puzzle_2() => Assert.Equal(47, Solve2(puzzleInput));
 
         public class Node
         {
@@ -97,7 +97,6 @@ namespace AdventOfCode2018
             while (edges.Any() && i++ < 10_000)
             {
                 var newEdges = new HashSet<(string state, Point position, int distance)>();
-                var newstate = Shift(state, size, time);
 
                 foreach (var edge in edges)
                 {
@@ -120,6 +119,7 @@ namespace AdventOfCode2018
                     {
                         if (CanMoveInDirection(edge.state, edge.position, size, dir))
                         {
+                            var newstate = Shift(edge.state, size, time);
                             var newpos = GetTarget(edge.position, dir);
                             newpos = ShiftSantaIfNeeded(newpos, time, size);
                             newEdges.Add((newstate, newpos, edge.distance + 1));
@@ -165,6 +165,7 @@ namespace AdventOfCode2018
 
         [Fact] public void Shift_sample_1() => Assert.Equal("4123abcd4567qwer", Shift("1234abcd4567qwer", 4, 0));
         [Fact] public void Shift_sample_2() => Assert.Equal("1w34a2cd4b67q5er", Shift("1234abcd4567qwer", 4, 1));
+        [Fact] public void Shift_sample_3() => Assert.Equal("123rabc4456dqwe7", Shift("1234abcd4567qwer", 4, 3));
 
         private static string Shift(string state, int size, int time)
         {

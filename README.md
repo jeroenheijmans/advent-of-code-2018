@@ -53,3 +53,5 @@ Here's direct links to every year's solutions I have so far:
 - [Advent of Code 2019 solutions](https://github.com/jeroenheijmans/advent-of-code-2019), in Python
 - [Advent of Code 2020 solutions](https://github.com/jeroenheijmans/advent-of-code-2020), in TypeScript
 - [Advent of Code 2021 solutions](https://github.com/jeroenheijmans/advent-of-code-2021), in PHP
+- [Advent of Code 2022 solutions](https://github.com/jeroenheijmans/advent-of-code-2022), in JavaScript
+- [Advent of Code 2023 solutions](https://github.com/jeroenheijmans/advent-of-code-2023), in TypeScript

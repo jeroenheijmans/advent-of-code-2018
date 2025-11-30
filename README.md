@@ -56,3 +56,4 @@ Here's direct links to every year's solutions I have so far:
 - [Advent of Code 2022 solutions](https://github.com/jeroenheijmans/advent-of-code-2022), in JavaScript
 - [Advent of Code 2023 solutions](https://github.com/jeroenheijmans/advent-of-code-2023), in TypeScript
 - [Advent of Code 2024 solutions](https://github.com/jeroenheijmans/advent-of-code-2024), in JavaScript
+- [Advent of Code 2025 solutions](https://github.com/jeroenheijmans/advent-of-code-2025), in TypeScript
